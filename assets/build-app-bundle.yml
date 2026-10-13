@@ -145,8 +145,8 @@ jobs:
             txt <- paste(unlist(lapply(sf, function(f) tryCatch(readLines(f, warn = FALSE), error = function(e) character()))), collapse = "\n")
             grab <- function(pat) { x <- regmatches(txt, gregexpr(pat, txt))[[1]]; if (length(x)) gsub("[()\"']", "", sub(".*?(library|require)", "", x)) else character() }
             seed <- unique(c(grab("library\\([A-Za-z0-9._\"']+"), grab("require\\([A-Za-z0-9._\"']+"),
-                             sub("::.*$", "", regmatches(txt, gregexpr("([A-Za-z][A-Za-z0-9._]+)::", txt))[[1]])),
-                             split_pkgs(Sys.getenv("EXTRA_PKGS")), "shiny")
+                             sub("::.*$", "", regmatches(txt, gregexpr("([A-Za-z][A-Za-z0-9._]+)::", txt))[[1]]),
+                             split_pkgs(Sys.getenv("EXTRA_PKGS")), "shiny"))
           } else if (mode == "package-fn") {
             dcf <- read.dcf(file.path(pkgroot, "DESCRIPTION")); pkg_name <- unname(dcf[1, "Package"])
             writeLines(c(opt(), Sys.getenv("ENTRY_FN")), file.path(appdir, "app.R"))
@@ -185,6 +185,17 @@ jobs:
           ins <- function(p, type = "both", deps = NA) if (length(p)) install.packages(p, lib = lib, repos = repos, type = type, dependencies = deps, Ncpus = 2)
           ins(closure)
           nb <- setdiff(closure, have()); if (length(nb)) { cat("source retry:", length(nb), "\n"); ins(nb, type = "source", deps = FALSE) }
+          if (identical(unname(Sys.info()[["sysname"]]), "Darwin")) {
+            sr <- split_pkgs(Sys.getenv("SOURCE_REBUILD"))
+            if (length(sr)) {
+              oldpath <- Sys.getenv("PATH"); pth <- strsplit(oldpath, .Platform$path.sep)[[1]]
+              pth <- pth[!grepl("homebrew|linuxbrew", pth, ignore.case = TRUE)]
+              Sys.setenv(PATH = paste(pth, collapse = .Platform$path.sep), PKG_CONFIG_PATH = "", PKG_CONFIG_LIBDIR = "")
+              cat("macOS source rebuild (Homebrew hidden):", paste(sr, collapse = ", "), "\n")
+              ins(sr, type = "source", deps = FALSE)
+              Sys.setenv(PATH = oldpath)
+            }
+          }
           if (mode == "package-fn") { install.packages(pkgroot, lib = lib, repos = NULL, type = "source", dependencies = FALSE); if (!pkg_name %in% have()) stop("app package failed to install: ", pkg_name) }
           for (u in split_pkgs(Sys.getenv("ARCHIVE_URLS"))) { f <- tempfile(fileext = ".tar.gz"); download.file(u, f, mode = "wb", quiet = TRUE); try(install.packages(f, lib = lib, repos = NULL, type = "source", dependencies = FALSE), silent = TRUE) }
 
@@ -197,8 +208,6 @@ jobs:
           }
 
           if (identical(unname(Sys.info()[["sysname"]]), "Darwin")) {
-            sr <- split_pkgs(Sys.getenv("SOURCE_REBUILD"))
-            if (length(sr)) { cat("macOS source rebuild:", paste(sr, collapse = ", "), "\n"); ins(sr, type = "source", deps = FALSE) }
             bins <- list.files(lib, pattern = "[.](so|dylib)$", recursive = TRUE, full.names = TRUE); bad <- character()
             for (b in bins) { o <- suppressWarnings(system2("otool", c("-L", shQuote(b)), stdout = TRUE, stderr = FALSE)); if (any(grepl("(/opt/X11|/opt/homebrew|/usr/local/opt)", o))) bad <- c(bad, b) }
             if (length(bad)) stop("non-portable dylib references: ", paste(unique(basename(bad)), collapse = ", "))

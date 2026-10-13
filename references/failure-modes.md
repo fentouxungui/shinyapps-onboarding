@@ -57,10 +57,25 @@ of them; the rest need a decision you make during feasibility.
     dynamic PDF, Windows HDF5 via `hdf5r`). Disclose it in `APP_NOTES` and the PR; it may
     work partially or only with network.
 
+**`golem` apps: `run_app()` returns the app object, but external backends must be disabled.**
+   A golem `run_app()` returns `with_golem_options(shinyApp(app_ui, app_server), ...)` without
+   calling `runApp()`, so it is a valid package-fn entry. Pass the golem options that turn off
+   server-side backends (e.g. `with_mongo = FALSE`), and check that the corresponding tab is
+   guarded by `get_golem_options(...)`.
+
+**The target is a framework or a generator, not an app.** `teal` (`init()` returns a list, run
+   as `shinyApp(app$ui, app$server)` and needs modules), `learnr` (tutorial framework;
+   `run_tutorial()`), and `ShinyCell`/`ShinyCell2` (`makeShinyApp()` writes an app dir from data)
+   have **no single runnable app**. Bundle a concrete demo/tutorial app around them instead of
+   the framework itself -- see `references/app-shapes.md`.
+
 ## Ops
 
-15. **The app never appears in the store.** `publish-catalog` discovers assets by the
+15. **Fork names preserve the original case** (e.g. `fentouxungui/PlotsOfData`, not
+    `plotsofdata`) and old-name remotes redirect. Use the exact fork name in the catalog `repo`;
+    keep the lowercase `<id>` for the asset prefix and catalog id.
+16. **The app never appears in the store.** `publish-catalog` discovers assets by the
     **`<id>-<version>-<platform>.zip`** filename from the repo's **latest Release**. A
     wrong `id`, wrong filename, or no published Release = no catalog entry.
-16. **Verify, always.** Read back `https://<owner>.github.io/ShinyApps/catalog.json` and
+17. **Verify, always.** Read back `https://<owner>.github.io/ShinyApps/catalog.json` and
     confirm the app's `version`, both platform artifacts, and their `sha256`.

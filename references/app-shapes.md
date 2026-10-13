@@ -52,3 +52,34 @@ ENTRY_FN='library(iSEE); iSEE::iSEE(...)'   # any expression returning a shinyAp
 ```
 
 The package's `Depends`/`Imports` seed the closure and the package is installed into `rlib/`.
+
+
+## golem apps (package-fn)
+
+A `golem` app's `run_app()` **returns** the app object
+(`golem::with_golem_options(shinyApp(app_ui, app_server), golem_opts = list(...))`); it does not
+call `runApp()` at build time. So a golem app is a **package-fn**:
+`ENTRY_FN='library(pkg); pkg::run_app(...)'`. Disable any external backend through the golem
+options -- e.g. `pkg::run_app(with_mongo = FALSE)` for hexmake (the MongoDB "My hexes" tab is
+then hidden). If a transitive dependency (`hexSticker`/`ggimage`/`rvg`) pulls **`gdtools`**,
+set `SOURCE_REBUILD=gdtools` (its CRAN macOS binary links XQuartz/Homebrew).
+
+## Auto-printing app objects
+
+Some packages ship an S3 generic that **returns** a `shiny.appobj` and relies on the console
+auto-printing it to launch (e.g. `explor()` / `explor.PCA()`). That is contract-compliant: the
+generated entry just calls the function and returns the value. Supply the object the app needs
+(e.g. a demo `FactoMineR::PCA(...)` result).
+
+## Frameworks and generators are NOT apps
+
+Do **not** try to bundle these as-is -- they have no single runnable app:
+
+| Package | What it is | What would be needed |
+|---|---|---|
+| **teal** | framework; `init()` returns a `teal_app` **list**, run as `shiny::shinyApp(app$ui, app$server)`; needs `modules` | bundle a **demo** built from `teal` + `teal.modules.general` + `teal_data()` |
+| **learnr** | tutorial framework; `run_tutorial()` renders an `.Rmd` tutorial into an app | bundle **one tutorial** (or an `app.R` that renders it) |
+| **ShinyCell / ShinyCell2** | **generators**: `makeShinyApp()`/`makeShinyFiles()` write an app dir from single-cell data | generate an app from a **bundled example dataset** at build time, then bundle that output |
+
+For these, the feasibility step must say so and propose bundling a concrete demo/tutorial app
+instead of the framework itself.
