@@ -1,49 +1,55 @@
 # shinyapps-onboarding
 
-Reusable tooling to publish **any Shiny-app GitHub repository** to the
+Reusable, **battle-tested** tooling to publish any Shiny-app GitHub repository to the
 [ShinyApps](https://github.com/fentouxungui/ShinyApps) desktop app store, end to end:
 
 ```
-feasibility  ->  fork  ->  bundle workflow  ->  tag / GitHub Actions release
-             ->  catalog entry + icon  ->  (optional) upstream pull request
+feasibility -> fork -> bundle workflow -> tag / GitHub Actions release
+            -> catalog entry + icon -> (optional) upstream pull request
 ```
 
-It uses the store's **"Route A"** model: a per-repo GitHub Actions workflow builds
-**prebuilt desktop bundles** (Windows `win-x64`, macOS `mac-arm64`, pinned to R 4.6.1)
-and attaches them to a GitHub Release; a catalog entry + icon in the store make the app
-installable **without rebuilding the store shell**. The same route already powers iSEE,
-UCSCXenaShiny, spatialLIBD, beeRapp, CSBB-Shiny, SeuratExplorer, scConvertShiny,
-shinyCircos-V2.0, UpSetR-shiny, GraphBio, splitKbCompare and ShinyStan.
+Route A: a per-repo GitHub Actions workflow builds **prebuilt desktop bundles**
+(Windows `win-x64`, macOS `mac-arm64`, pinned to R 4.6.1) and attaches them to a GitHub
+Release; a catalog entry + icon make the app installable **without rebuilding the store
+shell**. The same route powers iSEE, UCSCXenaShiny, spatialLIBD, beeRapp, CSBB-Shiny,
+SeuratExplorer, scConvertShiny, shinyCircos-V2.0, UpSetR-shiny, bestDEG, GraphBio,
+splitKbCompare and ShinyStan.
 
 ## Contents
 
 | Path | Purpose |
 |---|---|
-| `assets/build-app-bundle.yml` | Generic **dual-mode** bundle workflow (drop into `.github/workflows/`, fill the `env:` block) |
+| `assets/build-app-bundle.yml` | Hardened **multi-mode** bundle workflow (drop into `.github/workflows/`, fill `env:`) |
 | `assets/catalog-entry.yml`     | Catalog entry for `ShinyApps/catalog/apps.yml` |
-| `scripts/onboard-shiny-app.ps1`| Parameterized driver for steps 2-6 (fork → workflow → tag → release → catalog → PR) |
-| `references/store-contract.md` | Bundle/manifest/catalog contract and how `publish-catalog` works |
+| `scripts/onboard-shiny-app.ps1`| Parameterized driver for steps 2-6 |
+| `references/app-shapes.md`     | The 5 app shapes and how each is handled |
+| `references/failure-modes.md`  | Real failures and their fixes -- read this first |
+| `references/store-contract.md` | Bundle/manifest/catalog contract and `publish-catalog` |
 | `references/pr-template.md`    | Structure for the upstream pull request |
-| `examples/`                    | Two real, working workflows: a flat app and a package app |
+| `examples/`                    | Real working workflows (flat, package-fn, package-deploy) |
 
-## Two app shapes
+## App shapes
 
-* **flat** — the repo *is* the app: `app.R`, or `ui.R` + `server.R` (+ `global.R`).
-  Sources are copied verbatim and a tiny entry `app/app.R` is generated.
-* **package** — the app lives inside an **R package** (e.g. `inst/<subdir>/`). The package
-  **and** its dependency closure are installed into `rlib/`, and the entry either is a
-  custom `ENTRY_B64` or `shiny::shinyAppDir(system.file("<APP_SUBDIR>", package="<pkg>"))`.
+The workflow auto-detects most cases (`APP_MODE: auto`):
 
-`APP_MODE` defaults to `auto` (package if a `DESCRIPTION` is present, else flat).
+- **flat** -- the repo is the app: `app.R`, or `ui.R`+`server.R` (incl. legacy
+  `shinyUI`/`shinyServer`). Sources are copied verbatim; the runtime runs the directory.
+- **package-fn** -- an R package whose exported function returns a `shinyApp` object;
+  `ENTRY_FN` is that call, and the package is installed into `rlib/`.
+- **package-deploy** -- the app is a directory inside an R package that reads package
+  internals; the app files are copied, `library()` lines prepended, and data supplied via
+  an RData (mirrors the package's own `deploy_*()` helper).
+
+See [references/app-shapes.md](references/app-shapes.md) for detection and recipes.
 
 ## Prerequisites
 
-* `git` on PATH and a GitHub credential for `https://github.com` with the
+- `git` on PATH and a GitHub credential for `https://github.com` with the
   **`repo` + `workflow`** scopes (the `workflow` scope is required to push a
   `.github/workflows/` file). The script reads it via `git credential fill`.
-* A 512x512 PNG icon for the app.
-* **Git-LFS gotcha**: a global `filter.lfs.*` config can make `clone`/`fetch` hang or abort.
-  Disable it per command with
+- A 512x512 PNG icon for the app.
+- **Git-LFS gotcha**: a global `filter.lfs.*` config can make `clone`/`fetch` hang or
+  abort. Disable it per command with
   `-c filter.lfs.process= -c filter.lfs.smudge= -c filter.lfs.clean= -c filter.lfs.required=false`
   (the script already does this).
 
@@ -51,73 +57,47 @@ shinyCircos-V2.0, UpSetR-shiny, GraphBio, splitKbCompare and ShinyStan.
 
 Proceed only if all hold:
 
-1. **Contract**: the entry returns a `shinyApp` object and never calls `runApp()`.
+1. **Contract**: the app runs from a directory (has `app.R`, or `ui.R`+`server.R`), or is
+   an R package handled by the package-fn / package-deploy recipes. It must not require
+   `runApp()` from inside the bundle.
 2. **Dependencies**: `library()`/`pkg::` usage resolves against CRAN/Bioconductor. Flag
    GitHub-only deps; handle CRAN-archived ones via `ARCHIVE_URLS`.
 3. **Runtime**: no dependence on a shared server, a local daemon, or a system engine the
-   bundle cannot ship (e.g. LaTeX for dynamic PDF, a remote service, a private conda env).
-   List every such feature as a **known limitation** in `APP_NOTES` and the PR.
+   bundle cannot ship (LaTeX for dynamic PDF, a remote service, a private conda env).
+   List every such feature as a **known limitation** in `APP_NOTES`.
 4. **License**: record it (some upstreams declare none - disclose redistribution).
 
-## Steps 2-6 - run the driver
-
-Flat app:
+## Steps 2-6 - run the driver (or copy the workflow and do it by hand)
 
 ```powershell
 .\scripts\onboard-shiny-app.ps1 -ShinyAppsOwner <your-gh-username> `
-  -Upstream jhelvy/splitKbCompare -AppId splitkbcompare -AppName splitKbCompare `
-  -AppAuthor "John Helveston" -AppLicense MIT `
-  -AppHomepage "https://github.com/jhelvy/splitKbCompare" `
-  -AppDocs "https://github.com/jhelvy/splitKbCompare#readme" `
-  -AppCopyright "(c) 2020 John Helveston" -AppTags "keyboard,layout,comparison" `
-  -AppSubdir "." -ExtraPkgs "rmarkdown" `
-  -Exclude "rsconnect,images/raw,images/overlays.ai" `
+  -Upstream <owner>/<repo> -AppId <app-id> -AppName "<App Name>" `
+  -AppAuthor "<authors>" -AppLicense <SPDX> -AppHomepage "<url>" `
+  -AppMode flat -AppSubdir "." -AppTags "a,b,c" `
   -IconPath .\icon.png -Tag v0.1.0 -WatchRelease -OpenPR
 ```
 
-Package app (the ShinyStan case):
+## Reliability playbook (why this template is hardened)
 
-```powershell
-.\scripts\onboard-shiny-app.ps1 -ShinyAppsOwner <your-gh-username> `
-  -Upstream stan-dev/shinystan -AppId shinystan -AppName ShinyStan `
-  -AppAuthor "Jonah Gabry, Duco Veen, Stan Development Team" -AppLicense "GPL-3.0-or-later" `
-  -AppHomepage "https://mc-stan.org/shinystan/" -AppDocs "https://mc-stan.org/shinystan/" `
-  -AppMode package -PkgSubdir "." -AppSubdir "ShinyStan" -ExtraRepos "https://stan-dev.r-universe.dev" `
-  -EntryB64 "<base64 of your app/app.R>" -SoftPkgs "rstan" `
-  -IconPath .\icon.png -Tag v0.1.0 -WatchRelease -OpenPR
-```
+The workflow builds the dependency graph from the **source** index, installs
+per-package with `pkgType="both"` (binary, falling back to source), runs a **fix-up loop**
+over installed `DESCRIPTION`s, **load-validates** every required seed package from `rlib/`,
+excludes base packages, and on macOS audits binaries for non-portable
+XQuartz/Homebrew links. Full list: [references/failure-modes.md](references/failure-modes.md).
 
-Prefer doing it by hand? Fork the repo; add `.github/workflows/<id>-build-app-bundle.yml`
-(from `assets/build-app-bundle.yml`, `env:` filled); push a `vX.Y.Z` tag; append the entry
-from `assets/catalog-entry.yml` to `ShinyApps/catalog/apps.yml`; drop the icon at
-`ShinyApps/icons/<id>.png`; push; open the upstream PR.
+**Two rules that prevent the most common "it looks done but isn't":**
 
-## How the workflow works
-
-Per platform (`win-x64`, `mac-arm64`) on **R 4.6.1**:
-
-```
-<id>-<version>-<platform>.zip
-  app/app.R         generated entry (returns a shiny.appobj; never runApp())
-  app/...           upstream sources copied verbatim (flat mode)
-  rlib/<Pkg>/       prebuilt binary dependency closure (package itself included in package mode)
-  manifest.json     schema/id/version/platform/entry/r_version/packages/notes
-```
-
-* **Triggers**: push of a `v*` tag, `release: published`, or manual `workflow_dispatch`.
-* **Dependency seed**: package mode reads `Depends`/`Imports` from `DESCRIPTION`; flat mode
-  auto-extracts `library()`/`require()`/`pkg::`. Both are closed transitively over
-  CRAN/Bioconductor; `EXTRA_REPOS` adds repos (e.g. `https://stan-dev.r-universe.dev`).
-* **Archived packages**: list CRAN-Archive tarball URLs in `ARCHIVE_URLS`.
-* **Exclusions**: `EXCLUDE` drops source-only assets (AI/SVG, screenshots) to keep the bundle lean.
-* **`SOFT_PKGS`** are installed when a build is available but never fail the build (disclosed in `notes`).
+1. **Always bump the version** (`vX.Y.Z`) for any change. Installed clients compare the
+   catalog version to the installed one; re-pushing the same tag produces no `Update`.
+2. **Verify the catalog**, don't assume: read back
+   `https://<owner>.github.io/ShinyApps/catalog.json` and confirm the app's `version`, both
+   platform artifacts, and their `sha256`.
 
 ## Store side
 
 `ShinyApps/catalog/apps.yml` is the single registry; every key except `repo` is copied into
-`catalog.json`. `publish-catalog` discovers each app's **latest release assets** by the
-`<id>-` filename prefix and publishes `catalog.json` + `icons/` to `gh-pages`. So once the
-entry + icon are pushed, the app appears in the store automatically.
+`catalog.json`. `publish-catalog` discovers each app's **latest Release assets** by the
+`<id>-` filename prefix and publishes `catalog.json` + `icons/` to `gh-pages`.
 
 ## Security
 

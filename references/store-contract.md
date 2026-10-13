@@ -1,51 +1,65 @@
 # ShinyApps store contract (Route A)
 
 Source of truth: https://github.com/fentouxungui/ShinyApps
-(see `README.md`, `schemas/*.json`, `catalog/apps.yml`, `.github/workflows/publish-catalog.yml`).
+(`README.md`, `schemas/*.json`, `catalog/apps.yml`, `.github/workflows/publish-catalog.yml`).
+
+## How the shell runs an app
+
+`appstore.js` extracts the bundle to `apps/<id>/<version>/` and passes `appPath = <bundle>/app`
+to the R backend, which runs:
+
+```
+.libPaths(c(<private lib>, <shared lib>, .libPaths()))
+shiny::runApp('<appPath>', port=..., host='127.0.0.1', launch.browser=FALSE)
+```
+
+Consequences:
+* the app directory must contain `app.R` **or** `ui.R`+`server.R` (legacy `shinyUI`/
+  `shinyServer` also work); `manifest.entry` is **informational** for launching;
+* the app directory is the working directory, so **relative asset paths resolve**;
+* the app must not require `runApp()` from inside the bundle.
 
 ## Bundle artifact (per platform)
 
 ```
 <id>-<version>-<platform>.zip
-  app/app.R          entry (returns a shiny.appobj; never runApp())
-  app/...            the app's own sources and assets, copied verbatim
-  rlib/<Pkg>/        prebuilt binary dependency closure (pinned to R 4.6.1)
-  manifest.json      bundle manifest (schema below)
+  app/               the app (app.R, or ui.R/server.R, plus assets)
+  rlib/<Pkg>/        prebuilt dependency closure (pinned to R 4.6.1)
+  manifest.json
 ```
 
-Platforms currently built: `win-x64`, `mac-arm64` (schema also allows `win-arm64`,
-`mac-x64`, `linux-x64`).
+Platforms: `win-x64`, `mac-arm64` (schema also allows `win-arm64`, `mac-x64`, `linux-x64`).
 
 ## manifest.json (required fields)
 
-`schema` (=1), `id`, `name`, `version`, `platform`, `entry` (e.g. `app/app.R`),
-`r_version`, `packages[]`. `packages[]` items require `name`, `version`, `path`
-(e.g. `rlib/Seurat`); `source` is one of `cran|bioc|github|local`.
-Optional: `author`, `description`, `homepage`, `license`, `runtime`
-(`r-shiny`|`py-shiny`), `min_shell_version`, `notes`.
+`schema` (=1), `id`, `name`, `version`, `platform`, `entry`, `r_version`, `packages[]`.
+`packages[]` items require `name`, `version`, `path`; `source` in `cran|bioc|github|local`.
+Optional: `author`, `description`, `homepage`, `license`, `runtime` (`r-shiny`|`py-shiny`),
+`min_shell_version`, `notes`.
 
 ## Catalog (`catalog/apps.yml` -> `catalog.json`)
 
-`apps.yml` is the single hand-maintained registry. Every key **except `repo`** is
-copied verbatim into `catalog.json`. Each app entry needs at least `id`, `name`,
-`repo`; typical fields: `author`, `description`, `homepage`, `docs`, `email`,
-`copyright`, `license`, `icon`, `r_version`, `tags`.
+Every key **except `repo`** is copied verbatim into `catalog.json`. Each app entry needs at
+least `id`, `name`, `repo`; typical fields: `author`, `description`, `homepage`, `docs`,
+`email`, `copyright`, `license`, `icon`, `r_version`, `tags`.
 
-`publish-catalog` (`.github/workflows/publish-catalog.yml`) runs on a 10-minute
-schedule, on `workflow_dispatch`, on `repository_dispatch: [bundle-updated]`, and on
-push to `main` touching `catalog/apps.yml`, `catalog/render_readme.py`, or `icons/**`.
-For each entry it calls `gh api repos/<repo>/releases/latest`, keeps assets whose name
-starts with `<id>-` and ends with `.zip`, parses `platform` from the last two `-`
-tokens, takes the version from `tag_name` (minus `v`), and records
-`url`/`size`/`sha256` (from the asset `digest`). It then publishes `catalog.json`,
-`README.md` and `icons/` to `gh-pages`. An app with no published release is kept but
-marked unavailable.
+`publish-catalog` runs on a 10-minute schedule, on `workflow_dispatch`, on
+`repository_dispatch: [bundle-updated]`, and on push to `main` touching `catalog/apps.yml`,
+`catalog/render_readme.py`, or `icons/**`. For each entry it reads
+`gh api repos/<repo>/releases/latest`, keeps assets named `<id>-*.zip`, parses the platform
+from the last two `-` tokens, and records `url`/`size`/`sha256`. It publishes `catalog.json`,
+`README.md` and `icons/` to `gh-pages`.
 
 Icon URL pattern: `https://<owner>.github.io/ShinyApps/icons/<id>.png`.
 
-## Runtime / entry contract
+## Versioning rule
 
-- Pin packages to **R 4.6.1** (the shell runtime).
-- Entry returns a `shinyApp` object; **never** call `runApp()`.
-- The shell sets the app directory as the working directory, so relative paths resolve.
-- The store shell is `shinyelectron` (multi-app-store branch); app bundles never rebuild it.
+The client compares each app's **catalog version** to the installed version. **Any change
+must ship under a new tag** (`vX.Y.Z`) or installed users get no `Update`. Re-pushing the
+same tag changes `sha256` but not the version, so no `Update` appears.
+
+## Verify
+
+After `publish-catalog`, read back
+`https://<owner>.github.io/ShinyApps/catalog.json` and confirm the app's `version`, both
+platform artifacts, and their `sha256`.

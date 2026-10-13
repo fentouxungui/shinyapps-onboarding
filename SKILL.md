@@ -1,42 +1,47 @@
 ---
 name: shinyapps-onboarding
-description: Onboard a Shiny-app GitHub repository into the ShinyApps desktop app store (fentouxungui/ShinyApps) end to end - feasibility assessment, fork, a per-repo prebuilt bundle workflow, tag-driven GitHub Actions release, catalog entry and icon, and an upstream pull request. Use when the user wants to publish or "上架" a Shiny app repo to the ShinyApps store, add a desktop bundle for a Shiny app, or reuse the "Route A" prebuilt-bundle onboarding.
+description: Onboard a Shiny-app GitHub repository into the ShinyApps desktop app store (fentouxungui/ShinyApps) end to end - feasibility assessment, fork, a per-repo prebuilt bundle workflow, tag-driven GitHub Actions release, catalog entry and icon, and an upstream pull request. Use when the user wants to publish or "上架" a Shiny app repo to the ShinyApps store, add a desktop bundle for a Shiny app, or reuse the hardened "Route A" prebuilt-bundle onboarding.
 ---
 
 # ShinyApps onboarding
 
-Publish any Shiny-app repository to the **ShinyApps** desktop app store using the
+Publish any Shiny-app repository to the **ShinyApps** desktop app store using the hardened
 **"Route A"** route: a per-repo GitHub Actions workflow builds prebuilt desktop bundles
 (Windows `win-x64`, macOS `mac-arm64`, R 4.6.1) and attaches them to a GitHub Release; a
 catalog entry + icon make the app installable without rebuilding the store shell.
 
-Read `references/store-contract.md` before designing or modifying a workflow.
+Read `references/failure-modes.md` first, then `references/app-shapes.md` and
+`references/store-contract.md` before touching a workflow.
 
 ## When to use
 
 - publish / "上架" a Shiny app GitHub repo to the ShinyApps store;
 - add a prebuilt desktop bundle so users need no local R install;
 - reproduce the onboarding done for iSEE, UCSCXenaShiny, spatialLIBD, beeRapp,
-  CSBB-Shiny, SeuratExplorer, scConvertShiny, shinyCircos-V2.0, UpSetR-shiny, GraphBio,
-  splitKbCompare and ShinyStan.
+  CSBB-Shiny, SeuratExplorer, scConvertShiny, shinyCircos-V2.0, UpSetR-shiny, bestDEG,
+  GraphBio, splitKbCompare and ShinyStan.
 
-Do **not** use for: non-Shiny apps, or apps whose entry calls `runApp()` itself or that need
-a server-side engine the bundle cannot ship (give a feasibility caveat).
+Do **not** use for non-Shiny apps, or apps that need a server-side engine the bundle
+cannot ship (give a feasibility caveat).
 
-## Two app shapes
+## App shapes
 
-- **flat** (`app.R`, or `ui.R`+`server.R`): sources copied verbatim, tiny entry generated.
-- **package** (app inside an R package, e.g. `inst/<subdir>/`): the package and its closure
-  are installed into `rlib/`; entry is `ENTRY_B64` or `shinyAppDir(system.file(...))`.
+- **flat** -- `app.R`, or `ui.R`+`server.R` (incl. legacy `shinyUI`/`shinyServer`): copy
+  the sources; the runtime runs the directory. Do not synthesize an entry.
+- **package-fn** -- an R package whose exported function returns a `shinyApp` object:
+  `ENTRY_FN` is that call; install the package.
+- **package-deploy** -- an app directory inside an R package that reads package internals:
+  copy the app files, prepend `library()` lines, supply data via an RData (mirror the
+  package's own `deploy_*()` helper). Do **not** use `library(pkg)` + `pkg:::` + `runApp`.
 
-`assets/build-app-bundle.yml` handles both (`APP_MODE: auto|flat|package`).
+`assets/build-app-bundle.yml` handles all three (`APP_MODE: auto|flat|package-fn|package-deploy`).
 
 ## Procedure
 
-1. **Feasibility (gate).** Confirm the contract (entry returns a `shinyApp` object, never
-   calls `runApp()`), that dependencies resolve on CRAN/Bioconductor (archived via
-   `ARCHIVE_URLS`, extra repos via `EXTRA_REPOS`), that no unshippable runtime engine is
-   required (else record it in `APP_NOTES`), and the license. Proceed only when high.
+1. **Feasibility (gate).** Confirm the app runs from a directory or matches a package
+   recipe; that dependencies resolve on CRAN/Bioconductor (archived via `ARCHIVE_URLS`,
+   extra repos via `EXTRA_REPOS`); that no unshippable runtime engine is required (else
+   record it in `APP_NOTES`); and the license. Proceed only when high.
 2. **Fork** the upstream repo.
 3. **Generate + push** `.github/workflows/<id>-build-app-bundle.yml` from
    `assets/build-app-bundle.yml`, filling the `env:` block.
@@ -47,14 +52,21 @@ a server-side engine the bundle cannot ship (give a feasibility caveat).
 
 Fast path: run `scripts/onboard-shiny-app.ps1` (steps 2-6).
 
-## Key rules
+## Hard rules
 
 - Store `id` must be lowercase `^[a-z0-9][a-z0-9-]*$` and equal the release asset prefix
   `<id>-<version>-<platform>.zip`.
-- The entry must **return a `shiny.appobj`** and never call `runApp()`; the app dir is the
-  working directory, so relative asset paths resolve.
-- Pin to **R 4.6.1**; install closure in two passes (binary, then source fallback).
-- Verify `catalog.json` contains the app with both artifacts + `sha256`.
+- The app must run from a directory; never rely on `pkg:::` + `runApp()` from the bundle.
+- Pin to **R 4.6.1**.
+- **Bump the version on every change** -- same version = no client `Update`.
+- **Verify** `catalog.json` shows the app with both artifacts + `sha256`.
+
+## Reliability
+
+The template builds the dependency graph from the **source** index, uses `pkgType="both"`
+(binary then source), runs a fix-up loop, load-validates seed packages from `rlib/`,
+excludes base packages, and audits macOS binaries for XQuartz/Homebrew links. Details and
+the full failure catalog: `references/failure-modes.md`.
 
 ## Security
 
@@ -64,9 +76,9 @@ requires a `repo`+`workflow` token. Review before running.
 
 ## Files
 
-- `assets/build-app-bundle.yml` - dual-mode workflow template.
+- `assets/build-app-bundle.yml` - hardened multi-mode workflow template.
 - `assets/catalog-entry.yml` - catalog entry template.
 - `scripts/onboard-shiny-app.ps1` - parameterized driver for steps 2-6.
-- `references/store-contract.md` - bundle/manifest/catalog contract.
-- `references/pr-template.md` - upstream-PR structure.
-- `examples/` - real workflows for a flat app and a package app.
+- `references/app-shapes.md`, `references/failure-modes.md`, `references/store-contract.md`,
+  `references/pr-template.md`.
+- `examples/` - real workflows for flat, package-fn and package-deploy apps.
