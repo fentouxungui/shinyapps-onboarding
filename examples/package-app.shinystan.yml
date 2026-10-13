@@ -1,0 +1,167 @@
+# Package-aware ShinyApps bundle builder (Route A) for R-PACKAGE Shiny apps.
+# The app lives inside an installed R package (shinystan's inst/ShinyStan/
+# ui.R+server.R) and reads package internals (shinystan:::.sso_env), so this
+# workflow INSTALLS THE PACKAGE ITSELF into rlib/ and generates an entry that
+# returns shiny::shinyAppDir(system.file("ShinyStan", package="shinystan")).
+name: Build app bundle
+
+on:
+  push:
+    tags: ['v*']
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Existing tag to attach bundles to (e.g. v0.1.0)"
+        required: false
+        type: string
+
+permissions:
+  contents: write
+
+env:
+  APP_ID: "shinystan"
+  APP_NAME: "ShinyStan"
+  APP_AUTHOR: "Jonah Gabry, Duco Veen, Stan Development Team"
+  APP_DESC: "Interactive visual and numerical diagnostics and posterior analysis for Bayesian models (MCMC) - ShinyStan"
+  APP_HOMEPAGE: "https://mc-stan.org/shinystan/"
+  APP_LICENSE: "GPL-3.0-or-later"
+  PKG_DIR: "."
+  APP_FUN: "shinystan"
+  EXTRA_REPOS: "https://stan-dev.r-universe.dev"
+  SOFT_PKGS: "rstan"
+  APP_NOTES: "ShinyStan is an R package; the bundle installs the package itself into rlib/ and launches its bundled Shiny app via shinyAppDir(). A built-in demo dataset (eight_schools) is loaded at startup so the app opens with content; users can load their own MCMC output through the app. rstan is installed when a build is available (from stan-dev.r-universe.dev) for Stan-specific features; the core diagnostics for any MCMC output do not require it."
+  ENTRY_B64: "b3B0aW9ucyhzaGlueS5sYXVuY2guYnJvd3NlciA9IEZBTFNFLCBzaGlueS5tYXhSZXF1ZXN0U2l6ZSA9IDEwMjQgKiAxMDI0XjIpCmxpYnJhcnkoc2hpbnlzdGFuKQplIDwtIG5ldy5lbnYoKQp1dGlsczo6ZGF0YSgiZWlnaHRfc2Nob29scyIsIHBhY2thZ2UgPSAic2hpbnlzdGFuIiwgZW52aXIgPSBlKQpzaGlueXN0YW46Ojouc3NvX2VudiQuU0hJTllTVEFOX09CSkVDVCA8LSBlJGVpZ2h0X3NjaG9vbHMKc2hpbnk6OnNoaW55QXBwRGlyKHN5c3RlbS5maWxlKCJTaGlueVN0YW4iLCBwYWNrYWdlID0gInNoaW55c3RhbiIpKQo="
+  MAX_REQUEST_MB: "1024"
+  R_VERSION: "4.6.1"
+
+jobs:
+  bundle:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: windows-latest, platform: "win-x64" }
+          - { os: macos-14,       platform: "mac-arm64" }
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: ${{ env.R_VERSION }}
+          use-public-rspm: true
+
+      - name: Install build helpers
+        shell: bash
+        run: Rscript -e 'install.packages(c("jsonlite","zip","digest","BiocManager"), repos="https://cloud.r-project.org")'
+
+      - name: Resolve store version
+        shell: bash
+        run: |
+          V="${{ github.event.release.tag_name }}${{ github.ref_name }}${{ inputs.tag }}"
+          V="${V#v}"
+          if [ -z "$V" ]; then V="0.1.0"; fi
+          echo "VERSION=$V" >> "$GITHUB_ENV"
+
+      - name: Assemble bundle (install package + closure into rlib/)
+        shell: Rscript {0}
+        env:
+          GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          app_id   <- Sys.getenv("APP_ID")
+          pkg_name <- Sys.getenv("APP_FUN")
+          pkg_src  <- normalizePath(file.path(getwd(), Sys.getenv("PKG_DIR")), winslash = "/", mustWork = TRUE)
+          bundle   <- file.path(getwd(), "bundle"); unlink(bundle, recursive = TRUE); dir.create(bundle, recursive = TRUE)
+          appdir   <- file.path(bundle, "app"); dir.create(appdir, recursive = TRUE)
+          lib      <- file.path(bundle, "rlib"); dir.create(lib, recursive = TRUE)
+
+          extra <- strsplit(trimws(Sys.getenv("EXTRA_REPOS")), "[ ,]+")[[1]]; extra <- extra[nzchar(extra)]
+          repos <- unique(c(extra, BiocManager::repositories())); options(repos = repos)
+
+          d <- read.dcf(file.path(pkg_src, "DESCRIPTION"))
+          flds <- intersect(c("Depends", "Imports", "LinkingTo"), colnames(d))
+          raw <- na.omit(unlist(d[1, flds]))
+          deps <- trimws(sub("[[:space:]]*\\(.*\\)$", "", trimws(unlist(strsplit(paste(raw, collapse = ","), ",")))))
+          deps <- deps[nzchar(deps) & deps != "R"]
+          base_pkgs <- rownames(installed.packages(priority = "base"))
+          soft <- strsplit(trimws(Sys.getenv("SOFT_PKGS")), "[ ,]+")[[1]]; soft <- soft[nzchar(soft)]
+
+          db <- available.packages(repos = repos)
+          closure <- unique(c(deps, unlist(tools::package_dependencies(deps, db = db, recursive = TRUE))))
+          closure <- setdiff(closure, c(base_pkgs, pkg_name))
+          unk <- setdiff(closure, rownames(db)); if (length(unk)) cat("WARN not in repos:", paste(unk, collapse = ", "), "\n")
+          closure <- intersect(closure, rownames(db))
+          li <- function(p, type) if (length(p)) install.packages(p, lib = lib, repos = repos, type = type, dependencies = FALSE, Ncpus = 2)
+          have <- function() basename(list.dirs(lib, recursive = FALSE))
+
+          li(closure, "binary")
+          nb <- setdiff(closure, have()); if (length(nb)) { cat("source fallback:", length(nb), "\n"); li(nb, "source") }
+
+          install.packages(pkg_src, lib = lib, repos = NULL, type = "source", dependencies = FALSE)
+          if (!pkg_name %in% have()) stop("app package failed to install: ", pkg_name)
+
+          required <- setdiff(deps, c(soft, base_pkgs))
+          missing <- setdiff(required, have())
+          if (length(missing)) stop("missing required dependencies: ", paste(missing, collapse = ", "))
+          soft_missing <- setdiff(intersect(soft, deps), c(have(), base_pkgs))
+          cat("required ok | soft missing:", paste(soft_missing, collapse = ","), "\n")
+
+          writeLines(rawToChar(jsonlite::base64_dec(Sys.getenv("ENTRY_B64"))), file.path(appdir, "app.R"))
+
+          pkgs <- as.data.frame(installed.packages(lib.loc = lib), stringsAsFactors = FALSE)
+          notes <- Sys.getenv("APP_NOTES")
+          if (length(soft_missing)) notes <- paste0(notes, " Not bundled (no build available): ", paste(soft_missing, collapse = ", "), ".")
+          man <- list(
+            schema = 1L, id = app_id, name = Sys.getenv("APP_NAME"), version = Sys.getenv("VERSION"),
+            author = Sys.getenv("APP_AUTHOR"), description = Sys.getenv("APP_DESC"),
+            homepage = Sys.getenv("APP_HOMEPAGE"), license = Sys.getenv("APP_LICENSE"),
+            runtime = "r-shiny", entry = "app/app.R", platform = "${{ matrix.platform }}",
+            r_version = Sys.getenv("R_VERSION"), min_shell_version = "0.1.0", notes = notes,
+            packages = lapply(seq_len(nrow(pkgs)), function(i) list(
+              name = pkgs$Package[i], version = pkgs$Version[i],
+              path = file.path("rlib", pkgs$Package[i]), source = "cran")))
+          jsonlite::write_json(man, file.path(bundle, "manifest.json"), pretty = TRUE, auto_unbox = TRUE)
+          cat("rlib packages:", length(have()), "\n")
+
+      - name: Zip + sha256
+        shell: Rscript {0}
+        run: |
+          out <- sprintf("%s-%s-%s.zip", Sys.getenv("APP_ID"), Sys.getenv("VERSION"), "${{ matrix.platform }}")
+          bundle <- file.path(getwd(), "bundle"); old <- setwd(bundle); on.exit(setwd(old))
+          zip::zipr(out, files = list.files(".", all.files = TRUE, no.. = TRUE))
+          entries <- utils::unzip(out, list = TRUE)$Name
+          if (!any(grepl("^rlib/", entries))) stop("zip is missing rlib/ -- aborting")
+          if (!any(grepl("^app/app[.]R$", entries))) stop("zip is missing app/app.R -- aborting")
+          setwd(old); file.rename(file.path(bundle, out), out)
+          sha <- digest::digest(out, algo = "sha256", file = TRUE); sz <- file.size(out)
+          cat("bundle zip size (bytes):", sz, "\n")
+          if (sz > 2 * 1024^3) warning("bundle exceeds the 2 GiB GitHub Release asset limit.")
+          writeLines(sprintf('{"platform":"%s","file":"%s","sha256":"%s","size":%d}', "${{ matrix.platform }}", out, sha, sz),
+                     sprintf("meta-%s.json", "${{ matrix.platform }}"))
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: bundle-${{ matrix.platform }}
+          path: |
+            *.zip
+            meta-*.json
+
+  release:
+    needs: bundle
+    if: github.event_name == 'release' || startsWith(github.ref, 'refs/tags/v') || inputs.tag != ''
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ inputs.tag || github.ref_name }}
+          name: ${{ inputs.tag || github.ref_name }}
+          files: artifacts/*.zip

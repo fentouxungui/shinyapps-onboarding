@@ -1,0 +1,16 @@
+# Append this block under `apps:` in ShinyApps/catalog/apps.yml
+# (two-space indent before the dash), add the icon at ShinyApps/icons/<id>.png,
+# then let publish-catalog run. The id MUST equal the release asset prefix
+# (<id>-<version>-<platform>.zip).
+  - id: __APP_ID__
+    repo: __SHINYAPPS_OWNER__/__REPO_NAME__
+    name: __APP_NAME__
+    author: "__APP_AUTHOR__"
+    description: "__APP_DESC__"
+    homepage: "__APP_HOMEPAGE__"
+    docs: "__DOCS__"
+    copyright: "__COPYRIGHT__"
+    license: "__LICENSE__"
+    icon: "https://__SHINYAPPS_OWNER__.github.io/ShinyApps/icons/__APP_ID__.png"
+    r_version: "__R_VERSION__"
+    tags: [__TAGS__]

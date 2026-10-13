@@ -1,0 +1,232 @@
+# =====================================================================
+#  ShinyApps app-layer bundle builder (Route A) -- dual-mode.
+#  Builds prebuilt desktop bundles (Windows win-x64, macOS mac-arm64) for
+#  an R/Shiny app and attaches them to a GitHub Release. No shell rebuild.
+#
+#  Two modes (auto-detected when APP_MODE=auto):
+#    * flat    : the repo IS the app (app.R, or ui.R+server.R). Sources are
+#                copied verbatim; a tiny entry app/app.R is generated.
+#    * package : the app lives inside an R package (e.g. inst/<subdir>/).
+#                The package AND its dependency closure are installed into
+#                rlib/, and app/app.R is either ENTRY_B64 (custom) or a
+#                shiny::shinyAppDir(system.file("<APP_SUBDIR>", package="<pkg>")).
+#
+#  Fill the `env:` block, drop into .github/workflows/, push a v* tag.
+# =====================================================================
+name: Build app bundle
+
+on:
+  push:
+    tags: ['v*']
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Existing tag to attach bundles to (e.g. v0.1.0)"
+        required: false
+        type: string
+
+permissions:
+  contents: write
+
+env:
+  APP_ID: "__APP_ID__"
+  APP_NAME: "__APP_NAME__"
+  APP_AUTHOR: "__APP_AUTHOR__"
+  APP_DESC: "__APP_DESC__"
+  APP_HOMEPAGE: "__APP_HOMEPAGE__"
+  APP_LICENSE: "__APP_LICENSE__"
+  APP_MODE: "auto"
+  APP_SUBDIR: "__APP_SUBDIR__"
+  PKG_SUBDIR: "__PKG_SUBDIR__"
+  EXTRA_PKGS: "__EXTRA_PKGS__"
+  EXCLUDE: "__EXCLUDE__"
+  ARCHIVE_URLS: "__ARCHIVE_URLS__"
+  EXTRA_REPOS: "__EXTRA_REPOS__"
+  SOFT_PKGS: "__SOFT_PKGS__"
+  ENTRY_B64: "__ENTRY_B64__"
+  APP_NOTES: "__APP_NOTES__"
+  MAX_REQUEST_MB: "1024"
+  R_VERSION: "__R_VERSION__"
+
+jobs:
+  bundle:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: windows-latest, platform: "win-x64" }
+          - { os: macos-14,       platform: "mac-arm64" }
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: ${{ env.R_VERSION }}
+          use-public-rspm: true
+
+      - name: Install build helpers
+        shell: bash
+        run: Rscript -e 'install.packages(c("jsonlite","zip","digest","BiocManager"), repos="https://cloud.r-project.org")'
+
+      - name: Resolve store version
+        shell: bash
+        run: |
+          V="${{ github.event.release.tag_name }}${{ github.ref_name }}${{ inputs.tag }}"
+          V="${V#v}"
+          if [ -z "$V" ]; then V="0.1.0"; fi
+          echo "VERSION=$V" >> "$GITHUB_ENV"
+
+      - name: Assemble bundle (app/ + rlib/ + manifest.json)
+        shell: Rscript {0}
+        env:
+          GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          app_id  <- Sys.getenv("APP_ID")
+          mode    <- Sys.getenv("APP_MODE"); if (!nzchar(mode)) mode <- "auto"
+          sub_    <- Sys.getenv("APP_SUBDIR"); if (!nzchar(sub_)) sub_ <- "."
+          pkg_sub <- Sys.getenv("PKG_SUBDIR"); if (!nzchar(pkg_sub)) pkg_sub <- "."
+          src     <- normalizePath(file.path(getwd(), sub_), winslash = "/", mustWork = TRUE)
+          pkgroot <- normalizePath(file.path(getwd(), pkg_sub), winslash = "/", mustWork = TRUE)
+          bundle  <- file.path(getwd(), "bundle"); unlink(bundle, recursive = TRUE); dir.create(bundle, recursive = TRUE)
+          appdir  <- file.path(bundle, "app"); dir.create(appdir, recursive = TRUE)
+          lib     <- file.path(bundle, "rlib"); dir.create(lib, recursive = TRUE)
+
+          base_pkgs <- rownames(installed.packages(priority = "base"))
+          er <- strsplit(trimws(Sys.getenv("EXTRA_REPOS")), "[ ,]+")[[1]]; er <- er[nzchar(er)]
+          repos <- unique(c(er, BiocManager::repositories())); options(repos = repos)
+          db <- available.packages(repos = repos)
+          li <- function(p, type) if (length(p)) install.packages(p, lib = lib, repos = repos, type = type, dependencies = FALSE, Ncpus = 2)
+          have <- function() basename(list.dirs(lib, recursive = FALSE))
+          soft <- strsplit(trimws(Sys.getenv("SOFT_PKGS")), "[ ,]+")[[1]]; soft <- soft[nzchar(soft)]
+          write_entry <- function(txt) writeLines(txt, file.path(appdir, "app.R"))
+          opt <- function() sprintf("options(shiny.launch.browser = FALSE, shiny.maxRequestSize = %s * 1024^2)", Sys.getenv("MAX_REQUEST_MB"))
+
+          is_pkg <- (mode == "package") || (mode == "auto" && file.exists(file.path(pkgroot, "DESCRIPTION")))
+
+          if (!is_pkg) {
+            # ---------------- flat app mode ----------------
+            for (p in list.files(src, all.files = TRUE, no.. = TRUE, full.names = TRUE)) {
+              if (basename(p) %in% c(".git", ".github")) next
+              file.copy(p, appdir, recursive = TRUE)
+            }
+            ex <- strsplit(trimws(Sys.getenv("EXCLUDE")), "[ ,]+")[[1]]; ex <- ex[nzchar(ex)]
+            for (e in ex) { t <- file.path(appdir, e); if (file.exists(t)) unlink(t, recursive = TRUE) }
+            if (file.exists(file.path(src, "app.R"))) {
+              file.copy(file.path(src, "app.R"), file.path(appdir, paste0(app_id, "-app.R")), overwrite = TRUE)
+              write_entry(c(sprintf("# Auto-generated ShinyApps entry for %s.", app_id), opt(),
+                sprintf("app <- source(\"%s-app.R\")$value", app_id),
+                "if (!inherits(app, \"shiny.appobj\")) stop(\"upstream app.R did not return a shiny app object\")", "app"))
+            } else if (file.exists(file.path(src, "ui.R")) && file.exists(file.path(src, "server.R"))) {
+              write_entry(c(sprintf("# Auto-generated ShinyApps entry for %s (classic ui.R/server.R app).", app_id), opt(),
+                "if (file.exists(\"global.R\")) source(\"global.R\")", "source(\"ui.R\"); source(\"server.R\")", "shiny::shinyApp(ui, server)"))
+            } else stop("flat mode: no app.R and no ui.R/server.R found")
+
+            sf <- list.files(appdir, pattern = "[.](R|r|Rmd|rmd)$", recursive = TRUE, full.names = TRUE)
+            txt <- paste(unlist(lapply(sf, function(f) tryCatch(readLines(f, warn = FALSE), error = function(e) character()))), collapse = "\n")
+            grab <- function(pat) { x <- regmatches(txt, gregexpr(pat, txt))[[1]]; if (length(x)) gsub("[()\"']", "", sub(".*?(library|require)", "", x)) else character() }
+            pk <- unique(c(grab("library\\([A-Za-z0-9._\"']+"), grab("require\\([A-Za-z0-9._\"']+"),
+                           sub("::.*$", "", regmatches(txt, gregexpr("([A-Za-z][A-Za-z0-9._]+)::", txt))[[1]])))
+            extra <- strsplit(trimws(Sys.getenv("EXTRA_PKGS")), "[ ,]+")[[1]]; extra <- extra[nzchar(extra)]
+            seed <- setdiff(unique(c(pk, extra, "shiny")), c(base_pkgs, "base", "methods", "utils", "stats", "graphics", "grDevices", "tools", "parallel"))
+            seed <- seed[grepl("^[A-Za-z][A-Za-z0-9._]+$", seed)]
+            arch <- strsplit(trimws(Sys.getenv("ARCHIVE_URLS")), "[ ,]+")[[1]]; arch <- arch[nzchar(arch)]
+            arch_names <- sub("_.*$", "", sub("[.]tar[.]gz$", "", basename(arch)))
+            arch_deps <- character()
+            for (u in arch) {
+              f <- tempfile(fileext = ".tar.gz"); download.file(u, f, mode = "wb", quiet = TRUE)
+              gt <- tempfile(); dir.create(gt); utils::untar(f, exdir = gt)
+              dp <- list.files(gt, pattern = "^DESCRIPTION$", recursive = TRUE, full.names = TRUE)[1]; dd <- read.dcf(dp)
+              v <- na.omit(unlist(dd[1, intersect(c("Depends", "Imports"), colnames(dd))]))
+              v <- trimws(sub("[[:space:]]*\\(.*\\)$", "", trimws(unlist(strsplit(paste(v, collapse = ","), ",")))))
+              arch_deps <- c(arch_deps, setdiff(v[nzchar(v) & v != "R"], "ggplot2"))
+            }
+            root <- setdiff(c(seed, arch_deps), arch_names)
+            closure <- unique(c(root, arch_names, unlist(tools::package_dependencies(root, db = db, recursive = TRUE))))
+            closure <- setdiff(closure, base_pkgs); closure <- intersect(closure, rownames(db))
+            cat("seed:", paste(sort(seed), collapse = ", "), "\n")
+            li(closure, "binary"); nb <- setdiff(closure, have()); if (length(nb)) { cat("source fallback:", length(nb), "\n"); li(nb, "source") }
+            for (u in arch) install.packages(u, lib = lib, repos = NULL, type = "source", dependencies = FALSE)
+            required <- setdiff(seed, c(soft, base_pkgs)); missing <- setdiff(required, have())
+            if (length(missing)) stop("missing required dependencies: ", paste(missing, collapse = ", "))
+            soft_missing <- setdiff(intersect(soft, seed), c(have(), base_pkgs))
+            pkg_name <- app_id
+          } else {
+            # ---------------- R package app mode ----------------
+            dcf <- read.dcf(file.path(pkgroot, "DESCRIPTION"))
+            pkg_name <- unname(dcf[1, "Package"])
+            flds <- intersect(c("Depends", "Imports", "LinkingTo"), colnames(dcf)); raw <- na.omit(unlist(dcf[1, flds]))
+            deps <- trimws(sub("[[:space:]]*\\(.*\\)$", "", trimws(unlist(strsplit(paste(raw, collapse = ","), ",")))))
+            deps <- deps[nzchar(deps) & deps != "R"]
+            cat("package:", pkg_name, "| deps:", length(deps), "\n")
+            closure <- unique(c(deps, unlist(tools::package_dependencies(deps, db = db, recursive = TRUE))))
+            closure <- setdiff(closure, c(base_pkgs, pkg_name)); closure <- intersect(closure, rownames(db))
+            li(closure, "binary"); nb <- setdiff(closure, have()); if (length(nb)) { cat("source fallback:", length(nb), "\n"); li(nb, "source") }
+            install.packages(pkgroot, lib = lib, repos = NULL, type = "source", dependencies = FALSE)
+            if (!pkg_name %in% have()) stop("app package failed to install: ", pkg_name)
+            required <- setdiff(deps, c(soft, base_pkgs)); missing <- setdiff(required, have())
+            if (length(missing)) stop("missing required dependencies: ", paste(missing, collapse = ", "))
+            soft_missing <- setdiff(intersect(soft, deps), c(have(), base_pkgs))
+            ent <- Sys.getenv("ENTRY_B64")
+            if (nzchar(ent)) write_entry(rawToChar(jsonlite::base64_dec(ent))) else
+              write_entry(c(opt(), sprintf("library(%s)", pkg_name),
+                sprintf("shiny::shinyAppDir(system.file(\"%s\", package = \"%s\"))", sub_, pkg_name)))
+          }
+
+          pkgs <- as.data.frame(installed.packages(lib.loc = lib), stringsAsFactors = FALSE)
+          notes <- Sys.getenv("APP_NOTES")
+          if (length(soft_missing)) notes <- paste0(notes, " Not bundled: ", paste(soft_missing, collapse = ", "), ".")
+          man <- list(
+            schema = 1L, id = app_id, name = Sys.getenv("APP_NAME"), version = Sys.getenv("VERSION"),
+            author = Sys.getenv("APP_AUTHOR"), description = Sys.getenv("APP_DESC"),
+            homepage = Sys.getenv("APP_HOMEPAGE"), license = Sys.getenv("APP_LICENSE"),
+            runtime = "r-shiny", entry = "app/app.R", platform = "${{ matrix.platform }}",
+            r_version = Sys.getenv("R_VERSION"), min_shell_version = "0.1.0", notes = notes,
+            packages = lapply(seq_len(nrow(pkgs)), function(i) list(
+              name = pkgs$Package[i], version = pkgs$Version[i],
+              path = file.path("rlib", pkgs$Package[i]), source = "cran")))
+          jsonlite::write_json(man, file.path(bundle, "manifest.json"), pretty = TRUE, auto_unbox = TRUE)
+          cat("mode:", if (is_pkg) "package" else "flat", "| rlib packages:", length(have()), "| soft missing:", paste(soft_missing, collapse = ","), "\n")
+
+      - name: Zip + sha256
+        shell: Rscript {0}
+        run: |
+          out <- sprintf("%s-%s-%s.zip", Sys.getenv("APP_ID"), Sys.getenv("VERSION"), "${{ matrix.platform }}")
+          bundle <- file.path(getwd(), "bundle"); old <- setwd(bundle); on.exit(setwd(old))
+          zip::zipr(out, files = list.files(".", all.files = TRUE, no.. = TRUE))
+          entries <- utils::unzip(out, list = TRUE)$Name
+          if (!any(grepl("^rlib/", entries))) stop("zip is missing rlib/ -- aborting")
+          if (!any(grepl("^app/app[.]R$", entries))) stop("zip is missing app/app.R -- aborting")
+          setwd(old); file.rename(file.path(bundle, out), out)
+          sha <- digest::digest(out, algo = "sha256", file = TRUE); sz <- file.size(out)
+          cat("bundle zip size (bytes):", sz, "\n")
+          if (sz > 2 * 1024^3) warning("bundle exceeds the 2 GiB GitHub Release asset limit.")
+          writeLines(sprintf('{"platform":"%s","file":"%s","sha256":"%s","size":%d}', "${{ matrix.platform }}", out, sha, sz),
+                     sprintf("meta-%s.json", "${{ matrix.platform }}"))
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: bundle-${{ matrix.platform }}
+          path: |
+            *.zip
+            meta-*.json
+
+  release:
+    needs: bundle
+    if: github.event_name == 'release' || startsWith(github.ref, 'refs/tags/v') || inputs.tag != ''
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ inputs.tag || github.ref_name }}
+          name: ${{ inputs.tag || github.ref_name }}
+          files: artifacts/*.zip
