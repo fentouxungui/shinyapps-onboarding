@@ -113,6 +113,7 @@ jobs:
           bundle  <- file.path(root, "bundle"); unlink(bundle, recursive = TRUE); dir.create(bundle, recursive = TRUE)
           appdir  <- file.path(bundle, "app"); dir.create(appdir, recursive = TRUE)
           lib     <- file.path(bundle, "rlib"); dir.create(lib, recursive = TRUE)
+          .libPaths(c(lib, .libPaths()))
           base_pkgs <- rownames(installed.packages(priority = "base"))
           split_pkgs <- function(x) { p <- strsplit(trimws(x), "[ ,]+")[[1]]; p[nzchar(p)] }
           dcf_deps <- function(dcf, fields = c("Depends","Imports","LinkingTo")) {
@@ -181,7 +182,7 @@ jobs:
           options(pkgType = "both")
           soft <- split_pkgs(Sys.getenv("SOFT_PKGS"))
           have <- function() basename(list.dirs(lib, recursive = FALSE))
-          ins <- function(p, type = NULL, deps = NA) if (length(p)) install.packages(p, lib = lib, repos = repos, type = type, dependencies = deps, Ncpus = 2)
+          ins <- function(p, type = "both", deps = NA) if (length(p)) install.packages(p, lib = lib, repos = repos, type = type, dependencies = deps, Ncpus = 2)
           ins(closure)
           nb <- setdiff(closure, have()); if (length(nb)) { cat("source retry:", length(nb), "\n"); ins(nb, type = "source", deps = FALSE) }
           if (mode == "package-fn") { install.packages(pkgroot, lib = lib, repos = NULL, type = "source", dependencies = FALSE); if (!pkg_name %in% have()) stop("app package failed to install: ", pkg_name) }
@@ -205,7 +206,7 @@ jobs:
 
           required <- setdiff(seed, c(soft, base_pkgs)); miss <- setdiff(required, have())
           if (length(miss)) stop("missing required packages: ", paste(miss, collapse = ", "))
-          for (p in required) { ok <- suppressWarnings(tryCatch(isTRUE(requireNamespace(p, lib.loc = lib, quietly = TRUE)), error = function(e) FALSE)); if (!ok) stop("seed package cannot be loaded from rlib: ", p) }
+          for (p in required) { ok <- tryCatch({ loadNamespace(p, lib.loc = lib); TRUE }, error = function(e) { cat("LOAD FAILED:", p, "->", conditionMessage(e), "\n"); FALSE }); if (!ok) stop("seed package cannot be loaded from rlib: ", p) }
           soft_missing <- setdiff(intersect(soft, seed), c(have(), base_pkgs))
           cat("rlib packages:", length(have()), "| soft missing:", paste(soft_missing, collapse = ","), "\n")
 

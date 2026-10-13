@@ -18,43 +18,49 @@ of them; the rest need a decision you make during feasibility.
    index drops edges on a new R. Build it from the **source** index
    (`available.packages(type="source")`) and add a **fix-up loop**: re-read installed
    `DESCRIPTION`s and install whatever is still missing, until convergence.
-5. **"Builds but won't start."** Validate at build end that every required seed package can
+5. **A dependency is installed but the package still won't load.** `loadNamespace()` resolves a
+   package's own imports via `.libPaths()`, so add the bundle's `rlib/` to it before install and
+   validation (`.libPaths(c(lib, .libPaths()))`); otherwise `requireNamespace(pkg, lib.loc=lib)`
+   can fail even though every dependency is present in `rlib/`. Surface the real error when
+   validation fails (`loadNamespace` in a `tryCatch`) instead of returning a bare `FALSE`.
+6. **"Builds but won't start."** Validate at build end that every required seed package can
    be **loaded from `rlib/`** (`requireNamespace(pkg, lib.loc=lib)`); fail otherwise.
-6. **macOS: bundle won't launch / dylib errors.** Some CRAN macOS binaries hard-link
-   XQuartz / Homebrew (`/opt/X11`, `/opt/homebrew`, `/usr/local/opt`). Rebuild those
-   packages from source (`SOURCE_REBUILD`) and audit `rlib/**/*.so|*.dylib` with
+7. **macOS: bundle won't launch / dylib errors.** Some CRAN macOS binaries hard-link
+   XQuartz / Homebrew (`/opt/X11`, `/opt/homebrew`, `/usr/local/opt`) -- e.g. `gdtools` (pulled by
+   `rvg`/`ggiraph`). Either rebuild those packages from source (`SOURCE_REBUILD`) or, simpler, drop the
+   optional package that pulls them in and audit `rlib/**/*.so|*.dylib` with
    `otool -L`; fail on non-portable references.
-7. **CRAN-archived package** (`geomnet` 2021, `RSVGTipsDevice` 2016, ...). Install it from
+8. **CRAN-archived package** (`geomnet` 2021, `RSVGTipsDevice` 2016, ...). Install it from
    its **CRAN Archive** tarball (`ARCHIVE_URLS`); if it won't compile, ship a minimal
    **stub** for the missing function.
-8. **`R CMD INSTALL` says `dependency 'X' is not available`.** R CMD INSTALL requires
+9. **`R CMD INSTALL` says `dependency 'X' is not available`.** R CMD INSTALL requires
    `Imports` to be present. Install the closure -- **or** don't install the package at all
    when it is not needed at runtime (see package-deploy).
-9. **Huge closure / Release asset > 2 GiB.** Trim optional modules, drop dev-only packages
+10. **Huge closure / Release asset > 2 GiB.** Trim optional modules, drop dev-only packages
    (`devtools`, `usethis`, runtime `install_*.R` bootstraps), and `EXCLUDE` large source
    assets (`.ai`/SVG/raw/ screenshots). The workflow size-guards the asset.
 
 ## Runtime (after install)
 
-10. **`object 'PKG' not found` / the entry function calls `runApp()` and the app reads
+11. **`object 'PKG' not found` / the entry function calls `runApp()` and the app reads
     package internals.** Do **not** use `library(pkg)` + `pkg:::` + `shinyAppDir` from the
     bundle. Use the flat-directory copy, or the package-deploy recipe. See
     `references/app-shapes.md`.
-11. **App errors at startup from old Shiny idioms.** e.g. `attr(input,"readonly") <- FALSE`,
+12. **App errors at startup from old Shiny idioms.** e.g. `attr(input,"readonly") <- FALSE`,
     `max(NULL)` when inputs are unset, `input$x[1] <- ...`. Modern Shiny changed
     `reactivevalues`. Reproduce with the **same** `shiny` + app versions, then fix the app
     code (guard with `req()`, use `reactiveVal()`), or disclose.
-12. **A fix shipped under the SAME version tag is never installed.** The client compares the
+13. **A fix shipped under the SAME version tag is never installed.** The client compares the
     catalog version to the installed one. **Always bump the version** (`vX.Y.Z`) for any
     change; re-pushing the same tag produces no `Update`. Delete/reinstall locally to test.
-13. **Runtime engine/service needed** (Enrichr/KEGG network, a remote service, LaTeX for a
+14. **Runtime engine/service needed** (Enrichr/KEGG network, a remote service, LaTeX for a
     dynamic PDF, Windows HDF5 via `hdf5r`). Disclose it in `APP_NOTES` and the PR; it may
     work partially or only with network.
 
 ## Ops
 
-14. **The app never appears in the store.** `publish-catalog` discovers assets by the
+15. **The app never appears in the store.** `publish-catalog` discovers assets by the
     **`<id>-<version>-<platform>.zip`** filename from the repo's **latest Release**. A
     wrong `id`, wrong filename, or no published Release = no catalog entry.
-15. **Verify, always.** Read back `https://<owner>.github.io/ShinyApps/catalog.json` and
+16. **Verify, always.** Read back `https://<owner>.github.io/ShinyApps/catalog.json` and
     confirm the app's `version`, both platform artifacts, and their `sha256`.
