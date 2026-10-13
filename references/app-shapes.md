@@ -83,3 +83,11 @@ Do **not** try to bundle these as-is -- they have no single runnable app:
 
 For these, the feasibility step must say so and propose bundling a concrete demo/tutorial app
 instead of the framework itself.
+
+### A package whose app directory does `library(<pkg>)`
+
+Sometimes a package ships its app as a **directory inside `inst/`** and the app's `global.R` does
+`library(<pkg>)` (e.g. PhyloProfile's `inst/PhyloProfile/global.R`). Treat it as a **flat** app --
+`APP_MODE=flat`, `APP_SUBDIR=inst/<subdir>` -- and add `<pkg>` to `EXTRA_PKGS` so the package is
+installed for that call. (Do **not** use package-deploy here: package-deploy installs only the
+closure, not the app package.)

@@ -175,6 +175,8 @@ jobs:
           er <- split_pkgs(Sys.getenv("EXTRA_REPOS"))
           repos <- unique(c(er, BiocManager::repositories())); options(repos = repos)
           db <- available.packages(repos = repos, type = "source")
+          dropped <- setdiff(seed, rownames(db)); if (length(dropped)) cat("WARN dropped (not in CRAN/Bioc):", paste(dropped, collapse = ", "), "\n")
+          seed <- intersect(seed, rownames(db))
           closure <- unique(c(seed, unlist(tools::package_dependencies(seed, db = db, recursive = TRUE))))
           closure <- setdiff(closure, base_pkgs); closure <- intersect(closure, rownames(db))
           cat("closure size:", length(closure), "\n")

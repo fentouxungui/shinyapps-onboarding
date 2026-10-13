@@ -69,6 +69,24 @@ of them; the rest need a decision you make during feasibility.
    have **no single runnable app**. Bundle a concrete demo/tutorial app around them instead of
    the framework itself -- see `references/app-shapes.md`.
 
+**Seed extraction picks up regex false positives.** The `pkg::` scan can capture non-package
+   tokens (e.g. `digit`, `input`, `BiocInstaller`). Drop seed names that are not in
+   `available.packages()` (the template does this, with a `WARN dropped` line) instead of failing.
+   Real archived packages are dropped too and must be installed via `ARCHIVE_URLS`.
+
+**An archived dependency (e.g. `pca3d`).** Install it from its CRAN-Archive tarball
+   (`ARCHIVE_URLS`). Its install-time dependencies must already be present: add them to
+   `EXTRA_PKGS` (e.g. `rgl`, `ellipse` for `pca3d`). The fix-up loop then closes the rest.
+
+**A graphics library whose macOS binary cannot be made portable.** `gdtools` can be rebuilt from
+   source (it bundles static cairo via `autobrew`), but **`Cairo` cannot** -- its source build
+   needs cairo headers, and hiding Homebrew breaks its configure. Apps that hard-require `Cairo`
+   (e.g. VEGDESK) cannot currently be shipped portably on macOS; defer them or accept an XQuartz
+   dependency on the user's Mac.
+
+**Default branch varies.** Push the workflow to the fork's **default branch** and open the PR
+   against the same branch -- repos use `master`, `main`, and sometimes `devel` (e.g. PhyloProfile).
+
 ## Ops
 
 15. **Fork names preserve the original case** (e.g. `fentouxungui/PlotsOfData`, not
