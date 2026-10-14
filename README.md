@@ -77,6 +77,13 @@ Proceed only if all hold:
   -IconPath .\icon.png -Tag v0.1.0 -WatchRelease -OpenPR
 ```
 
+## Built-in smoke test
+
+The workflow includes a **`Smoke test`** step: after building, it unzips the bundle, puts
+`rlib/` on `.libPaths()`, and loads the app the way the ShinyApps shell does -- in a bounded child
+process (`callr::r` with a timeout) that cannot hang and prints the exact R error on failure. A failed
+start blocks the release. Toggle with `SMOKE: "on"|"off"` and `SMOKE_TIMEOUT_SEC` (default 300).
+
 ## Reliability playbook (why this template is hardened)
 
 The workflow builds the dependency graph from the **source** index, installs

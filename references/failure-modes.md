@@ -87,6 +87,22 @@ of them; the rest need a decision you make during feasibility.
 **Default branch varies.** Push the workflow to the fork's **default branch** and open the PR
    against the same branch -- repos use `master`, `main`, and sometimes `devel` (e.g. PhyloProfile).
 
+**Old `shinyjs::extendShinyjs(script = ...)` breaks on modern shinyjs.** The modern API requires
+   the `functions=` argument (the JS function names to expose) and the **`V8`** package. Symptom:
+   the app returns HTTP 500 / fails to load with `shinyjs: extendShinyjs: 'functions' argument must
+   be provided`. Fix the app's `ui.R` (`extendShinyjs(script = "www/custom.js", functions =
+   c("fn1", "fn2"))`, names from the JS file) and add `V8` to `EXTRA_PKGS`.
+
+**Indirect dependencies the seed extraction misses.** Some packages are needed at load without a
+   `library()`/`pkg::` of their own -- e.g. `shiny::includeMarkdown()` needs the **`markdown`**
+   package. The build's seed-based load check passes, but the app errors at runtime with
+   `there is no package called 'X'`. Add `X` to `EXTRA_PKGS` (the smoke test points right at it).
+
+**The smoke test is the safety net for exactly these.** The build-time load validation only loads
+   the *seed* packages; the `Smoke test` step actually loads the app (entry + ui/server) the way the
+   shell does, so it catches code-level startup errors and indirect deps -- and prints the real R
+   error. Keep `SMOKE: "on"`.
+
 ## Ops
 
 15. **Fork names preserve the original case** (e.g. `fentouxungui/PlotsOfData`, not

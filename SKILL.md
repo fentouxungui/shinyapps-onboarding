@@ -63,6 +63,10 @@ Fast path: run `scripts/onboard-shiny-app.ps1` (steps 2-6).
 
 ## Reliability
 
+The workflow ships a **`Smoke test`** step that loads the built bundle the way the shell does (bounded,
+prints the real error, blocks the release on failure). See `references/failure-modes.md`. Turn it off
+with `SMOKE: "off"` for apps that need network at startup.
+
 The template builds the dependency graph from the **source** index, uses `pkgType="both"`
 (binary then source), runs a fix-up loop, load-validates seed packages from `rlib/`,
 excludes base packages, and audits macOS binaries for XQuartz/Homebrew links. Details and
