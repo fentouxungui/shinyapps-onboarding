@@ -103,6 +103,18 @@ of them; the rest need a decision you make during feasibility.
    shell does, so it catches code-level startup errors and indirect deps -- and prints the real R
    error. Keep `SMOKE: "on"`.
 
+**The app needs data the repo does not ship.** Some apps read a data file/DB at startup that is
+   not committed -- e.g. MutationExplorer opens `data/scanb.sqlite` (`unable to open database file`),
+   and shiny-genome-stats reads `data/genome_*.tsv` that are *generated* by `scripts/prefetch_genomes.R`
+   (NCBI `datasets` CLI + downloads). The build's app-start smoke test catches this (`... does not exist
+   in current working directory`). Either add a build step that fetches/generates the data into `app/`
+   before zipping, or treat the app as **not self-contained** and defer it.
+
+**A package-fn demo object may no longer exist.** When the entry builds a demo object (e.g.
+   `explor(FactoMineR::PCA(FactoMineR::decathlon[...])))`), a package update can remove it
+   (`'decathlon' is not an exported object from 'namespace:FactoMineR'`). Prefer a stable built-in
+   dataset (`iris`). The smoke test reports the exact `Caused by error` line.
+
 ## Ops
 
 15. **Fork names preserve the original case** (e.g. `fentouxungui/PlotsOfData`, not
