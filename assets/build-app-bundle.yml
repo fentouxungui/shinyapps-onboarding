@@ -68,6 +68,8 @@ env:
   SOURCE_REBUILD: "__SOURCE_REBUILD__"
   APP_NOTES: "__APP_NOTES__"
   MAX_REQUEST_MB: "1024"
+  SMOKE: "on"
+  SMOKE_TIMEOUT_SEC: "240"
   R_VERSION: "__R_VERSION__"
 
 jobs:
@@ -89,7 +91,7 @@ jobs:
 
       - name: Install build helpers
         shell: bash
-        run: Rscript -e 'install.packages(c("jsonlite","zip","digest","BiocManager"), repos="https://cloud.r-project.org")'
+        run: Rscript -e 'install.packages(c("jsonlite","zip","digest","BiocManager","callr","curl"), repos="https://cloud.r-project.org")'
 
       - name: Resolve store version
         shell: bash
@@ -246,6 +248,41 @@ jobs:
           if (sz > 2 * 1024^3) stop("bundle exceeds the 2 GiB GitHub Release asset limit; trim modules or use a smaller closure.")
           writeLines(sprintf('{"platform":"%s","file":"%s","sha256":"%s","size":%d}', "${{ matrix.platform }}", out, sha, sz),
                      sprintf("meta-%s.json", "${{ matrix.platform }}"))
+
+      - name: Smoke test (launch the bundle like the ShinyApps shell)
+        if: ${{ env.SMOKE != 'off' }}
+        shell: Rscript {0}
+        run: |
+          app_id <- Sys.getenv("APP_ID"); ver <- Sys.getenv("VERSION"); plat <- "${{ matrix.platform }}"
+          zip <- sprintf("%s-%s-%s.zip", app_id, ver, plat)
+          if (!file.exists(zip)) stop("smoke: bundle not found: ", zip)
+          tmp <- tempfile("smoke"); dir.create(tmp)
+          utils::unzip(zip, exdir = tmp)
+          appdir <- file.path(tmp, "app"); lib <- file.path(tmp, "rlib")
+          if (!dir.exists(appdir) || !dir.exists(lib)) stop("smoke: unexpected bundle layout")
+          timeout <- suppressWarnings(as.integer(Sys.getenv("SMOKE_TIMEOUT_SEC", "240"))); if (is.na(timeout) || timeout < 30) timeout <- 240
+          port <- 20000L + (as.integer(Sys.time()) %% 20000L)
+          cat("smoke: launching '", app_id, "' on 127.0.0.1:", port, "\n", sep = "")
+          proc <- callr::r_bg(function(appdir, lib, port) {
+            .libPaths(c(lib, .libPaths()))
+            shiny::runApp(appdir, host = "127.0.0.1", port = port, launch.browser = FALSE)
+          }, args = list(appdir = appdir, lib = lib, port = port), supervise = TRUE,
+             stdout = file.path(tmp, "smoke.out"), stderr = file.path(tmp, "smoke.err"))
+          on.exit(if (proc$is_alive()) proc$kill(), add = TRUE)
+          ok <- FALSE; deadline <- Sys.time() + timeout
+          while (Sys.time() < deadline) {
+            Sys.sleep(2)
+            if (!proc$is_alive()) break
+            r <- tryCatch(curl::curl_fetch_memory(sprintf("http://127.0.0.1:%d/", port)), error = function(e) NULL)
+            if (!is.null(r) && r$status_code >= 200 && r$status_code < 400) { ok <- TRUE; break }
+          }
+          cat("smoke: served =", ok, "| alive =", proc$is_alive(), "\n")
+          if (!ok) {
+            cat("\n---- smoke stdout ----\n"); if (file.exists(file.path(tmp, "smoke.out"))) cat(readLines(file.path(tmp, "smoke.out"), warn = FALSE), sep = "\n")
+            cat("\n---- smoke stderr ----\n"); if (file.exists(file.path(tmp, "smoke.err"))) cat(readLines(file.path(tmp, "smoke.err"), warn = FALSE), sep = "\n")
+            stop("smoke test FAILED: the bundle did not serve a healthy HTTP response within ", timeout, "s")
+          }
+          cat("SMOKE OK\n")
 
       - uses: actions/upload-artifact@v4
         with:
