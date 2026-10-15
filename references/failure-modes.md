@@ -39,6 +39,13 @@ of them; the rest need a decision you make during feasibility.
 10. **Huge closure / Release asset > 2 GiB.** Trim optional modules, drop dev-only packages
    (`devtools`, `usethis`, runtime `install_*.R` bootstraps), and `EXCLUDE` large source
    assets (`.ai`/SVG/raw/ screenshots). The workflow size-guards the asset.
+11. **Subtracting the whole `installed.packages()` set drops toolchain packages.** A workflow
+   that does `setdiff(closure, rownames(installed.packages()))` also removes packages that are
+   merely present in the **CI toolchain** (`jsonlite`, `zip`, `digest`, `BiocManager`, `callr`,
+   `curl`) even when the app needs them at runtime → `there is no package called 'X'` after install.
+   Exclude only **base/recommended** (`installed.packages(priority = "base")`), never all of
+   `installed.packages()`. The current `assets/build-app-bundle.yml` already does this; re-onboard
+   any app still built with an older per-app workflow (its bundle is missing those packages).
 
 ## Runtime (after install)
 
