@@ -289,14 +289,11 @@ jobs:
           load_app <- function(appdir, lib) {
             .libPaths(c(lib, .libPaths()))
             old <- setwd(appdir); on.exit(setwd(old), add = TRUE)
-            if (file.exists("app.R")) {
-              obj <- source("app.R")$value
-              if (!inherits(obj, "shiny.appobj")) stop("app.R did not return a shiny app object")
-            } else if (file.exists("ui.R") && file.exists("server.R")) {
-              if (file.exists("global.R")) source("global.R")
-              source("ui.R"); source("server.R")
-              obj <- shiny::shinyApp(ui, server)
-            } else stop("no app.R and no ui.R/server.R")
+            # shinyAppDir reproduces the shell: it handles app.R and legacy
+            # ui.R+server.R (shinyUI/shinyServer) directory apps alike.
+            obj <- tryCatch(shiny::shinyAppDir("."), error = function(e) e)
+            if (inherits(obj, "error")) stop("shinyAppDir failed: ", conditionMessage(obj))
+            if (!inherits(obj, "shiny.appobj")) stop("app did not produce a shiny app object")
             invisible(TRUE)
           }
           res <- tryCatch(callr::r(load_app, args = list(appdir = appdir, lib = lib), timeout = timeout, show = TRUE),
