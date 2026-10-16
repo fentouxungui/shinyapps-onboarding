@@ -41,7 +41,9 @@ cannot ship (give a feasibility caveat).
 1. **Feasibility (gate).** Confirm the app runs from a directory or matches a package
    recipe; that dependencies resolve on CRAN/Bioconductor (archived via `ARCHIVE_URLS`,
    extra repos via `EXTRA_REPOS`); that no unshippable runtime engine is required (else
-   record it in `APP_NOTES`); and the license. Proceed only when high.
+   record it in `APP_NOTES`); that no successful start depends on a first-launch
+   download (plan a build-time prefetch -- see `references/startup-data.md`); and the
+   license. Proceed only when high.
 2. **Fork** the upstream repo.
 3. **Generate + push** `.github/workflows/<id>-build-app-bundle.yml` from
    `assets/build-app-bundle.yml`, filling the `env:` block.
@@ -67,6 +69,14 @@ The workflow ships a **`Smoke test`** step that loads the built bundle the way t
 prints the real error, blocks the release on failure). See `references/failure-modes.md`. Turn it off
 with `SMOKE: "off"` for apps that need network at startup.
 
+**Apps that fetch a database at first launch** (a reference DB, taxonomy, annotation bundle)
+must not do it from the bundle: the user may be offline and R's default `download.file` timeout
+(60 s) aborts a large download mid-stream, so the app errors on start. Generate that data at
+build time and ship it inside `app/`, so the app's own "file exists?" guard is satisfied and it
+never downloads. Point the workflow's `PREFETCH_SCRIPT` at a repo R script; the template runs it
+inside the bundled `app/` with `rlib/` on `.libPaths()` before zipping. For a heavy dump, generate
+once in a separate job and pass it as an artifact. Recipe: `references/startup-data.md`.
+
 The template builds the dependency graph from the **source** index, uses `pkgType="both"`
 (binary then source), runs a fix-up loop, load-validates seed packages from `rlib/`,
 excludes base packages, and audits macOS binaries for XQuartz/Homebrew links. Details and
@@ -84,5 +94,5 @@ requires a `repo`+`workflow` token. Review before running.
 - `assets/catalog-entry.yml` - catalog entry template.
 - `scripts/onboard-shiny-app.ps1` - parameterized driver for steps 2-6.
 - `references/app-shapes.md`, `references/failure-modes.md`, `references/store-contract.md`,
-  `references/pr-template.md`.
+  `references/startup-data.md`, `references/pr-template.md`.
 - `examples/` - real workflows for flat, package-fn and package-deploy apps.

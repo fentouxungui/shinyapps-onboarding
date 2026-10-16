@@ -66,6 +66,7 @@ env:
   EXTRA_REPOS: "__EXTRA_REPOS__"
   SOFT_PKGS: "__SOFT_PKGS__"
   SOURCE_REBUILD: "__SOURCE_REBUILD__"
+  PREFETCH_SCRIPT: "__PREFETCH_SCRIPT__"
   APP_NOTES: "__APP_NOTES__"
   MAX_REQUEST_MB: "1024"
   SMOKE: "on"
@@ -233,6 +234,25 @@ jobs:
             packages = lapply(seq_len(nrow(pkgs)), function(i) list(name = pkgs$Package[i], version = pkgs$Version[i], path = file.path("rlib", pkgs$Package[i]), source = "cran")))
           jsonlite::write_json(man, file.path(bundle, "manifest.json"), pretty = TRUE, auto_unbox = TRUE)
 
+      - name: Prefetch first-launch data (optional)
+        if: ${{ env.PREFETCH_SCRIPT != '' }}
+        timeout-minutes: 45
+        shell: Rscript {0}
+        run: |
+          # Run a repo-provided R script from inside the bundled app directory, with the
+          # bundle's rlib on .libPaths(), so an app that downloads a database at first launch
+          # generates it here and ships it (the app then finds it and never downloads). The
+          # script must write into the current directory (e.g. data/<db>) and be idempotent.
+          root   <- getwd()
+          script <- file.path(root, Sys.getenv("PREFETCH_SCRIPT"))
+          if (!file.exists(script)) stop("PREFETCH_SCRIPT not found: ", script)
+          appdir <- file.path(root, "bundle", "app")
+          .libPaths(c(file.path(root, "bundle", "rlib"), .libPaths()))
+          options(timeout = 3600)
+          old <- setwd(appdir); on.exit(setwd(old), add = TRUE)
+          source(script)
+          cat("prefetch done; files under the app dir:\n")
+          print(list.files(".", recursive = TRUE, pattern = "[.](txt|tsv|rds|rda|sqlite)$"))
       - name: Zip + sha256 + size guard
         shell: Rscript {0}
         run: |

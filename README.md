@@ -24,6 +24,7 @@ splitKbCompare and ShinyStan.
 | `scripts/onboard-shiny-app.ps1`| Parameterized driver for steps 2-6 |
 | `references/app-shapes.md`     | The 5 app shapes and how each is handled |
 | `references/failure-modes.md`  | Real failures and their fixes -- read this first |
+| `references/startup-data.md`   | First-launch data downloads: generate at build time into the bundle |
 | `references/store-contract.md` | Bundle/manifest/catalog contract and `publish-catalog` |
 | `references/pr-template.md`    | Structure for the upstream pull request |
 | `examples/`                    | Real working workflows (flat, package-fn, package-deploy) |
@@ -66,6 +67,7 @@ Proceed only if all hold:
    bundle cannot ship (LaTeX for dynamic PDF, a remote service, a private conda env).
    List every such feature as a **known limitation** in `APP_NOTES`.
 4. **License**: record it (some upstreams declare none - disclose redistribution).
+5. **First-launch data**: if the app downloads a database on start (taxonomy, reference DB), plan a build-time prefetch into the bundle -- see [references/startup-data.md](references/startup-data.md).
 
 ## Steps 2-6 - run the driver (or copy the workflow and do it by hand)
 
@@ -91,6 +93,8 @@ per-package with `pkgType="both"` (binary, falling back to source), runs a **fix
 over installed `DESCRIPTION`s, **load-validates** every required seed package from `rlib/`,
 excludes base packages, and on macOS audits binaries for non-portable
 XQuartz/Homebrew links. Full list: [references/failure-modes.md](references/failure-modes.md).
+
+**First-launch downloads.** An app that downloads a database on start (e.g. PhyloProfile's NCBI taxonomy) fails in the bundle -- offline, and R's 60 s `download.file` timeout aborts a large dump. Pre-generate that data at build time and ship it inside `app/` (the workflow's `PREFETCH_SCRIPT` hook, or a dedicated job for heavy dumps). Recipe: [references/startup-data.md](references/startup-data.md).
 
 **Two rules that prevent the most common "it looks done but isn't":**
 

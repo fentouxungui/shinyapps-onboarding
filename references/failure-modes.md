@@ -64,6 +64,15 @@ of them; the rest need a decision you make during feasibility.
     dynamic PDF, Windows HDF5 via `hdf5r`). Disclose it in `APP_NOTES` and the PR; it may
     work partially or only with network.
 
+**The app downloads a database at first launch and the download times out.** PhyloProfile's
+`server.R` calls `processNcbiTaxonomy()` on first run, which `download.file()`s the full NCBI
+`taxdmp.zip` (~76 MB). On the desktop bundle this hits R's default 60 s timeout and aborts
+mid-stream (`Timeout of 60 seconds was reached`, `downloaded length 6839603 != reported length
+79832129`), so the app errors at startup. The step is guarded by a `file.exists("data/<db>")`
+check, so do **not** patch the app: pre-generate the file at build time and ship it in the
+bundle's `app/` (see `references/startup-data.md`; PhyloProfile generates it once in a dedicated
+ubuntu job and copies it into `app/data/preProcessedTaxonomy.txt` before zipping).
+
 **`golem` apps: `run_app()` returns the app object, but external backends must be disabled.**
    A golem `run_app()` returns `with_golem_options(shinyApp(app_ui, app_server), ...)` without
    calling `runApp()`, so it is a valid package-fn entry. Pass the golem options that turn off
@@ -115,7 +124,7 @@ of them; the rest need a decision you make during feasibility.
    and shiny-genome-stats reads `data/genome_*.tsv` that are *generated* by `scripts/prefetch_genomes.R`
    (NCBI `datasets` CLI + downloads). The build's app-start smoke test catches this (`... does not exist
    in current working directory`). Either add a build step that fetches/generates the data into `app/`
-   before zipping, or treat the app as **not self-contained** and defer it.
+   before zipping, or treat the app as **not self-contained** and defer it. When the data can be generated with network at build time, use the same prefetch recipe (`references/startup-data.md`); this also removes a first-launch download that would otherwise time out on the user's machine.
 
 **A package-fn demo object may no longer exist.** When the entry builds a demo object (e.g.
    `explor(FactoMineR::PCA(FactoMineR::decathlon[...])))`), a package update can remove it

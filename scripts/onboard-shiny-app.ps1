@@ -33,7 +33,7 @@ param(
   [string]$EntryFn = "", [string]$UiLibs = "", [string]$ServerLibs = "",
   [string]$DemoRda = "", [string]$DemoObject = "", [string]$DemoSaveAs = "", [string]$DemoRdata = "",
   [string]$ExtraPkgs = "", [string]$Exclude = "rsconnect,.github", [string]$ArchiveUrls = "",
-  [string]$ExtraRepos = "", [string]$SoftPkgs = "", [string]$SourceRebuild = "", [string]$AppNotes = "",
+  [string]$ExtraRepos = "", [string]$SoftPkgs = "", [string]$SourceRebuild = "", [string]$PrefetchScript = "", [string]$AppNotes = "",
   [string]$Tag = "v0.1.0", [string]$RVersion = "4.6.1",
   [string]$IconPath = "", [string]$WorkDir = ".",
   [switch]$OpenPR, [switch]$WatchRelease
@@ -76,7 +76,7 @@ $map = [ordered]@{
   '__UI_LIBS__'=$UiLibs;'__SERVER_LIBS__'=$ServerLibs
   '__DEMO_RDA__'=$DemoRda;'__DEMO_OBJECT__'=$DemoObject;'__DEMO_SAVE_AS__'=$DemoSaveAs;'__DEMO_RDATA__'=$DemoRdata
   '__EXTRA_PKGS__'=$ExtraPkgs;'__EXCLUDE__'=$Exclude;'__ARCHIVE_URLS__'=$ArchiveUrls
-  '__EXTRA_REPOS__'=$ExtraRepos;'__SOFT_PKGS__'=$SoftPkgs;'__SOURCE_REBUILD__'=$SourceRebuild
+  '__EXTRA_REPOS__'=$ExtraRepos;'__SOFT_PKGS__'=$SoftPkgs;'__SOURCE_REBUILD__'=$SourceRebuild;'__PREFETCH_SCRIPT__'=$PrefetchScript
   '__APP_NOTES__'=$AppNotes;'__R_VERSION__'=$RVersion
 }
 foreach ($k in $map.Keys) { $tpl = $tpl.Replace($k, [string]$map[$k]) }
