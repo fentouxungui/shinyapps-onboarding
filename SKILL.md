@@ -83,6 +83,25 @@ The template builds the dependency graph from the **source** index, uses `pkgTyp
 excludes base packages, and audits macOS binaries for XQuartz/Homebrew links. Details and
 the full failure catalog: `references/failure-modes.md`.
 
+## Field lessons (batch CRAN sweep)
+
+- The template uses `__APP_ID__`, `__APP_SUBDIR__`, `__ENTRY_FN__`, ... placeholders. When generating a
+  workflow by hand, replace **every** placeholder; an unsubstituted `__ENTRY_FN__` fails only at smoke time.
+- `APP_MODE: "auto"` never selects `flat`. If the app lives in `inst/<dir>` (or any subdirectory), set
+  `APP_MODE: "flat"` plus `APP_SUBDIR` explicitly.
+- YAML quoting: an `ENTRY_FN` containing double quotes must use single quotes inside the YAML string,
+  e.g. `ENTRY_FN: "local({ source('app.R') })"`, or the workflow never triggers.
+- `package-fn` works only when the exported function **returns** a `shinyApp` object. A launcher that calls
+  `runApp()` blocks and makes smoke time out after the 300 s budget -- use `SMOKE: "off"` only after the log
+  shows `Listening on http://127.0.0.1:...` (evidence the app really starts), or build a `shinyapps/app.R`
+  adapter that returns the object.
+- `flat` bundles only the app directory. Paths in `ENTRY_FN` are relative to that directory, not the repo root.
+- macOS: an OpenMP symbol error (`___kmpc_barrier`, `kohonen.so`, ...) is fixed by
+  `SOURCE_REBUILD: "<pkg>"`. A package whose load needs XQuartz (`tcltk`, `summarytools`) is **not**
+  shippable on the mac runner; record Windows-only or skip.
+- Poll CI by workflow name **and** the tag on `head_branch`; otherwise a stale failed run matches first.
+- `cran/*` repos are read-only mirrors: onboard the fork but do not open an upstream PR.
+
 ## Security
 
 `scripts/onboard-shiny-app.ps1` reads the GitHub token via `git credential fill` into the
