@@ -131,6 +131,14 @@ ubuntu job and copies it into `app/data/preProcessedTaxonomy.txt` before zipping
    (`'decathlon' is not an exported object from 'namespace:FactoMineR'`). Prefer a stable built-in
    dataset (`iris`). The smoke test reports the exact `Caused by error` line.
 
+**The only entry point starts its own Shiny server.** A package that exposes only `launch...()`
+(`runApp()`/`startApp()` inside) returns a handle, not a `shinyApp` object, so an `app.R` calling
+it either nests a server or leaves the shell with no app object (smoke: "app did not produce a
+shiny app object", or the step hangs). Build the app object and return it -- reproduce the
+launcher's `shinyApp(ui, server)` from the package internals (`pkg:::`), or ask upstream to
+export an app-returning function; bundle demo data if the entry needs one. See
+`references/app-shapes.md` (GateLabR).
+
 ## Ops
 
 15. **Fork names preserve the original case** (e.g. `fentouxungui/PlotsOfData`, not

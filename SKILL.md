@@ -49,7 +49,7 @@ cannot ship (give a feasibility caveat).
    `assets/build-app-bundle.yml`, filling the `env:` block.
 4. **Tag** `vX.Y.Z` and push -> builds both platform bundles and creates the Release.
 5. **Onboard**: append the entry from `assets/catalog-entry.yml` to
-   `ShinyApps/catalog/apps.yml`, add `ShinyApps/icons/<id>.png`, push.
+   `ShinyApps/catalog/apps.yml`, add `ShinyApps/icons/<id>.png` (from the upstream repo's own logo), push.
 6. **Open the upstream PR** (CI-only; see `references/pr-template.md`).
 
 Fast path: run `scripts/onboard-shiny-app.ps1` (steps 2-6).
@@ -61,6 +61,7 @@ Fast path: run `scripts/onboard-shiny-app.ps1` (steps 2-6).
 - The app must run from a directory; never rely on `pkg:::` + `runApp()` from the bundle.
 - Pin to **R 4.6.1**.
 - **Bump the version on every change** -- same version = no client `Update`.
+- **Use the app's own icon.** Copy the upstream repo's logo (e.g. `man/figures/logo.png`, `www/logo*.png`, `inst/app/www/img/*logo*.png`, `docs/logo.png`) and resize it to a 512x512 PNG; synthesize one only when the repo genuinely has none. See `references/store-contract.md`.
 - **Verify** `catalog.json` shows the app with both artifacts + `sha256`.
 
 ## Reliability

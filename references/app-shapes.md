@@ -91,3 +91,32 @@ Sometimes a package ships its app as a **directory inside `inst/`** and the app'
 `APP_MODE=flat`, `APP_SUBDIR=inst/<subdir>` -- and add `<pkg>` to `EXTRA_PKGS` so the package is
 installed for that call. (Do **not** use package-deploy here: package-deploy installs only the
 closure, not the app package.)
+
+### An entry point that starts its own Shiny server
+
+Some package apps expose only a launcher that **starts its own server** (`runApp()`/`startApp()`)
+and returns a handle, not a `shinyApp` object -- e.g. GateLabR's `launchGatingApp()`/
+`launchReactGateLab()`. The shell runs `runApp(app_dir)`, so `app.R` must **return** an app
+object; calling the launcher inside `app.R` would nest/block a server.
+
+Recipe (the GateLabR case):
+
+1. Package as **flat**: put a shim `app.R` in the fork (e.g. `shinyapps/app.R`) and set
+   `APP_MODE=flat`, `APP_SUBDIR=shinyapps`. (The repo has a `DESCRIPTION`, so `auto` would pick
+   package-deploy and look for `inst/shinyapps`; force `flat`.)
+2. In the shim, **build the app object without starting it**. If the package has no exported
+   app-returning builder, reproduce the launcher's construction from its internals (`pkg:::`).
+   GateLabR: `assets <- GateLabR:::.gatelabr_react_asset_dir();
+   shiny::addResourcePath(prefix, assets); ui <- GateLabR:::.gatelabr_react_ui(prefix, build,
+   ...); server <- GateLabR:::.gatelabr_react_server(...);
+   shiny::shinyApp(ui, server, onStart = function() shiny::onStop(cleanup))`. End `app.R` on the
+   `shinyApp(...)` value.
+3. **Supply demo data in the shim** if the entry needs it and the repo ships none. Match the
+   documented schema (GateLabR: channels as rows with `rowData$channel_name`/`marker_name`,
+   events as columns, `colData$sample_id`, a `counts` assay); synthesize a small object at load.
+4. Install the app package: if it is not on CRAN/Bioconductor, add its GitHub tarball to
+   `ARCHIVE_URLS` and its `Imports` to `EXTRA_PKGS` (they must exist before the
+   `dependencies=FALSE` install).
+5. Prefer an upstream export: ask the package to export a function that **returns** the app
+   object (e.g. `gatelabApp(sce)`), so the shim becomes `library(pkg); pkg::gatelabApp(demo)`.
+   The `:::` route is stable for a pinned bundle but breaks if upstream refactors those internals.

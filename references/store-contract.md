@@ -52,6 +52,14 @@ from the last two `-` tokens, and records `url`/`size`/`sha256`. It publishes `c
 
 Icon URL pattern: `https://<owner>.github.io/ShinyApps/icons/<id>.png`.
 
+## Icons
+
+Always use the app's **own** icon from its upstream repository, not a synthesized one. Look for
+`man/figures/logo.png` (pkgdown), `www/logo*.png`, `inst/app/www/img/*logo*.png`,
+`inst/assets/*logo*.png`, `docs/logo.png`, or an `<img>` in the README; download it and resize to
+a 512x512 PNG (contain on white). Only generate a placeholder when the repo genuinely ships no
+logo, and say so in the PR/notes.
+
 ## Versioning rule
 
 The client compares each app's **catalog version** to the installed version. **Any change
