@@ -61,7 +61,7 @@ Fast path: run `scripts/onboard-shiny-app.ps1` (steps 2-6).
 - The app must run from a directory; never rely on `pkg:::` + `runApp()` from the bundle.
 - Pin to **R 4.6.1**.
 - **Bump the version on every change** -- same version = no client `Update`.
-- **Use the app's own icon.** Copy the upstream repo's logo (e.g. `man/figures/logo.png`, `www/logo*.png`, `inst/app/www/img/*logo*.png`, `docs/logo.png`) and resize it to a 512x512 PNG; synthesize one only when the repo genuinely has none. See `references/store-contract.md`.
+- **Use the app's own icon.** Follow `references/icon-sourcing.md`: repository logo files -> README/HTML -> pkgdown -> the project site linked from the repo About/README -> generate only as a last resort. Reject platform logos, screenshots and badges; never overwrite an already-correct icon.
 - **PR quality is part of onboarding.** Every upstream PR must use
   `references/pr-template.md`: explain what ShinyApps is, why the workflow exists, the
   exact diff scope (one YAML file, no app code), the impact (Actions minutes only on tags,
