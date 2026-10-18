@@ -62,6 +62,11 @@ Fast path: run `scripts/onboard-shiny-app.ps1` (steps 2-6).
 - Pin to **R 4.6.1**.
 - **Bump the version on every change** -- same version = no client `Update`.
 - **Use the app's own icon.** Copy the upstream repo's logo (e.g. `man/figures/logo.png`, `www/logo*.png`, `inst/app/www/img/*logo*.png`, `docs/logo.png`) and resize it to a 512x512 PNG; synthesize one only when the repo genuinely has none. See `references/store-contract.md`.
+- **PR quality is part of onboarding.** Every upstream PR must use
+  `references/pr-template.md`: explain what ShinyApps is, why the workflow exists, the
+  exact diff scope (one YAML file, no app code), the impact (Actions minutes only on tags,
+  credit), what the maintainer must do, and an explicit opt-out. One-line "adds a workflow"
+  PRs are not acceptable and damage the store's reputation.
 - **Verify** `catalog.json` shows the app with both artifacts + `sha256`.
 
 ## Reliability

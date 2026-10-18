@@ -1,36 +1,30 @@
-# Upstream PR structure (fill-in template)
+# Pull request template (store onboarding)
 
-Title:
-`Add a GitHub Actions workflow publishing prebuilt desktop app bundles (ShinyApps store)`
+Never open a bare "adds a workflow" PR. Maintainers receive many CI PRs and will close
+low-context ones. Every PR must answer, in this order:
 
-Body sections (English):
+1. **What is ShinyApps?** Community-run desktop store for Shiny apps; prebuilt bundles
+   (Windows x64 / macOS arm64, pinned R) so users need no R install. Link the store repo
+   and `catalog.json`.
+2. **Why this PR?** The app is listed in the store and needs a reproducible prebuilt
+   artifact. State explicitly that only one YAML file is added and no application code,
+   `DESCRIPTION`, tests, or data change.
+3. **What the workflow does.** Numbered: install deps into a private library; build both
+   platforms; smoke-test that the app starts; attach zips to a Release on tag.
+4. **Impact on the maintainer.** No source changes; no maintenance burden; Actions minutes
+   only on tag pushes (free standard runners for public repos, ~10-20 min/platform);
+   discoverability and credit with a link back to the repo.
+5. **What the maintainer needs to do.** Review the single file, merge (or request a
+   different filename/branch), optionally push a tag; offer to do it for them.
+6. **Opt-out.** "If you would rather not have this, close the PR and I will remove the
+   store entry. No hard feelings."
+7. **Thanks**, naming the app.
 
-1. **Summary** - one workflow; CI-only; no application code changed.
-2. **What is ShinyApps?** - desktop store, pinned R 4.6.1, on-demand install; list apps already carried.
-3. **Why this matters for <APP>** - tie to the app's actual audience; note existing hosting
-   (shinyapps.io / runGitHub / Docker) stays unchanged.
-4. **What this workflow does** - triggers, matrix, build steps, artifact layout.
-5. **How it maps to the app's own shape** - flat directory vs package-fn vs package-deploy
-   (mirror any `deploy_*()` helper the project already has); state that upstream sources are
-   byte-for-byte unchanged.
-6. **Dependency closure** - the auto-derived set; note archived/GitHub/Bioconductor deps and
-   the binary->source handling.
-7. **Known limitation (honest disclosure)** - anything that will not work offline (missing
-   engine/service) or needs the network. State which parts still work.
-8. **Testing** - link the fork workflow, the built Release (asset names + sizes), and the
-   public `catalog.json` entry.
-9. **How maintainers can test it** - install the shell, find the card, Install -> Run.
-10. **Impact and maintenance** - CI cost; no side effects; offer `workflow_dispatch`-only,
-    artifact-instead-of-Release, SHA-pinning, concurrency.
-11. **Licensing** - confirm upstream license unchanged; note redistribution of binaries.
-    If the upstream declares **no** license, raise it explicitly and ask.
-12. **If accepted** - point the catalog `repo`/`homepage` at the official repo; zero-maintenance channel.
-13. **Checklist** - CI-only; builds end-to-end; app runs from its directory (no `runApp()`);
-    closure derived; limitation disclosed.
+Keep it plain Markdown, no marketing fluff, no claims that the author must accept.
+Use the app name consistently. Reuse this template verbatim, substituting the app name.
 
-Also produce a short Chinese "提交前提示" (Base/Head branch, one-file diff, license note,
-and the honest disclosure), kept outside the PR body.
+## Repairing existing PRs
 
-Before opening the PR, **bump the version and rebuild** so the linked Release/test evidence
-is real and current. Model the tone on the existing ShinyApps PRs (iSEE, UCSCXenaShiny,
-shinyCircos, GraphBio).
+If earlier PRs were opened with a one-line body, update them with
+`PATCH /repos/{owner}/{repo}/pulls/{number}` (title + body). Personalize per repo; do not
+paste an unmodified wall of text that names the wrong app.
