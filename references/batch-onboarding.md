@@ -21,3 +21,12 @@ Pipeline used for the CRAN Shiny sweep (244-row shortlist).
    PR only for real upstreams (never `cran/*`).
 6. **Record** failures with the concrete error class (X11, OpenMP, blocking launcher, non-standard entry)
    instead of retrying blindly.
+
+## Detection pitfalls
+
+- A file named `R/app.R`, `R/app_ui.R`, `R/ui.R` is **not** a flat app root. Only a literal
+  `app.R` / `ui.R`+`server.R` at the directory that will be copied counts.
+- If `git grep` finds `shinyApp(...)` in `R/*.R` and `NAMESPACE` exports a zero-argument function,
+  prefer `package-fn` with `ENTRY_FN="library(pkg); fn()"`. Rebuilding after a wrong `flat` guess is one tag bump.
+- Functions that take required data arguments (`handcode(data)`, `IMP::staticPerfMeasures(list_models, g)`)
+  have no zero-argument entry; skip rather than fabricate demo data.
