@@ -131,7 +131,7 @@
 | `xenashiny` | UCSCXenaShiny | active | win-x64, mac-arm64 | v0.1.0 | openbiox/UCSCXenaShiny | [NOTES](xenashiny/NOTES.md) |
 | `yuima-gui` | yuimaGUI | active | win-x64, mac-arm64 | v0.1.0 | cran/yuimaGUI | [NOTES](yuima-gui/NOTES.md) |
 | `zscorer` | zscorer | active | win-x64, mac-arm64 | v0.3.2 | nutriverse/zscorer | [NOTES](zscorer/NOTES.md) |
-| `scrdavis` | ScRDAVis | pending | win-x64 | v1.0.2 | GudaLab/ScRDAVis | [NOTES](scrdavis/NOTES.md) |
+| `scrdavis` | ScRDAVis | pending | win-x64, mac-arm64 | v1.1.2 | GudaLab/ScRDAVis | [NOTES](scrdavis/NOTES.md) |
 | `xomicsshiny` | xOmicsShiny | pending | win-x64, mac-arm64 | v3.0.2 | interactivereport/xOmicsShiny | [NOTES](xomicsshiny/NOTES.md) |
 | `insane` | insane | withdrawn | win-x64, mac-arm64 | v0.2.0 | mcanouil/insane | [NOTES](insane/NOTES.md) |
 | `nacho` | NACHO | withdrawn | win-x64, mac-arm64 | v0.1.1 | mcanouil/NACHO | [NOTES](nacho/NOTES.md) |

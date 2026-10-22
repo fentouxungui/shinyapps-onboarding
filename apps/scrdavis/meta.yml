@@ -5,31 +5,33 @@ upstream: GudaLab/ScRDAVis
 fork: fentouxungui/ScRDAVis
 license: none upstream (no LICENSE file)
 app_mode: flat
-platforms: win-x64
-version: 1.0.2
-tag: v1.0.2
-release_url: https://github.com/fentouxungui/ScRDAVis/releases/tag/v1.0.2
-build_run: https://github.com/fentouxungui/ScRDAVis/actions/runs/39717890320
+platforms: win-x64, mac-arm64
+version: 1.1.2
+tag: v1.1.2
+release_url: https://github.com/fentouxungui/ScRDAVis/releases/tag/v1.1.2
+build_run: ""
 template: pre-hardening (personal skill v3)
 patch_file: ""
 recorded_at: 2026-10-22
-built_at: 2026-10-22T04:12:37Z
+built_at: 2026-10-22T07:42:13Z
 source_repo: fentouxungui/ScRDAVis
-source_commit: e73b0d59341ba16da7a4362a3275aef500f4f517
+source_commit: e2dfb2556fb391c267ceebf96c1199bb6a53815e
 upstream_repo: GudaLab/ScRDAVis
 upstream_head: fbb7455af2913c1d7c92d8a27c373d77e71d5496
-upstream_checked_at: 2026-10-22T08:00:00Z
+upstream_checked_at: 2026-10-22T12:08:18Z
 workflow_path: .github/workflows/scrdavis-build-app-bundle.yml
-workflow_commit: e73b0d59341ba16da7a4362a3275aef500f4f517
-workflow_sha256: de74d1e96e0dae3f275c7fc6f002df485365766beeb45de08e8efc6237b28938
-app_size_mb: win-x64=1617
+workflow_commit: e2dfb2556fb391c267ceebf96c1199bb6a53815e
+workflow_sha256: 511d51abda6967329723067ae7cdb216b270d4a310aae2e7f785c8d9641b1f24
+app_size_mb: win-x64=1617, mac-arm64=1535
 closure_packages: 484
 decisions:
-  - PLATFORMS=win-x64 - monocle3 -> ggrastr -> Cairo/XQuartz cannot be made portable; Windows-only
-  - SOFT_PKGS=BSgenome hg38 mm10 - 731 MB + 650 MB over the 2 GiB limit with a 484-package closure
+  - PLATFORMS=win-x64 mac-arm64 - Cairo/XQuartz solved by vendoring X11 dylibs into rlib/<pkg>/libs
+  - SOFT_PKGS=BSgenome hg38 mm10 - 731 + 650 MB over the 2 GiB limit with a 484-package closure
   - ON-DEMAND TF genome - first use of the TF module downloads one genome into a per-user library
   - ARCHIVE_URLS=11 GitHub-only packages - CellChat fork, DoubletFinder, GPTCelltype, presto, monocle3, SeuratWrappers, SeuratDisk, genesorteR, hdWGCNA, msigdf, leidenbase
   - BPCells from r/ subdir - monorepo tarball; its DESCRIPTION deps (readr, hexbin) installed first
+  - MACOS_BREW_DEPS=openssl@3 hdf5 - inline brew step + ~/.R/Makevars for source builds; dylibs vendored
+  - SOURCE_REBUILD=gdtools - static gdtools so no XQuartz link remains
   - PATCH global.R and tfrn1.R - remove startup BSgenome install; lazy ensure_bsgenome per species
   - Vendored scType - scripts and ScTypeDB copied into www/sctype for offline use
   - MAX_REQUEST_MB=4096 and SMOKE_TIMEOUT_SEC=1800 - single-cell uploads and long first load

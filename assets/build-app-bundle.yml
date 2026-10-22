@@ -59,6 +59,9 @@ env:
   EXTRA_REPOS: "__EXTRA_REPOS__"
   SOFT_PKGS: "__SOFT_PKGS__"
   SOURCE_REBUILD: "__SOURCE_REBUILD__"
+  # Space-separated Homebrew formulae needed to compile source packages on macOS
+  # (e.g. "openssl@3 hdf5"). Build-time only; their dylibs are vendored by the audit.
+  MACOS_BREW_DEPS: "__MACOS_BREW_DEPS__"
   # Optional R script run inside app/ after assembly, for build-time patches
   # (absolute paths in config files, disabling a module that cannot ship).
   PATCH_SCRIPT: "__PATCH_SCRIPT__"
@@ -117,6 +120,27 @@ jobs:
       - name: Install build helpers
         shell: bash
         run: Rscript -e 'install.packages(c("jsonlite","zip","digest","BiocManager","callr","curl"), repos="https://cloud.r-project.org")'
+
+      - name: Install macOS build dependencies (optional)
+        if: ${{ env.MACOS_BREW_DEPS != '' && runner.os == 'macOS' }}
+        shell: bash
+        run: |
+          export HOMEBREW_NO_AUTO_UPDATE=1
+          brew install ${{ env.MACOS_BREW_DEPS }}
+          mkdir -p "$HOME/.R"
+          pc=""; cpp=""; ld=""
+          for f in ${{ env.MACOS_BREW_DEPS }}; do
+            p="$(brew --prefix "$f")"
+            pc="$p/lib/pkgconfig:$p/share/pkgconfig:$pc"
+            cpp="-I$p/include $cpp"
+            ld="-L$p/lib $ld"
+            printf 'CPPFLAGS += -I%s/include\nLDFLAGS += -L%s/lib\n' "$p" "$p" >> "$HOME/.R/Makevars"
+          done
+          {
+            echo "PKG_CONFIG_PATH=$pc$PKG_CONFIG_PATH"
+            echo "CPPFLAGS=$cpp$CPPFLAGS"
+            echo "LDFLAGS=$ld$LDFLAGS"
+          } >> "$GITHUB_ENV"
 
       - name: Resolve and validate version
         shell: bash
@@ -243,12 +267,14 @@ jobs:
           if (identical(unname(Sys.info()[["sysname"]]), "Darwin")) {
             sr <- split_pkgs(Sys.getenv("SOURCE_REBUILD"))
             if (length(sr)) {
-              oldpath <- Sys.getenv("PATH"); pth <- strsplit(oldpath, .Platform$path.sep)[[1]]
+              oldpath <- Sys.getenv("PATH"); old_pc <- Sys.getenv("PKG_CONFIG_PATH"); old_pcl <- Sys.getenv("PKG_CONFIG_LIBDIR")
+              pth <- strsplit(oldpath, .Platform$path.sep)[[1]]
               pth <- pth[!grepl("homebrew|linuxbrew", pth, ignore.case = TRUE)]
               Sys.setenv(PATH = paste(pth, collapse = .Platform$path.sep), PKG_CONFIG_PATH = "", PKG_CONFIG_LIBDIR = "")
               cat("macOS source rebuild (Homebrew hidden):", paste(sr, collapse = ", "), "\n")
+              on.exit(Sys.setenv(PATH = oldpath, PKG_CONFIG_PATH = old_pc, PKG_CONFIG_LIBDIR = old_pcl), add = TRUE)
               ins(sr, type = "source", deps = FALSE)
-              Sys.setenv(PATH = oldpath)
+              Sys.setenv(PATH = oldpath, PKG_CONFIG_PATH = old_pc, PKG_CONFIG_LIBDIR = old_pcl)
             }
           }
           if (mode == "package-fn") { install.packages(pkgroot, lib = lib, repos = NULL, type = "source", dependencies = FALSE); if (!pkg_name %in% have()) stop("app package failed to install: ", pkg_name) }

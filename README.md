@@ -94,6 +94,8 @@ Proceed only if all hold:
 
 Omit `-Tag` to use the package `Version` when a `DESCRIPTION` exists. Omit
 `-CranSnapshot` for live CRAN, and `-PandocVersion` for apps that do not render R Markdown.
+`-MacosBrewDeps "openssl@3 hdf5"` installs build-time Homebrew dependencies on the macOS
+runner and wires them into `~/.R/Makevars`; their dylibs are vendored by the audit.
 
 ## Version and release policy
 

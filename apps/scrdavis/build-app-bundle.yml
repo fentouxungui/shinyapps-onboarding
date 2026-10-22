@@ -65,9 +65,9 @@ env:
   ARCHIVE_URLS: "https://codeload.github.com/jinworks/CellChat/tar.gz/refs/heads/main https://codeload.github.com/chris-mcginnis-ucsf/DoubletFinder/tar.gz/refs/heads/master https://codeload.github.com/Winnie09/GPTCelltype/tar.gz/refs/heads/master https://codeload.github.com/immunogenomics/presto/tar.gz/refs/heads/master https://codeload.github.com/cole-trapnell-lab/monocle3/tar.gz/refs/heads/master https://codeload.github.com/satijalab/seurat-wrappers/tar.gz/refs/heads/master https://codeload.github.com/mojaveazure/seurat-disk/tar.gz/refs/heads/master https://codeload.github.com/mahmoudibrahim/genesorteR/tar.gz/refs/heads/master https://codeload.github.com/smorabit/hdWGCNA/tar.gz/refs/heads/dev https://codeload.github.com/stephenturner/msigdf/tar.gz/refs/heads/master https://codeload.github.com/cole-trapnell-lab/leidenbase/tar.gz/refs/heads/master"
   EXTRA_REPOS: ""
   SOFT_PKGS: "BSgenome.Hsapiens.UCSC.hg38 BSgenome.Mmusculus.UCSC.mm10"
-  SOURCE_REBUILD: ""
+  SOURCE_REBUILD: "gdtools"
   PREFETCH_SCRIPT: ""
-  APP_NOTES: "All analysis modules and www/ demo data are bundled. BSgenome.Hsapiens.UCSC.hg38 and BSgenome.Mmusculus.UCSC.mm10 (~1.4 GB combined) exceed the 2 GiB desktop bundle limit and are not shipped, so the TF motif-scanning module (JASPAR + BSgenome) is disabled; every other module is available offline. The top-level auto-install lines for those two genomes were removed from global.R in the bundle only. sc-Type reference scripts and ScTypeDB are vendored into www/sctype for offline use. The two BSgenome genomes are downloaded on demand into a per-user library when the TF module is first used (~700 MB per species). This build is Windows-only: monocle3 imports ggrastr, which pulls Cairo, whose macOS binary requires XQuartz and cannot be shipped portably; macOS support will be addressed separately."
+  APP_NOTES: "All analysis modules and www/ demo data are bundled. BSgenome.Hsapiens.UCSC.hg38 and BSgenome.Mmusculus.UCSC.mm10 (~1.4 GB combined) exceed the 2 GiB desktop bundle limit and are not shipped, so the TF motif-scanning module (JASPAR + BSgenome) is disabled; every other module is available offline. The top-level auto-install lines for those two genomes were removed from global.R in the bundle only. sc-Type reference scripts and ScTypeDB are vendored into www/sctype for offline use. The two BSgenome genomes are downloaded on demand into a per-user library when the TF module is first used (~700 MB per species). Cairo dylibs are vendored into the macOS bundle, so users do not need XQuartz."
   MAX_REQUEST_MB: "4096"
   SMOKE: "on"
   SMOKE_TIMEOUT_SEC: "1800"
@@ -81,9 +81,7 @@ jobs:
       matrix:
         include:
           - { os: windows-latest, platform: "win-x64" }
-          # macOS is intentionally not built yet: monocle3 imports ggrastr -> Cairo, whose
-          # CRAN macOS binary requires XQuartz and cannot be shipped portably.
-          # Re-enable the macos-14 entry once that dependency is handled.
+          - { os: macos-14,       platform: "mac-arm64" }
     steps:
       - uses: actions/checkout@v4
 
@@ -183,6 +181,35 @@ jobs:
           cat("desktop patches applied; ensure_bsgenome present:",
               any(grepl("ensure_bsgenome", readLines(g, warn = FALSE))), "\n")
 
+      - name: Install macOS build dependencies (OpenSSL, HDF5)
+        if: runner.os == 'macOS'
+        run: |
+          # alabaster.base links -lssl and BPCells probes `pkg-config hdf5`. Homebrew's
+          # openssl/hdf5 are keg-only, so expose them explicitly. The resulting Homebrew
+          # references are later vendored into the bundle by the otool pass.
+          brew install openssl@3 hdf5
+          echo "PKG_CONFIG_PATH=$(brew --prefix openssl@3)/lib/pkgconfig:$(brew --prefix hdf5)/lib/pkgconfig:$PKG_CONFIG_PATH" >> "$GITHUB_ENV"
+          echo "LDFLAGS=-L$(brew --prefix openssl@3)/lib -L$(brew --prefix hdf5)/lib" >> "$GITHUB_ENV"
+          echo "CPPFLAGS=-I$(brew --prefix openssl@3)/include -I$(brew --prefix hdf5)/include" >> "$GITHUB_ENV"
+          echo "HDF5_DIR=$(brew --prefix hdf5)" >> "$GITHUB_ENV"
+          pkg-config --cflags --libs hdf5
+          mkdir -p ~/.R
+          {
+            echo "CPPFLAGS += -I$(brew --prefix openssl@3)/include -I$(brew --prefix hdf5)/include"
+            echo "LDFLAGS += -L$(brew --prefix openssl@3)/lib -L$(brew --prefix hdf5)/lib"
+          } >> ~/.R/Makevars
+          cat ~/.R/Makevars
+
+      - name: Install XQuartz (macOS, for dylib vendoring only)
+        if: runner.os == 'macOS'
+        run: |
+          # Cairo's CRAN macOS binary links /opt/X11 (XQuartz). XQuartz is installed on the
+          # runner only so those dylibs exist and can be copied into the bundle; the otool
+          # pass then rewrites every reference to @loader_path. Users do NOT need XQuartz.
+          curl -fsSL -o /tmp/XQuartz.pkg https://github.com/XQuartz/XQuartz/releases/download/XQuartz-2.8.6/XQuartz-2.8.6.pkg
+          sudo installer -pkg /tmp/XQuartz.pkg -target /
+          ls -l /opt/X11/lib/libXrender.1.dylib /opt/X11/lib/libX11.6.dylib
+
       - name: Assemble bundle (app/ + rlib/ + manifest.json)
         timeout-minutes: 120
         shell: Rscript {0}
@@ -276,10 +303,11 @@ jobs:
             if (length(sr)) {
               oldpath <- Sys.getenv("PATH"); pth <- strsplit(oldpath, .Platform$path.sep)[[1]]
               pth <- pth[!grepl("homebrew|linuxbrew", pth, ignore.case = TRUE)]
+              oldpkg <- Sys.getenv("PKG_CONFIG_PATH"); oldlib <- Sys.getenv("PKG_CONFIG_LIBDIR")
               Sys.setenv(PATH = paste(pth, collapse = .Platform$path.sep), PKG_CONFIG_PATH = "", PKG_CONFIG_LIBDIR = "")
               cat("macOS source rebuild (Homebrew hidden):", paste(sr, collapse = ", "), "\n")
               ins(sr, type = "source", deps = FALSE)
-              Sys.setenv(PATH = oldpath)
+              Sys.setenv(PATH = oldpath, PKG_CONFIG_PATH = oldpkg, PKG_CONFIG_LIBDIR = oldlib)
             }
           }
           nb <- setdiff(closure, have()); if (length(nb)) { cat("source retry:", length(nb), "\n"); ins(nb, type = "source", deps = FALSE) }

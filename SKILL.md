@@ -50,8 +50,9 @@ cannot ship (give a feasibility caveat).
 2. **Fork** the upstream repo.
 3. **Generate + push** `.github/workflows/<id>-build-app-bundle.yml` from
    `assets/build-app-bundle.yml`, filling the `env:` block -- every `__PLACEHOLDER__`,
-   including `APP_MODE`, `STRICT_VERSION`, `STRICT_DEPS`, `CRAN_SNAPSHOT` and
-   `PANDOC_VERSION`. Unsubstituted `__X__` values fall back to safe defaults.
+   including `APP_MODE`, `STRICT_VERSION`, `STRICT_DEPS`, `CRAN_SNAPSHOT`,
+   `PANDOC_VERSION` and `MACOS_BREW_DEPS`. Unsubstituted `__X__` values fall back to safe
+   defaults.
 4. **Tag** `vX.Y.Z` and push -> builds both platform bundles and creates the Release.
 5. **Onboard**: append the entry from `assets/catalog-entry.yml` to
    `ShinyApps/catalog/apps.yml`, add `ShinyApps/icons/<id>.png` (from the upstream repo's own logo), push.
@@ -102,7 +103,10 @@ with `SMOKE: "off"` for apps that need network at startup.
 A **module that the user explicitly opens** may fetch its own large data on first use
 (one artifact at a time, into a user-writable library, with progress and a readable
 failure) -- this is the only allowed exception to the no-startup-download rule. Conditions
-and a reference implementation: `references/runtime-downloads.md`.
+and a reference implementation: `references/runtime-downloads.md`. The shell moves
+`app/rlib` into a shared library after install, so a per-user library outside the app
+directory survives and vendored dylibs travel with their package -- keep the user library
+**appended** to `.libPaths()`.
 
 **Apps that fetch a database at first launch** (a reference DB, taxonomy, annotation bundle)
 must not do it from the bundle: the user may be offline and R's default `download.file` timeout
@@ -139,9 +143,11 @@ portability: `references/macos-portability.md`.
   adapter that returns the object.
 - `flat` bundles only the app directory. Paths in `ENTRY_FN` are relative to that directory, not the repo root.
 - macOS: an OpenMP symbol error (`___kmpc_barrier`, `kohonen.so`, ...) is fixed by
-  `SOURCE_REBUILD: "<pkg>"`. A package whose load needs XQuartz (`tcltk`, `summarytools`,
-  `Cairo` via `ggrastr`) is **not** shippable as-is: rebuild, drop/guard the feature, or
-  record Windows-only. Never put `dylibbundler` in a loop -- it hangs; see
+  `SOURCE_REBUILD: "<pkg>"`. XQuartz-only links (`Cairo` via `ggrastr`) are **not** a dead
+  end: vendor the X11 dylibs into the package's `libs/` with `install_name_tool` + ad-hoc
+  `codesign` (ScRDAVis v1.1.2 ships both platforms this way, +15-30 MB). `tcltk`/Tcl-Tk is
+  still hard -- guard or drop that module. Source packages needing openssl/hdf5 use
+  `MACOS_BREW_DEPS`. Never put `dylibbundler` in a loop -- it hangs; see
   `references/macos-portability.md`.
 - Poll CI by workflow name **and** the tag on `head_branch`; otherwise a stale failed run matches first.
 - `cran/*` repos are read-only mirrors: onboard the fork but do not open an upstream PR.

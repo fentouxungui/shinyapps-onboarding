@@ -4,7 +4,7 @@ A "heavy" app is one where a naive workflow produces a zip that builds, passes t
 smoke test and still fails for the user. The two field cases behind this file are
 xOmicsShiny (76 bundled packages, 297 MB demo data, ~950 MB per platform) and ScRDAVis
 (87 declared packages, 11 GitHub-only plus BPCells inside a monorepo, two BSgenome
-references of 731 MB + 650 MB, 484-package closure, 1.70 GB Windows zip).
+references of 731 MB + 650 MB, 484-package closure, 1.6 GB per platform).
 
 Signals to check at feasibility time:
 
@@ -70,11 +70,16 @@ downloads remain forbidden.
 
 ### Windows-only is a valid outcome
 
-When a macOS dependency cannot be made portable (ScRDAVis: `monocle3` -> `ggrastr` ->
-`Cairo`/XQuartz), publish a Windows-only release rather than a mac asset that does not
-work. Delete the `macos-14` entry from `matrix.include`, keep the app id and asset prefix
-unchanged, and record "Windows-only, <module> unavailable on macOS" in `APP_NOTES` and the
-PR. The catalog publishes whatever artifacts exist; mac users simply get no download.
+When a macOS dependency really cannot be made portable, publish a Windows-only release
+rather than a mac asset that does not work. Delete the `macos-14` entry from
+`matrix.include`, keep the app id and asset prefix unchanged, and record "Windows-only,
+<module> unavailable on macOS" in `APP_NOTES` and the PR. The catalog publishes whatever
+artifacts exist; mac users simply get no download.
+
+Exhaust the portability options first: ScRDAVis v1.0.2 was Windows-only because of
+`monocle3` -> `ggrastr` -> `Cairo`, but v1.1.2 shipped both platforms by **vendoring the
+XQuartz dylibs** (`references/macos-portability.md`). Windows-only is a last resort, not a
+shortcut.
 
 Never ship a bundle that silently lacks a package the code calls: that is the failure
 mode in section 5.
@@ -167,7 +172,7 @@ offline limitation in `APP_NOTES`.
 | App | Shape | What mattered |
 |---|---|---|
 | xOmicsShiny | flat, 24 modules | 76 packages scanned from all modules; `config.csv` absolute path; `metabaser` not on CRAN -> `SOFT_PKGS`; Cairo/gdtools/ggrastr and Mfuzz/tcltk blocked macOS -> rebuild/drop; PCSF archived + `topGO`; final zips 942/913 MB |
-| ScRDAVis | flat, Seurat/monocle3/CellChat | 87 declared packages -> 484-package closure; 11 GitHub-only packages + BPCells from a `r/` subdirectory; two BSgenome references over budget -> dropped, TF module downloads one genome on first use; monocle3 pulls Cairo -> Windows-only; 1.62 GB zip; no upstream LICENSE -> ask before listing |
+| ScRDAVis | flat, Seurat/monocle3/CellChat | 87 declared packages -> 484-package closure; 11 GitHub-only packages + BPCells from a `r/` subdirectory; two BSgenome references over budget -> dropped, TF module downloads one genome on first use; `monocle3` -> Cairo solved by vendoring XQuartz dylibs (v1.1.2 ships win + mac, 1617/1535 MB); `openssl@3`/`hdf5` build deps via `MACOS_BREW_DEPS`; no upstream LICENSE -> ask before listing |
 
 ## Checklist
 

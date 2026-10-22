@@ -27,16 +27,37 @@ where two `BSgenome` references (731 MB + 650 MB) cannot fit in a GitHub Release
 7. **Disclosed.** Write the module name, size, and offline limitation into `APP_NOTES`, the
    catalog entry notes, and the upstream PR/issue. The store does not verify user data.
 
+## How the ShinyApps shell installs a bundle
+
+Observed on shell 0.1.11: after install, the app's `rlib/` is not simply deleted. Package
+directories are moved into a **global shared library** (`%APPDATA%\shinyapps\lib` --
+600+ packages on a real machine), and the version directory keeps the original bundle at
+`<app>/<version>/app/bundle/{app,rlib}` for repair/reinstall.
+
+Consequences for downloaded data and vendored libraries:
+
+- A per-user library **outside** the app version directory (`%APPDATA%\<App>\rlib`)
+  survives upgrades, reinstall and rlib cleanup.
+- Vendored dylibs inside `rlib/<pkg>/libs/` move with the package; `@loader_path`
+  references keep resolving in the shared library.
+- **Append** the user library -- `.libPaths(c(.libPaths(), user_lib))` -- instead of
+  prepending it, so a user-installed package cannot shadow the shared library's version in
+  the same session. Check `requireNamespace()` first and reuse a shared copy when present.
+- Shared-library dedup is by package name+version. Two apps bundling the same package
+  version with different vendored libraries can overwrite each other; this is rare, but if
+  it matters keep a private copy under the app directory and add it only for that module.
+
 ## Reference shape
 
 ```r
 user_lib <- file.path(Sys.getenv(if (.Platform$OS.type == "windows") "APPDATA" else "HOME"),
                       "ScRDAVis", "rlib")
 dir.create(user_lib, recursive = TRUE, showWarnings = FALSE)
-.libPaths(c(user_lib, .libPaths()))
+# Append: the shared library must win for packages it already provides.
+.libPaths(c(.libPaths(), user_lib))
 
 ensure_bsgenome <- function(pkg) {
-  if (requireNamespace(pkg, quietly = TRUE)) return(invisible(TRUE))
+  if (requireNamespace(pkg, quietly = TRUE)) return(invisible(TRUE))  # shared lib or user lib
   if (!requireNamespace("BiocManager", quietly = TRUE))
     stop("BiocManager is missing from the bundle; cannot fetch ", pkg)
   message("Downloading ", pkg, " (~700 MB); this runs once.")
