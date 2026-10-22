@@ -1,25 +1,18 @@
 <#
-  onboard-shiny-app.ps1
-  ---------------------
-  Onboard any Shiny-app GitHub repo into the ShinyApps desktop app store
-  (https://github.com/fentouxungui/ShinyApps), end to end:
+  onboard-shiny-app-hardened.ps1
+  ------------------------------
+  Fork -> bundle workflow -> tag/release -> catalog entry + icon -> optional PR.
 
-    fork -> bundle workflow -> tag/release -> catalog entry + icon -> optional PR.
+  Adds, on top of the basic route:
+    * -StrictVersion auto|on|off  (tag vs DESCRIPTION Version)
+    * -CranSnapshot YYYY-MM-DD    (optional Posit Package Manager snapshot)
+    * -StrictDeps on|off          (missing required/transitive deps)
+    * -PandocVersion x.y.z        (optional install + check for report apps)
+    * AppMode is actually written into the workflow
+    * when -Tag is omitted, the package version is used when available
 
-  Prerequisites
-    * git on PATH, and a stored GitHub credential for https://github.com with the
-      `repo` + `workflow` scopes (e.g. via Git Credential Manager).
-    * templates/ under  assets/  (build-app-bundle.yml, catalog-entry.yml).
-    * a 512x512 PNG icon for the app (-IconPath).
-
-  App shapes (see https://github.com/fentouxungui/shinyapps-onboarding):
-    * flat           : -AppMode flat           -AppSubdir <app dir>
-    * package-fn     : -AppMode package-fn     -PkgSubdir <pkg root> -EntryFn 'library(pkg); pkg::fn(...)'
-    * package-deploy : -AppMode package-deploy -AppSubdir <dir in inst/> -UiLibs ... -ServerLibs ...
-                       -DemoRda <repo .rda> -DemoObject <name> -DemoSaveAs .SHINYSTAN_OBJECT
-
-  Always bump -Tag for any change: installed clients only see an Update when the
-  catalog version changes.
+  Prerequisites: git, a stored GitHub credential with repo+workflow scopes,
+  assets/build-app-bundle.yml, and a 512x512 PNG icon.
 #>
 param(
   [Parameter(Mandatory=$true)][string]$ShinyAppsOwner,
@@ -34,14 +27,15 @@ param(
   [string]$DemoRda = "", [string]$DemoObject = "", [string]$DemoSaveAs = "", [string]$DemoRdata = "",
   [string]$ExtraPkgs = "", [string]$Exclude = "rsconnect,.github", [string]$ArchiveUrls = "",
   [string]$ExtraRepos = "", [string]$SoftPkgs = "", [string]$SourceRebuild = "", [string]$PrefetchScript = "", [string]$AppNotes = "",
-  [string]$Tag = "v0.1.0", [string]$RVersion = "4.6.1",
+  [ValidateSet('auto','on','off')][string]$StrictVersion = 'auto',
+  [string]$CranSnapshot = "", [ValidateSet('on','off')][string]$StrictDeps = 'on', [string]$PandocVersion = "",
+  [string]$Tag = "", [string]$RVersion = "4.6.1",
   [string]$IconPath = "", [string]$WorkDir = ".",
   [switch]$OpenPR, [switch]$WatchRelease
 )
 $ErrorActionPreference = "Stop"
 function Info($m){ Write-Host "[onboard] $m" -ForegroundColor Cyan }
 
-# --- token (repo + workflow scopes) -----------------------------------------
 $cred = "protocol=https`nhost=github.com`n" | git credential fill 2>$null
 $env:GH_TOKEN = (($cred | Where-Object { $_ -like 'password=*' }) -replace '^password=','')
 if (-not $env:GH_TOKEN) { throw "No stored GitHub credential for https://github.com" }
@@ -64,20 +58,42 @@ for ($i=0; $i -lt 30; $i++) { try { $fork = Api GET "https://api.github.com/repo
 $branch = $fork.default_branch
 Info "fork ready: $me/$RepoName (default=$branch)"
 
-# --- workflow ---------------------------------------------------------------
+# --- clone + version policy -------------------------------------------------
 $dir = Join-Path $WorkDir "$AppId-fork"
 if (Test-Path $dir) { Remove-Item -Recurse -Force $dir }
 git @LFS clone --depth 1 -q "https://github.com/$me/$RepoName.git" $dir
-$tpl = Get-Content (Join-Path $PSScriptRoot 'assets\build-app-bundle.yml') -Raw
+
+$descPath = [IO.Path]::Combine($dir, $PkgSubdir, "DESCRIPTION")
+$descVersion = $null
+if (Test-Path $descPath) {
+  $m = Select-String -Path $descPath -Pattern '^Version:\s*(\S+)' | Select-Object -First 1
+  if ($m) { $descVersion = $m.Matches[0].Groups[1].Value.Trim() }
+}
+if (-not $Tag) {
+  if ($descVersion) { $Tag = "v$descVersion" } else { $Tag = "v0.1.0" }
+}
+$tagVersion = $Tag -replace '^v',''
+if ($StrictVersion -eq 'on' -and -not $descVersion) {
+  throw "StrictVersion=on but no DESCRIPTION found at $descPath. Fix -PkgSubdir, or use auto/off for a repo without DESCRIPTION."
+}
+if ($StrictVersion -ne 'off' -and $descVersion -and $tagVersion -ne $descVersion) {
+  throw "Tag $Tag != DESCRIPTION Version $descVersion. Use -Tag v$descVersion, or -StrictVersion off (and explain in -AppNotes)."
+}
+$descLabel = if ($descVersion) { $descVersion } else { 'none' }
+Info "tag=$Tag (DESCRIPTION version=$descLabel; strict=$StrictVersion)"
+
+# --- workflow ---------------------------------------------------------------
+$tpl = Get-Content (Join-Path $PSScriptRoot '..\assets\build-app-bundle.yml') -Raw
 $map = [ordered]@{
   '__APP_ID__'=$AppId;'__APP_NAME__'=$AppName;'__APP_AUTHOR__'=$AppAuthor;'__APP_DESC__'=$AppDesc
-  '__APP_HOMEPAGE__'=$AppHomepage;'__APP_LICENSE__'=$AppLicense
+  '__APP_HOMEPAGE__'=$AppHomepage;'__APP_LICENSE__'=$AppLicense;'__APP_MODE__'=$AppMode
   '__APP_SUBDIR__'=$AppSubdir;'__PKG_SUBDIR__'=$PkgSubdir;'__ENTRY_FN__'=$EntryFn
   '__UI_LIBS__'=$UiLibs;'__SERVER_LIBS__'=$ServerLibs
   '__DEMO_RDA__'=$DemoRda;'__DEMO_OBJECT__'=$DemoObject;'__DEMO_SAVE_AS__'=$DemoSaveAs;'__DEMO_RDATA__'=$DemoRdata
   '__EXTRA_PKGS__'=$ExtraPkgs;'__EXCLUDE__'=$Exclude;'__ARCHIVE_URLS__'=$ArchiveUrls
   '__EXTRA_REPOS__'=$ExtraRepos;'__SOFT_PKGS__'=$SoftPkgs;'__SOURCE_REBUILD__'=$SourceRebuild;'__PREFETCH_SCRIPT__'=$PrefetchScript
   '__APP_NOTES__'=$AppNotes;'__R_VERSION__'=$RVersion
+  '__CRAN_SNAPSHOT__'=$CranSnapshot;'__STRICT_VERSION__'=$StrictVersion;'__STRICT_DEPS__'=$StrictDeps;'__PANDOC_VERSION__'=$PandocVersion
 }
 foreach ($k in $map.Keys) { $tpl = $tpl.Replace($k, [string]$map[$k]) }
 $wfdir = Join-Path $dir ".github\workflows"
@@ -108,7 +124,7 @@ if (Test-Path $sa) { Remove-Item -Recurse -Force $sa }
 git @LFS clone --depth 1 -q "https://github.com/$ShinyAppsOwner/$ShinyAppsRepo.git" $sa
 $apps = Join-Path $sa "catalog\apps.yml"
 if ((Get-Content $apps -Raw) -notmatch "id:\s*$AppId\b") {
-  $cat = Get-Content (Join-Path $PSScriptRoot 'assets\catalog-entry.yml') -Raw
+  $cat = Get-Content (Join-Path $PSScriptRoot '..\assets\catalog-entry.yml') -Raw
   $cmap = [ordered]@{'__APP_ID__'=$AppId;'__SHINYAPPS_OWNER__'=$ShinyAppsOwner;'__REPO_NAME__'=$RepoName
     '__APP_NAME__'=$AppName;'__APP_AUTHOR__'=$AppAuthor;'__APP_DESC__'=$AppDesc;'__APP_HOMEPAGE__'=$AppHomepage
     '__DOCS__'=$AppDocs;'__COPYRIGHT__'=$AppCopyright;'__LICENSE__'=$AppLicense;'__R_VERSION__'=$RVersion;'__TAGS__'=$AppTags}

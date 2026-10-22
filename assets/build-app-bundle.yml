@@ -1,47 +1,37 @@
 # =====================================================================
-#  ShinyApps app-layer bundle builder (Route A) -- HARDENED.
+#  ShinyApps app-layer bundle builder (Route A) -- HARDENED v2.
 #  Builds prebuilt desktop bundles (win-x64, mac-arm64) for an R/Shiny app
 #  and attaches them to a GitHub Release. No shell rebuild. R 4.6.1.
 #
-#  Reliability design (learned from real onboardings):
-#   * dependency graph from the SOURCE index (binary index is incomplete on
-#     a brand-new R and silently drops edges)
-#   * per-package binary->source install (Bioc annotations/TxDb have no
-#     binaries for a new R)
-#   * fix-up loop over installed DESCRIPTIONs (catches dropped transitive deps)
-#   * load validation: every required seed package must load from rlib
-#   * base-priority packages are excluded from the required check
-#   * macOS: optional source rebuild + otool portability audit (CRAN macOS
-#     binaries can hard-link XQuartz/Homebrew)
-#   * size guard against the 2 GiB GitHub Release asset limit
+#  This is the exmort-review revision of assets/build-app-bundle.yml.
+#  It adds: optional tag/DESCRIPTION version enforcement, one trigger,
+#  immutable release assets, fail-fast dependency resolution, an optional
+#  CRAN snapshot, a clean-library smoke test, optional pinned Pandoc,
+#  least-privilege permissions, and published checksums/metadata.
 #
 #  Modes (auto-detected when APP_MODE=auto):
 #   * flat           - the repo IS the app (app.R, or ui.R+server.R, or legacy
-#                      shinyUI/shinyServer). Sources are copied verbatim; the
-#                      runtime runs the directory. No entry is synthesized.
+#                      shinyUI/shinyServer). Sources are copied verbatim.
 #   * package-fn     - the app is an R package whose exported function returns
 #                      a shinyApp object; ENTRY_FN is that call.
 #   * package-deploy - the app is a dir inside an R package that reads package
-#                      internals; the app files are copied + library() lines
-#                      prepended + data supplied via an RData (mirrors the
-#                      package's own deploy_*() helper).
+#                      internals; app files are copied + library() lines
+#                      prepended + data supplied via an RData.
 # =====================================================================
 name: Build app bundle
 
 on:
   push:
     tags: ['v*']
-  release:
-    types: [published]
   workflow_dispatch:
     inputs:
       tag:
-        description: "Existing tag to attach bundles to (e.g. v0.1.0)"
-        required: false
+        description: "Existing tag to build and publish (e.g. v0.2.0)"
+        required: true
         type: string
 
 permissions:
-  contents: write
+  contents: read
 
 env:
   APP_ID: "__APP_ID__"
@@ -50,7 +40,7 @@ env:
   APP_DESC: "__APP_DESC__"
   APP_HOMEPAGE: "__APP_HOMEPAGE__"
   APP_LICENSE: "__APP_LICENSE__"
-  APP_MODE: "auto"
+  APP_MODE: "__APP_MODE__"
   APP_SUBDIR: "__APP_SUBDIR__"
   PKG_SUBDIR: "__PKG_SUBDIR__"
   ENTRY_FN: "__ENTRY_FN__"
@@ -72,6 +62,16 @@ env:
   SMOKE: "on"
   SMOKE_TIMEOUT_SEC: "300"
   R_VERSION: "__R_VERSION__"
+  # Optional Posit Package Manager date snapshot, e.g. "2026-10-01".
+  # Empty = live CRAN. Set it when reproducible dependency inputs matter.
+  CRAN_SNAPSHOT: "__CRAN_SNAPSHOT__"
+  # auto = enforce tag == DESCRIPTION Version when DESCRIPTION exists;
+  # on   = require DESCRIPTION and enforce; off = tag is the store version.
+  STRICT_VERSION: "__STRICT_VERSION__"
+  # on = missing required/transitive dependencies fail the build.
+  STRICT_DEPS: "__STRICT_DEPS__"
+  # Non-empty = install and check this Pandoc version (report-rendering apps).
+  PANDOC_VERSION: "__PANDOC_VERSION__"
 
 jobs:
   bundle:
@@ -84,23 +84,45 @@ jobs:
           - { os: macos-14,       platform: "mac-arm64" }
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag || github.ref }}
+          fetch-depth: 0
 
       - uses: r-lib/actions/setup-r@v2
         with:
           r-version: ${{ env.R_VERSION }}
           use-public-rspm: true
 
+      - uses: r-lib/actions/setup-pandoc@v2
+        if: env.PANDOC_VERSION != ''
+        with:
+          pandoc-version: ${{ env.PANDOC_VERSION }}
+
+      - name: Verify report toolchain
+        if: env.PANDOC_VERSION != ''
+        shell: bash
+        run: |
+          if ! command -v pandoc >/dev/null 2>&1; then
+            echo "::error::PANDOC_VERSION is set but pandoc was not found"
+            exit 1
+          fi
+          pandoc --version | head -n 1
+
       - name: Install build helpers
         shell: bash
         run: Rscript -e 'install.packages(c("jsonlite","zip","digest","BiocManager","callr","curl"), repos="https://cloud.r-project.org")'
 
-      - name: Resolve store version
+      - name: Resolve and validate version
         shell: bash
         run: |
-          V="${{ github.event.release.tag_name }}${{ github.ref_name }}${{ inputs.tag }}"
+          V="${{ inputs.tag || github.ref_name }}"
           V="${V#v}"
-          if [ -z "$V" ]; then V="0.1.0"; fi
+          if [ -z "$V" ]; then
+            echo "::error::cannot resolve version from tag"
+            exit 1
+          fi
           echo "VERSION=$V" >> "$GITHUB_ENV"
+          echo "TAG=v$V" >> "$GITHUB_ENV"
 
       - name: Assemble bundle (app/ + rlib/ + manifest.json)
         shell: Rscript {0}
@@ -109,7 +131,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           app_id  <- Sys.getenv("APP_ID")
-          mode    <- Sys.getenv("APP_MODE"); if (!nzchar(mode)) mode <- "auto"
+          mode    <- Sys.getenv("APP_MODE"); if (!nzchar(mode) || grepl("^__", mode)) mode <- "auto"
           sub_    <- Sys.getenv("APP_SUBDIR"); if (!nzchar(sub_)) sub_ <- "."
           pkg_sub <- Sys.getenv("PKG_SUBDIR"); if (!nzchar(pkg_sub)) pkg_sub <- "."
           root    <- getwd()
@@ -128,6 +150,18 @@ jobs:
           opt <- function() sprintf("options(shiny.launch.browser = FALSE, shiny.maxRequestSize = %s * 1024^2)", Sys.getenv("MAX_REQUEST_MB"))
           pkgroot <- normalizePath(file.path(root, pkg_sub), winslash = "/", mustWork = FALSE)
           has_pkg <- file.exists(file.path(pkgroot, "DESCRIPTION"))
+          strict_version <- tolower(Sys.getenv("STRICT_VERSION")); if (!nzchar(strict_version) || grepl("^__", strict_version)) strict_version <- "auto"
+          if (has_pkg) {
+            dcf0 <- read.dcf(file.path(pkgroot, "DESCRIPTION"))
+            pkg_ver <- unname(dcf0[1, "Version"])
+            if (strict_version != "off" && !identical(as.character(pkg_ver), Sys.getenv("VERSION"))) {
+              stop("version mismatch: DESCRIPTION Version=", pkg_ver,
+                   " but tag/manifest version=", Sys.getenv("VERSION"),
+                   ". Retag with v", pkg_ver, " or set STRICT_VERSION=off (and explain in APP_NOTES).")
+            }
+          } else if (strict_version == "on") {
+            stop("STRICT_VERSION=on but no DESCRIPTION was found at ", pkgroot)
+          }
           if (mode == "auto") mode <- if (!has_pkg) "flat" else if (nzchar(Sys.getenv("ENTRY_FN"))) "package-fn" else "package-deploy"
 
           seed <- character(); pkg_name <- ""
@@ -176,16 +210,26 @@ jobs:
           cat("mode:", mode, "| seed:", paste(sort(seed), collapse = ", "), "\n")
 
           er <- split_pkgs(Sys.getenv("EXTRA_REPOS"))
-          repos <- unique(c(er, BiocManager::repositories())); options(repos = repos)
+          snap <- Sys.getenv("CRAN_SNAPSHOT"); if (grepl("^__", snap)) snap <- ""
+          cran <- if (nzchar(snap)) sprintf("https://packagemanager.posit.co/cran/%s", snap) else "https://cloud.r-project.org"
+          repos <- unique(c(er, cran, BiocManager::repositories())); options(repos = repos)
           db <- available.packages(repos = repos, type = "source")
-          dropped <- setdiff(seed, rownames(db)); if (length(dropped)) cat("WARN dropped (not in CRAN/Bioc):", paste(dropped, collapse = ", "), "\n")
+          soft <- split_pkgs(Sys.getenv("SOFT_PKGS"))
+          strict_deps <- tolower(Sys.getenv("STRICT_DEPS")); if (!nzchar(strict_deps) || grepl("^__", strict_deps)) strict_deps <- "on"
+          dropped <- setdiff(seed, rownames(db))
+          hard_dropped <- setdiff(dropped, soft)
+          if (strict_deps == "on" && length(hard_dropped)) stop("unresolved required dependencies: ", paste(hard_dropped, collapse = ", "))
+          if (length(dropped)) cat(if (strict_deps == "on") "optional/soft packages not in index:" else "WARN dropped (not in CRAN/Bioc):", paste(dropped, collapse = ", "), "\n")
           seed <- intersect(seed, rownames(db))
-          closure <- unique(c(seed, unlist(tools::package_dependencies(seed, db = db, recursive = TRUE))))
-          closure <- setdiff(closure, base_pkgs); closure <- intersect(closure, rownames(db))
+          deps <- unlist(tools::package_dependencies(seed, db = db, recursive = TRUE))
+          closure_all <- unique(c(seed, deps[!is.na(deps)]))
+          closure_missing <- setdiff(closure_all, c(base_pkgs, rownames(db)))
+          if (strict_deps == "on" && length(closure_missing)) stop("unresolved transitive dependencies: ", paste(closure_missing, collapse = ", "))
+          closure <- if (strict_deps == "on") setdiff(closure_all, base_pkgs) else setdiff(intersect(closure_all, rownames(db)), base_pkgs)
+          if (strict_deps != "on" && length(closure_missing)) cat("WARN dropped transitive dependencies:", paste(closure_missing, collapse = ", "), "\n")
           cat("closure size:", length(closure), "\n")
 
           options(pkgType = "both")
-          soft <- split_pkgs(Sys.getenv("SOFT_PKGS"))
           have <- function() basename(list.dirs(lib, recursive = FALSE))
           ins <- function(p, type = "both", deps = NA) if (length(p)) install.packages(p, lib = lib, repos = repos, type = type, dependencies = deps, Ncpus = 2)
           ins(closure)
@@ -219,17 +263,23 @@ jobs:
           }
 
           required <- setdiff(seed, c(soft, base_pkgs)); miss <- setdiff(required, have())
-          if (length(miss)) stop("missing required packages: ", paste(miss, collapse = ", "))
+          if (length(miss) && strict_deps == "on") stop("missing required packages: ", paste(miss, collapse = ", "))
           for (p in required) { ok <- tryCatch({ loadNamespace(p, lib.loc = lib); TRUE }, error = function(e) { cat("LOAD FAILED:", p, "->", conditionMessage(e), "\n"); FALSE }); if (!ok) stop("seed package cannot be loaded from rlib: ", p) }
           soft_missing <- setdiff(intersect(soft, seed), c(have(), base_pkgs))
           cat("rlib packages:", length(have()), "| soft missing:", paste(soft_missing, collapse = ","), "\n")
 
           entry <- if (file.exists(file.path(appdir, "app.R"))) "app/app.R" else "app/ui.R"
           pkgs <- as.data.frame(installed.packages(lib.loc = lib), stringsAsFactors = FALSE)
+          platform <- "${{ matrix.platform }}"
+          lock <- data.frame(package = pkgs$Package, version = pkgs$Version, stringsAsFactors = FALSE)
+          lock <- lock[order(lock$package), ]
+          lock_file <- sprintf("deps-%s.json", platform)
+          jsonlite::write_json(lock, file.path(root, lock_file), pretty = TRUE, auto_unbox = TRUE)
+          lock_sha <- digest::digest(file.path(root, lock_file), algo = "sha256", file = TRUE)
           notes <- Sys.getenv("APP_NOTES"); if (length(soft_missing)) notes <- paste0(notes, " Not bundled: ", paste(soft_missing, collapse = ", "), ".")
           man <- list(schema = 1L, id = app_id, name = Sys.getenv("APP_NAME"), version = Sys.getenv("VERSION"),
             author = Sys.getenv("APP_AUTHOR"), description = Sys.getenv("APP_DESC"), homepage = Sys.getenv("APP_HOMEPAGE"),
-            license = Sys.getenv("APP_LICENSE"), runtime = "r-shiny", entry = entry, platform = "${{ matrix.platform }}",
+            license = Sys.getenv("APP_LICENSE"), runtime = "r-shiny", entry = entry, platform = platform,
             r_version = Sys.getenv("R_VERSION"), min_shell_version = "0.1.0", notes = notes,
             packages = lapply(seq_len(nrow(pkgs)), function(i) list(name = pkgs$Package[i], version = pkgs$Version[i], path = file.path("rlib", pkgs$Package[i]), source = "cran")))
           jsonlite::write_json(man, file.path(bundle, "manifest.json"), pretty = TRUE, auto_unbox = TRUE)
@@ -239,10 +289,6 @@ jobs:
         timeout-minutes: 45
         shell: Rscript {0}
         run: |
-          # Run a repo-provided R script from inside the bundled app directory, with the
-          # bundle's rlib on .libPaths(), so an app that downloads a database at first launch
-          # generates it here and ships it (the app then finds it and never downloads). The
-          # script must write into the current directory (e.g. data/<db>) and be idempotent.
           root   <- getwd()
           script <- file.path(root, Sys.getenv("PREFETCH_SCRIPT"))
           if (!file.exists(script)) stop("PREFETCH_SCRIPT not found: ", script)
@@ -253,10 +299,12 @@ jobs:
           source(script)
           cat("prefetch done; files under the app dir:\n")
           print(list.files(".", recursive = TRUE, pattern = "[.](txt|tsv|rds|rda|sqlite)$"))
-      - name: Zip + sha256 + size guard
+
+      - name: Zip + sha256 + metadata + size guard
         shell: Rscript {0}
         run: |
-          out <- sprintf("%s-%s-%s.zip", Sys.getenv("APP_ID"), Sys.getenv("VERSION"), "${{ matrix.platform }}")
+          platform <- "${{ matrix.platform }}"
+          out <- sprintf("%s-%s-%s.zip", Sys.getenv("APP_ID"), Sys.getenv("VERSION"), platform)
           bundle <- file.path(getwd(), "bundle"); old <- setwd(bundle); on.exit(setwd(old))
           zip::zipr(out, files = list.files(".", all.files = TRUE, no.. = TRUE))
           entries <- utils::unzip(out, list = TRUE)$Name
@@ -266,17 +314,34 @@ jobs:
           sha <- digest::digest(out, algo = "sha256", file = TRUE); sz <- file.size(out)
           cat("bundle zip size (bytes):", sz, "\n")
           if (sz > 2 * 1024^3) stop("bundle exceeds the 2 GiB GitHub Release asset limit; trim modules or use a smaller closure.")
-          writeLines(sprintf('{"platform":"%s","file":"%s","sha256":"%s","size":%d}', "${{ matrix.platform }}", out, sha, sz),
-                     sprintf("meta-%s.json", "${{ matrix.platform }}"))
+          lock_file <- sprintf("deps-%s.json", platform)
+          lock_sha <- if (file.exists(lock_file)) digest::digest(lock_file, algo = "sha256", file = TRUE) else NA_character_
+          pv <- Sys.getenv("PANDOC_VERSION"); if (grepl("^__", pv)) pv <- ""
+          if (nzchar(pv)) {
+            found <- tryCatch(system2("pandoc", "--version", stdout = TRUE, stderr = FALSE)[1], error = function(e) NA_character_)
+            if (is.na(found) || !nzchar(found)) stop("PANDOC_VERSION is set but pandoc was not found on PATH")
+            pv <- found
+          } else {
+            pv <- NA_character_
+          }
+          meta <- list(
+            schema = 1L, app_id = Sys.getenv("APP_ID"), platform = platform,
+            version = Sys.getenv("VERSION"), file = out, sha256 = sha, size = sz,
+            source_repository = Sys.getenv("GITHUB_REPOSITORY"), source_commit = Sys.getenv("GITHUB_SHA"),
+            source_ref = Sys.getenv("GITHUB_REF"), source_tag = Sys.getenv("TAG"),
+            r_version = Sys.getenv("R_VERSION"), cran_snapshot = Sys.getenv("CRAN_SNAPSHOT"),
+            strict_version = Sys.getenv("STRICT_VERSION"), strict_deps = Sys.getenv("STRICT_DEPS"),
+            pandoc_version = pv, dependency_lock = lock_file, dependency_lock_sha256 = lock_sha,
+            package_count = nrow(utils::installed.packages(lib.loc = file.path("bundle", "rlib")))
+          )
+          jsonlite::write_json(meta, sprintf("meta-%s.json", platform), pretty = TRUE, auto_unbox = TRUE)
+          writeLines(sprintf("%s  %s", sha, out), sprintf("meta-%s.sha256", platform))
 
       - name: Smoke test (launch the bundle like the ShinyApps shell)
         if: ${{ env.SMOKE != 'off' }}
         timeout-minutes: 12
         shell: Rscript {0}
         run: |
-          # Reproduce the ShinyApps shell's startup: put the bundle's rlib on .libPaths and
-          # load the app from its own directory. Runs in a child process with a hard timeout so
-          # it can never hang, and surfaces the exact R error if the app fails to start.
           app_id <- Sys.getenv("APP_ID"); ver <- Sys.getenv("VERSION"); plat <- "${{ matrix.platform }}"
           zip <- sprintf("%s-%s-%s.zip", app_id, ver, plat)
           if (!file.exists(zip)) stop("smoke: bundle not found: ", zip)
@@ -287,16 +352,23 @@ jobs:
           timeout <- suppressWarnings(as.integer(Sys.getenv("SMOKE_TIMEOUT_SEC", "300"))); if (is.na(timeout) || timeout < 30) timeout <- 300
           cat(sprintf("smoke: loading app '%s' (rlib on .libPaths)\n", app_id))
           load_app <- function(appdir, lib) {
-            .libPaths(c(lib, .libPaths()))
+            .libPaths(c(lib, .Library))
+            if (!identical(normalizePath(.libPaths()[1], winslash = "/", mustWork = TRUE),
+                           normalizePath(lib, winslash = "/", mustWork = TRUE))) {
+              stop("smoke: bundle rlib is not first on .libPaths()")
+            }
+            allowed <- normalizePath(c(lib, .Library), winslash = "/", mustWork = TRUE)
+            actual <- normalizePath(.libPaths(), winslash = "/", mustWork = FALSE)
+            extra <- setdiff(actual, allowed)
+            if (length(extra)) stop("smoke: unexpected library paths: ", paste(extra, collapse = ", "))
             old <- setwd(appdir); on.exit(setwd(old), add = TRUE)
-            # shinyAppDir reproduces the shell: it handles app.R and legacy
-            # ui.R+server.R (shinyUI/shinyServer) directory apps alike.
             obj <- tryCatch(shiny::shinyAppDir("."), error = function(e) e)
             if (inherits(obj, "error")) stop("shinyAppDir failed: ", conditionMessage(obj))
             if (!inherits(obj, "shiny.appobj")) stop("app did not produce a shiny app object")
             invisible(TRUE)
           }
-          res <- tryCatch(callr::r(load_app, args = list(appdir = appdir, lib = lib), timeout = timeout, show = TRUE),
+          res <- tryCatch(callr::r(load_app, args = list(appdir = appdir, lib = lib), timeout = timeout, show = TRUE,
+                                   env = c(R_LIBS_USER = "", R_LIBS_SITE = "")),
                           error = function(e) e)
           if (inherits(res, "error")) {
             cat("\n---- smoke error ----\n"); cat(conditionMessage(res), "\n")
@@ -309,11 +381,13 @@ jobs:
           name: bundle-${{ matrix.platform }}
           path: |
             *.zip
+            *.sha256
             meta-*.json
+            deps-*.json
 
   release:
     needs: bundle
-    if: github.event_name == 'release' || startsWith(github.ref, 'refs/tags/v') || inputs.tag != ''
+    if: startsWith(github.ref, 'refs/tags/v') || inputs.tag != ''
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -322,8 +396,30 @@ jobs:
         with:
           path: artifacts
           merge-multiple: true
+      - name: Refuse to overwrite published assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          TAG="${{ inputs.tag || github.ref_name }}"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            existing="$(gh release view "$TAG" --json assets --jq '.assets[].name')"
+            for f in artifacts/*; do
+              n="$(basename "$f")"
+              if printf '%s\n' "$existing" | grep -qxF "$n"; then
+                echo "::error::release asset already exists: $n"
+                exit 1
+              fi
+            done
+          fi
       - uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ inputs.tag || github.ref_name }}
-          name: ${{ inputs.tag || github.ref_name }}
-          files: artifacts/*.zip
+          files: |
+            artifacts/*.zip
+            artifacts/*.sha256
+            artifacts/meta-*.json
+            artifacts/deps-*.json
+          overwrite_assets: false
+          fail_on_unmatched_files: true
+          generate_release_notes: false

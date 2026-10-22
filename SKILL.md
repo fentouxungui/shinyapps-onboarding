@@ -10,8 +10,9 @@ Publish any Shiny-app repository to the **ShinyApps** desktop app store using th
 (Windows `win-x64`, macOS `mac-arm64`, R 4.6.1) and attaches them to a GitHub Release; a
 catalog entry + icon make the app installable without rebuilding the store shell.
 
-Read `references/failure-modes.md` first, then `references/app-shapes.md` and
-`references/store-contract.md` before touching a workflow.
+Read `references/failure-modes.md` first, then `references/app-shapes.md`,
+`references/store-contract.md` and `references/release-hardening.md` before touching a
+workflow.
 
 ## When to use
 
@@ -46,7 +47,9 @@ cannot ship (give a feasibility caveat).
    license. Proceed only when high.
 2. **Fork** the upstream repo.
 3. **Generate + push** `.github/workflows/<id>-build-app-bundle.yml` from
-   `assets/build-app-bundle.yml`, filling the `env:` block.
+   `assets/build-app-bundle.yml`, filling the `env:` block -- every `__PLACEHOLDER__`,
+   including `APP_MODE`, `STRICT_VERSION`, `STRICT_DEPS`, `CRAN_SNAPSHOT` and
+   `PANDOC_VERSION`. Unsubstituted `__X__` values fall back to safe defaults.
 4. **Tag** `vX.Y.Z` and push -> builds both platform bundles and creates the Release.
 5. **Onboard**: append the entry from `assets/catalog-entry.yml` to
    `ShinyApps/catalog/apps.yml`, add `ShinyApps/icons/<id>.png` (from the upstream repo's own logo), push.
@@ -61,6 +64,15 @@ Fast path: run `scripts/onboard-shiny-app.ps1` (steps 2-6).
 - The app must run from a directory; never rely on `pkg:::` + `runApp()` from the bundle.
 - Pin to **R 4.6.1**.
 - **Bump the version on every change** -- same version = no client `Update`.
+- **Tag policy.** With `STRICT_VERSION: "auto"` (default) a package tag must equal
+  `DESCRIPTION` `Version`; a repo without a `DESCRIPTION` uses the tag as the store
+  version. Use `on` to require a `DESCRIPTION`, and `off` only for a deliberate
+  mismatch documented in `APP_NOTES` and the PR. Never ship a silent mismatch.
+- **Immutable releases.** One tag trigger; refuse to overwrite a published release
+  asset. A second trigger (`release: published`) double-builds the same tag.
+- **Fail loud.** Required and transitive dependencies missing from the configured
+  repositories fail the build (`STRICT_DEPS: "on"`); list genuinely optional packages
+  in `SOFT_PKGS` instead of letting them disappear.
 - **Use the app's own icon.** Follow `references/icon-sourcing.md`: repository logo files -> README/HTML -> pkgdown -> the project site linked from the repo About/README -> generate only as a last resort. Reject platform logos, screenshots and badges; never overwrite an already-correct icon.
 - **PR quality is part of onboarding.** Every upstream PR must use
   `references/pr-template.md`: explain what ShinyApps is, why the workflow exists, the
@@ -92,8 +104,8 @@ the full failure catalog: `references/failure-modes.md`.
 
 - The template uses `__APP_ID__`, `__APP_SUBDIR__`, `__ENTRY_FN__`, ... placeholders. When generating a
   workflow by hand, replace **every** placeholder; an unsubstituted `__ENTRY_FN__` fails only at smoke time.
-- `APP_MODE: "auto"` never selects `flat`. If the app lives in `inst/<dir>` (or any subdirectory), set
-  `APP_MODE: "flat"` plus `APP_SUBDIR` explicitly.
+- `APP_MODE: "auto"` selects `flat` only when the repo has no `DESCRIPTION`. If the app lives in
+  `inst/<dir>` (or any subdirectory of a package), set `APP_MODE: "flat"` plus `APP_SUBDIR` explicitly.
 - YAML quoting: an `ENTRY_FN` containing double quotes must use single quotes inside the YAML string,
   e.g. `ENTRY_FN: "local({ source('app.R') })"`, or the workflow never triggers.
 - `package-fn` works only when the exported function **returns** a `shinyApp` object. A launcher that calls
@@ -111,7 +123,14 @@ the full failure catalog: `references/failure-modes.md`.
 
 `scripts/onboard-shiny-app.ps1` reads the GitHub token via `git credential fill` into the
 process environment only and performs fork/push/tag/release/PR on the user's behalf; it
-requires a `repo`+`workflow` token. Review before running.
+requires a `repo`+`workflow` token. Review before running. The CI build job is
+`contents: read`; only the release job may write.
+
+**Release hardening.** Besides the smoke test, the template enforces the tag/version
+policy, one immutable release per tag, clean-library smoke (only `rlib` + base R on
+`.libPaths()`), fail-fast dependencies, an optional `CRAN_SNAPSHOT` pin and optional
+`PANDOC_VERSION`, and publishes `*.sha256`, `meta-*.json` and `deps-*.json`. Checklist:
+`references/release-hardening.md`.
 
 ## Files
 
@@ -119,5 +138,5 @@ requires a `repo`+`workflow` token. Review before running.
 - `assets/catalog-entry.yml` - catalog entry template.
 - `scripts/onboard-shiny-app.ps1` - parameterized driver for steps 2-6.
 - `references/app-shapes.md`, `references/failure-modes.md`, `references/store-contract.md`,
-  `references/startup-data.md`, `references/pr-template.md`.
+  `references/startup-data.md`, `references/release-hardening.md`, `references/pr-template.md`.
 - `examples/` - real workflows for flat, package-fn and package-deploy apps.

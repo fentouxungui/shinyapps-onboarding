@@ -21,11 +21,12 @@ splitKbCompare and ShinyStan.
 |---|---|
 | `assets/build-app-bundle.yml` | Hardened **multi-mode** bundle workflow (drop into `.github/workflows/`, fill `env:`) |
 | `assets/catalog-entry.yml`     | Catalog entry for `ShinyApps/catalog/apps.yml` |
-| `scripts/onboard-shiny-app.ps1`| Parameterized driver for steps 2-6 |
+| `scripts/onboard-shiny-app.ps1`| Parameterized driver for steps 2-6 (`-StrictVersion`, `-CranSnapshot`, `-PandocVersion`) |
 | `references/app-shapes.md`     | The 5 app shapes and how each is handled |
 | `references/failure-modes.md`  | Real failures and their fixes -- read this first |
 | `references/startup-data.md`   | First-launch data downloads: generate at build time into the bundle |
 | `references/store-contract.md` | Bundle/manifest/catalog contract and `publish-catalog` |
+| `references/release-hardening.md` | Tag/version policy, release-safety checklist, reviewer boundary |
 | `references/pr-template.md`    | Structure for the upstream pull request |
 | `examples/`                    | Real working workflows (flat, package-fn, package-deploy) |
 
@@ -76,8 +77,31 @@ Proceed only if all hold:
   -Upstream <owner>/<repo> -AppId <app-id> -AppName "<App Name>" `
   -AppAuthor "<authors>" -AppLicense <SPDX> -AppHomepage "<url>" `
   -AppMode flat -AppSubdir "." -AppTags "a,b,c" `
+  -StrictVersion auto -CranSnapshot 2026-10-01 -PandocVersion 3.1.11 `
   -IconPath .\icon.png -Tag v0.1.0 -WatchRelease -OpenPR
 ```
+
+Omit `-Tag` to use the package `Version` when a `DESCRIPTION` exists. Omit
+`-CranSnapshot` for live CRAN, and `-PandocVersion` for apps that do not render R Markdown.
+
+## Version and release policy
+
+The default template follows the maintainer-review checklist in
+[references/release-hardening.md](references/release-hardening.md): the build starts from
+the exact tag, a package tag must equal `DESCRIPTION` `Version`, there is a single tag
+trigger, and an existing release asset is never overwritten.
+
+| `STRICT_VERSION` | Behaviour | When |
+|---|---|---|
+| `auto` (default) | Enforce tag = `DESCRIPTION` `Version` when a `DESCRIPTION` exists; otherwise the tag is the store version | Packages and flat repos |
+| `on` | Require a `DESCRIPTION` and enforce equality; fail without one | Package repos with a known root |
+| `off` | Tag is the store version; no comparison | Deliberate re-packaging; explain in `APP_NOTES` and the PR |
+
+`CRAN_SNAPSHOT` pins CRAN inputs to a Posit Package Manager date. `STRICT_DEPS: "on"`
+(default) turns a missing required or transitive dependency into a build failure instead
+of a silent drop; use `SOFT_PKGS` for genuinely optional packages. `PANDOC_VERSION`
+installs and checks Pandoc for report-rendering apps (Pandoc and LaTeX are not bundled;
+PDF output still needs LaTeX locally).
 
 ## Built-in smoke test
 
@@ -92,7 +116,11 @@ The workflow builds the dependency graph from the **source** index, installs
 per-package with `pkgType="both"` (binary, falling back to source), runs a **fix-up loop**
 over installed `DESCRIPTION`s, **load-validates** every required seed package from `rlib/`,
 excludes base packages, and on macOS audits binaries for non-portable
-XQuartz/Homebrew links. Full list: [references/failure-modes.md](references/failure-modes.md).
+XQuartz/Homebrew links. The smoke test runs with `R_LIBS_USER`/`R_LIBS_SITE` cleared and
+only `rlib` + base R on `.libPaths()`, so a runner library cannot mask a missing bundle
+dependency. The build job is `contents: read`; only the release job may write, and it
+publishes `*.sha256`, `meta-*.json` and `deps-*.json`. Full list:
+[references/failure-modes.md](references/failure-modes.md).
 
 **First-launch downloads.** An app that downloads a database on start (e.g. PhyloProfile's NCBI taxonomy) fails in the bundle -- offline, and R's 60 s `download.file` timeout aborts a large dump. Pre-generate that data at build time and ship it inside `app/` (the workflow's `PREFETCH_SCRIPT` hook, or a dedicated job for heavy dumps). Recipe: [references/startup-data.md](references/startup-data.md).
 
