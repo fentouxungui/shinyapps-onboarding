@@ -1,0 +1,28 @@
+id: sdstudio
+name: sdstudio
+status: active
+upstream: cran/sdstudio
+fork: fentouxungui/sdstudio
+license: See upstream
+app_mode: package-fn
+platforms: win-x64, mac-arm64
+version: 0.1.0
+tag: v0.1.0
+release_url: https://github.com/fentouxungui/sdstudio/releases/tag/v0.1.0
+build_run: ""
+template: unknown (backfill)
+patch_file: ""
+recorded_at: 2026-10-22
+built_at: 2026-10-18T00:40:05Z
+source_repo: fentouxungui/sdstudio
+source_commit: eb5fd0dee915b43fe3a3354464aa311559e2f96f
+upstream_repo: cran/sdstudio
+upstream_head: 76c029be538b4dce38ae8e17c695da200939268f
+upstream_checked_at: 2026-10-22T09:58:27Z
+workflow_path: .github/workflows/build-app-bundle.yml
+workflow_commit: eb5fd0dee915b43fe3a3354464aa311559e2f96f
+workflow_sha256: 75639e36462baa19cb2604cee37b9f694fa82d761a96ed067f028097b74672bb
+app_size_mb: win-x64=68, mac-arm64=62
+closure_packages: ""
+decisions:
+  - APP_MODE=package-fn - app layout from the generated workflow

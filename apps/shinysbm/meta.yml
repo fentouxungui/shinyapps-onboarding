@@ -1,0 +1,29 @@
+id: shinysbm
+name: shinySbm
+status: active
+upstream: cran/shinySbm
+fork: fentouxungui/shinySbm
+license: MIT + file LICENSE
+app_mode: package-fn
+platforms: win-x64, mac-arm64
+version: 0.2.0
+tag: v0.2.0
+release_url: https://github.com/fentouxungui/shinySbm/releases/tag/v0.2.0
+build_run: ""
+template: unknown (backfill)
+patch_file: ""
+recorded_at: 2026-10-22
+built_at: 2026-10-18T14:02:42Z
+source_repo: fentouxungui/shinySbm
+source_commit: 787ba52e6a865afafa2786b506ff86802fcac0a1
+upstream_repo: cran/shinySbm
+upstream_head: dcca6d9a6e62c5b44d5e4a1bcbf84aafea44eee4
+upstream_checked_at: 2026-10-22T09:58:59Z
+workflow_path: .github/workflows/build-app-bundle.yml
+workflow_commit: 787ba52e6a865afafa2786b506ff86802fcac0a1
+workflow_sha256: 6841b7e964ed7324e80921b2a6e72f5f279c32e76d36a5cf59c06cf67a668c6c
+app_size_mb: win-x64=155, mac-arm64=146
+closure_packages: ""
+decisions:
+  - APP_MODE=package-fn - app layout from the generated workflow
+  - SOURCE_REBUILD=gdtools - rebuilt from source for macOS

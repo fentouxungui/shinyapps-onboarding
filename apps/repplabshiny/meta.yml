@@ -1,0 +1,30 @@
+id: repplabshiny
+name: REPPlabShiny
+status: active
+upstream: cran/REPPlabShiny
+fork: fentouxungui/REPPlabShiny
+license: GPL-2.0-or-later
+app_mode: flat
+platforms: win-x64, mac-arm64
+version: 0.1.0
+tag: v0.1.0
+release_url: https://github.com/fentouxungui/REPPlabShiny/releases/tag/v0.1.0
+build_run: ""
+template: unknown (backfill)
+patch_file: ""
+recorded_at: 2026-10-22
+built_at: 2026-10-17T15:22:12Z
+source_repo: fentouxungui/REPPlabShiny
+source_commit: 9f6ffa3450c74f4c1c832a9072c1cf958404a3fe
+upstream_repo: cran/REPPlabShiny
+upstream_head: 107655e12f7472ba087946c4a67fdca8b6def7fa
+upstream_checked_at: 2026-10-22T09:58:20Z
+workflow_path: .github/workflows/repplabshiny-build-app-bundle.yml
+workflow_commit: 9f6ffa3450c74f4c1c832a9072c1cf958404a3fe
+workflow_sha256: 0c9dec12974c5fd9d30f6e20b057e02a59d70f06b48173bb6b7bc1d1801770fc
+app_size_mb: win-x64=40, mac-arm64=38
+closure_packages: ""
+decisions:
+  - APP_MODE=flat - app layout from the generated workflow
+  - EXTRA_PKGS=1 packages - extra dependencies declared in the workflow
+  - APP_SUBDIR=inst/shiny-examples/myapp - app lives in a subdirectory

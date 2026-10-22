@@ -1,0 +1,30 @@
+id: quickexplore
+name: QuickExplore
+status: active
+upstream: Ramsas88/QuickExplore
+fork: fentouxungui/QuickExplore
+license: MIT
+app_mode: flat
+platforms: win-x64, mac-arm64
+version: 0.1.2
+tag: v0.1.2
+release_url: https://github.com/fentouxungui/QuickExplore/releases/tag/v0.1.2
+build_run: ""
+template: unknown (backfill)
+patch_file: ""
+recorded_at: 2026-10-22
+built_at: 2026-10-17T13:05:10Z
+source_repo: fentouxungui/QuickExplore
+source_commit: e326cb970133d79d18aa05562c9c5c3e8533210d
+upstream_repo: Ramsas88/QuickExplore
+upstream_head: 7f90bb8c81aafb450d1a52aab6bf57cdf714d265
+upstream_checked_at: 2026-10-22T09:58:08Z
+workflow_path: .github/workflows/quickexplore-build-app-bundle.yml
+workflow_commit: e326cb970133d79d18aa05562c9c5c3e8533210d
+workflow_sha256: d98c3c9157aa060a1e8ef78d2c06960ed99d67dbfc3a2b44a35df730b51f7fe9
+app_size_mb: win-x64=49, mac-arm64=46
+closure_packages: ""
+decisions:
+  - APP_MODE=flat - app layout from the generated workflow
+  - EXTRA_PKGS=1 packages - extra dependencies declared in the workflow
+  - APP_SUBDIR=inst/app - app lives in a subdirectory

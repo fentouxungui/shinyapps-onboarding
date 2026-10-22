@@ -1,0 +1,28 @@
+id: spatiallibd
+name: spatialLIBD
+status: active
+upstream: LieberInstitute/spatialLIBD
+fork: fentouxungui/spatialLIBD
+license: Artistic-2.0
+app_mode: auto
+platforms: win-x64, mac-arm64
+version: 0.1.0
+tag: v0.1.0
+release_url: https://github.com/fentouxungui/spatialLIBD/releases/tag/v0.1.0
+build_run: ""
+template: unknown (backfill)
+patch_file: ""
+recorded_at: 2026-10-22
+built_at: 2026-10-10T07:56:34Z
+source_repo: fentouxungui/spatialLIBD
+source_commit: 95cd55c4d832c8c4c7f273b5e3d6e5391cb2d6d0
+upstream_repo: LieberInstitute/spatialLIBD
+upstream_head: 2c4b400922e4c0918c252d20c43abb02533ce73a
+upstream_checked_at: 2026-10-22T09:59:16Z
+workflow_path: .github/workflows/spatiallibd-build-app-bundle.yml
+workflow_commit: 95cd55c4d832c8c4c7f273b5e3d6e5391cb2d6d0
+workflow_sha256: 1f43e86b6f0dfbef1817e3e33a3428312f3867105e2b9e285353072ad15d2259
+app_size_mb: win-x64=300, mac-arm64=281
+closure_packages: ""
+decisions:
+  - no non-default settings - generated from the stock template

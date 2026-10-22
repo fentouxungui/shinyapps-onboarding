@@ -1,0 +1,31 @@
+id: somenv
+name: SOMEnv
+status: active
+upstream: cran/SOMEnv
+fork: fentouxungui/SOMEnv
+license: See upstream
+app_mode: flat
+platforms: win-x64, mac-arm64
+version: 0.2.0
+tag: v0.2.0
+release_url: https://github.com/fentouxungui/SOMEnv/releases/tag/v0.2.0
+build_run: ""
+template: unknown (backfill)
+patch_file: ""
+recorded_at: 2026-10-22
+built_at: 2026-10-17T17:29:08Z
+source_repo: fentouxungui/SOMEnv
+source_commit: a70ae8ba7ac51c09a6b8f61852c78a45daf18525
+upstream_repo: cran/SOMEnv
+upstream_head: ae1376facce784f49f4d3c897de7733bf1eb8d77
+upstream_checked_at: 2026-10-22T09:59:10Z
+workflow_path: .github/workflows/build-app-bundle.yml
+workflow_commit: a70ae8ba7ac51c09a6b8f61852c78a45daf18525
+workflow_sha256: 823878ec497335a6badaa6ec069507ffc063acfea2fe89cb550cedad50ea42d4
+app_size_mb: win-x64=109, mac-arm64=104
+closure_packages: ""
+decisions:
+  - APP_MODE=flat - app layout from the generated workflow
+  - EXTRA_PKGS=1 packages - extra dependencies declared in the workflow
+  - SOURCE_REBUILD=kohonen - rebuilt from source for macOS
+  - APP_SUBDIR=inst/shiny-examples/myapp - app lives in a subdirectory

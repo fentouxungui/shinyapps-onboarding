@@ -1,0 +1,28 @@
+id: seurat-explorer
+name: SeuratExplorer
+status: active
+upstream: fentouxungui/SeuratExplorer
+fork: fentouxungui/SeuratExplorer
+license: GPL-3.0-or-later
+app_mode: auto
+platforms: win-x64, mac-arm64
+version: 0.1.9
+tag: v0.1.9
+release_url: https://github.com/fentouxungui/SeuratExplorer/releases/tag/v0.1.9
+build_run: ""
+template: unknown (backfill)
+patch_file: ""
+recorded_at: 2026-10-22
+built_at: 2026-10-09T01:54:43Z
+source_repo: fentouxungui/SeuratExplorer
+source_commit: 64ce76a3e38076309a14f44ab6c2fd207c887e5c
+upstream_repo: fentouxungui/SeuratExplorer
+upstream_head: 64ce76a3e38076309a14f44ab6c2fd207c887e5c
+upstream_checked_at: 2026-10-22T09:58:34Z
+workflow_path: .github/workflows/seurat-explorer-build-app-bundle.yml
+workflow_commit: 68e9c6935513e42bc950e9ae02a98ab5fe0eb451
+workflow_sha256: 41ba936819a05bb98c135f92d87f81321619788a8482b137cc18437625c37a4d
+app_size_mb: win-x64=227, mac-arm64=211
+closure_packages: ""
+decisions:
+  - no non-default settings - generated from the stock template

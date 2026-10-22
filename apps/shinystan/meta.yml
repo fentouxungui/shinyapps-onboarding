@@ -1,0 +1,28 @@
+id: shinystan
+name: ShinyStan
+status: active
+upstream: stan-dev/shinystan
+fork: fentouxungui/shinystan
+license: GPL-3.0-or-later
+app_mode: auto
+platforms: win-x64, mac-arm64
+version: 0.3.0
+tag: v0.3.0
+release_url: https://github.com/fentouxungui/shinystan/releases/tag/v0.3.0
+build_run: ""
+template: unknown (backfill)
+patch_file: ""
+recorded_at: 2026-10-22
+built_at: 2026-10-13T09:54:26Z
+source_repo: fentouxungui/shinystan
+source_commit: 2d7d6779d1f631b4950f4f64d748150457611170
+upstream_repo: stan-dev/shinystan
+upstream_head: 6b5eea8b141d47839bb5445440f582cd974c58fe
+upstream_checked_at: 2026-10-22T09:59:02Z
+workflow_path: .github/workflows/shinystan-build-app-bundle.yml
+workflow_commit: 2d7d6779d1f631b4950f4f64d748150457611170
+workflow_sha256: 332449b262f620fa7e93555a1ea2d70dcebf81c67ab5b8f3411073e48fda7ec7
+app_size_mb: win-x64=110, mac-arm64=106
+closure_packages: ""
+decisions:
+  - APP_SUBDIR=ShinyStan - app lives in a subdirectory

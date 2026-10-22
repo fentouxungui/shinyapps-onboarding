@@ -1,0 +1,28 @@
+id: shinymixr
+name: shinyMixR
+status: active
+upstream: cran/shinyMixR
+fork: fentouxungui/shinyMixR
+license: See upstream
+app_mode: package-fn
+platforms: win-x64, mac-arm64
+version: 0.1.0
+tag: v0.1.0
+release_url: https://github.com/fentouxungui/shinyMixR/releases/tag/v0.1.0
+build_run: ""
+template: unknown (backfill)
+patch_file: ""
+recorded_at: 2026-10-22
+built_at: 2026-10-18T12:18:42Z
+source_repo: fentouxungui/shinyMixR
+source_commit: 617eff73559fe2d42f81eaa5a461459c30de00cf
+upstream_repo: cran/shinyMixR
+upstream_head: 4be6725e9234927cf8206f2688b79358d6b46dc7
+upstream_checked_at: 2026-10-22T09:58:55Z
+workflow_path: .github/workflows/build-app-bundle.yml
+workflow_commit: 617eff73559fe2d42f81eaa5a461459c30de00cf
+workflow_sha256: 066018a4f0caf4cafa907e4aefdf494b41d8a5b96113da7ae803ed5b2faa4de0
+app_size_mb: win-x64=176, mac-arm64=186
+closure_packages: ""
+decisions:
+  - APP_MODE=package-fn - app layout from the generated workflow

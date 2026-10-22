@@ -1,0 +1,28 @@
+id: upsetr-shiny
+name: UpSetR-shiny
+status: active
+upstream: hms-dbmi/UpSetR-shiny
+fork: fentouxungui/UpSetR-shiny
+license: Unspecified (upstream declares no license)
+app_mode: auto
+platforms: win-x64, mac-arm64
+version: 0.1.0
+tag: v0.1.0
+release_url: https://github.com/fentouxungui/UpSetR-shiny/releases/tag/v0.1.0
+build_run: ""
+template: unknown (backfill)
+patch_file: ""
+recorded_at: 2026-10-22
+built_at: 2026-10-12T05:18:11Z
+source_repo: fentouxungui/UpSetR-shiny
+source_commit: 10f875f10b9390b81cc8b72927d886214b8df1a0
+upstream_repo: hms-dbmi/UpSetR-shiny
+upstream_head: a7fe0777135d290cd5f3c504fc62b401ea77c1e3
+upstream_checked_at: 2026-10-22T09:59:53Z
+workflow_path: .github/workflows/upsetr-shiny-build-app-bundle.yml
+workflow_commit: 10f875f10b9390b81cc8b72927d886214b8df1a0
+workflow_sha256: 8067ac6c2b2a03c23c80efdc2b64452a89a410986bbd2d26097960788ffeaf97
+app_size_mb: win-x64=52, mac-arm64=49
+closure_packages: ""
+decisions:
+  - no non-default settings - generated from the stock template

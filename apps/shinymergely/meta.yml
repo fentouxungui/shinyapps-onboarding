@@ -1,0 +1,30 @@
+id: shinymergely
+name: shinyMergely
+status: active
+upstream: stla/shinyMergely
+fork: fentouxungui/shinyMergely
+license: GPL-3.0
+app_mode: flat
+platforms: win-x64, mac-arm64
+version: 0.1.1
+tag: v0.1.1
+release_url: https://github.com/fentouxungui/shinyMergely/releases/tag/v0.1.1
+build_run: ""
+template: unknown (backfill)
+patch_file: ""
+recorded_at: 2026-10-22
+built_at: 2026-10-17T14:17:18Z
+source_repo: fentouxungui/shinyMergely
+source_commit: 6c35a7361c817c231d3d1bf88053c1f1ca8a5061
+upstream_repo: stla/shinyMergely
+upstream_head: d9fc68514b324a2a3324b36437efa8887c68d0aa
+upstream_checked_at: 2026-10-22T09:58:51Z
+workflow_path: .github/workflows/shinymergely-build-app-bundle.yml
+workflow_commit: 6c35a7361c817c231d3d1bf88053c1f1ca8a5061
+workflow_sha256: 40d0cc116c96e9002a550b6423a6b702e4dee76d174a37b83013e80c7ca43a4a
+app_size_mb: win-x64=37, mac-arm64=36
+closure_packages: ""
+decisions:
+  - APP_MODE=flat - app layout from the generated workflow
+  - EXTRA_PKGS=1 packages - extra dependencies declared in the workflow
+  - APP_SUBDIR=inst/shinyApp - app lives in a subdirectory

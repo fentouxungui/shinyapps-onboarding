@@ -1,0 +1,29 @@
+id: tfrmtbuilder
+name: tfrmtbuilder
+status: active
+upstream: GSK-Biostatistics/tfrmtbuilder
+fork: fentouxungui/tfrmtbuilder-1
+license: Apache License (>= 2)
+app_mode: package-fn
+platforms: win-x64, mac-arm64
+version: 0.1.0
+tag: v0.1.0
+release_url: https://github.com/fentouxungui/tfrmtbuilder-1/releases/tag/v0.1.0
+build_run: ""
+template: unknown (backfill)
+patch_file: ""
+recorded_at: 2026-10-22
+built_at: 2026-10-19T01:38:33Z
+source_repo: fentouxungui/tfrmtbuilder-1
+source_commit: 2717ef7eb57b517f1f63f72c81d9a5a39e7535b3
+upstream_repo: GSK-Biostatistics/tfrmtbuilder
+upstream_head: 26bc6c80b44f6a0e24c794e6cb8f9cb328dcf524
+upstream_checked_at: 2026-10-22T09:59:49Z
+workflow_path: .github/workflows/build-app-bundle.yml
+workflow_commit: 2717ef7eb57b517f1f63f72c81d9a5a39e7535b3
+workflow_sha256: a16a0d725f9713d8d508e68ccfd8bfebf29518fc9cb1194d7dc3921d8952fd5c
+app_size_mb: win-x64=136, mac-arm64=128
+closure_packages: ""
+decisions:
+  - APP_MODE=package-fn - app layout from the generated workflow
+  - SOURCE_REBUILD=gdtools - rebuilt from source for macOS

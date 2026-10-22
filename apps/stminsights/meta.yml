@@ -1,0 +1,28 @@
+id: stminsights
+name: stminsights
+status: active
+upstream: cschwem2er/stminsights
+fork: fentouxungui/stminsights
+license: MIT
+app_mode: auto
+platforms: win-x64, mac-arm64
+version: 0.1.0
+tag: v0.1.0
+release_url: https://github.com/fentouxungui/stminsights/releases/tag/v0.1.0
+build_run: ""
+template: unknown (backfill)
+patch_file: ""
+recorded_at: 2026-10-22
+built_at: 2026-10-16T08:43:52Z
+source_repo: fentouxungui/stminsights
+source_commit: 7615aa8a6b559c11d1ad041c0190a49463c3ac93
+upstream_repo: cschwem2er/stminsights
+upstream_head: 7c34686c5af62f4e1aaac05f2bcc7103bf2e3fd1
+upstream_checked_at: 2026-10-22T09:59:38Z
+workflow_path: .github/workflows/stminsights-build-app-bundle.yml
+workflow_commit: 7615aa8a6b559c11d1ad041c0190a49463c3ac93
+workflow_sha256: 1c9e3ff35d448150dacb75454aec3dea51c88d8839a30c90533af40eac7e73d9
+app_size_mb: win-x64=143, mac-arm64=134
+closure_packages: ""
+decisions:
+  - APP_SUBDIR=app - app lives in a subdirectory

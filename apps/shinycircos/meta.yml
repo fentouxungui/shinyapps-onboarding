@@ -1,0 +1,28 @@
+id: shinycircos
+name: shinyCircos-V2.0
+status: active
+upstream: YaoLab-Bioinfo/shinyCircos-V2.0
+fork: YaoLab-Bioinfo/shinyCircos-V2.0
+license: GPL-3.0
+app_mode: auto
+platforms: win-x64, mac-arm64
+version: 0.1.0
+tag: v0.1.0
+release_url: https://github.com/YaoLab-Bioinfo/shinyCircos-V2.0/releases/tag/v0.1.0
+build_run: ""
+template: unknown (backfill)
+patch_file: ""
+recorded_at: 2026-10-22
+built_at: 2026-10-14T11:01:50Z
+source_repo: YaoLab-Bioinfo/shinyCircos-V2.0
+source_commit: f8e5fa9726d31ad97fa3f1acc872d7d9048a4e91
+upstream_repo: YaoLab-Bioinfo/shinyCircos-V2.0
+upstream_head: f8e5fa9726d31ad97fa3f1acc872d7d9048a4e91
+upstream_checked_at: 2026-10-22T09:58:40Z
+workflow_path: .github/workflows/shinycircos-build-app-bundle.yml
+workflow_commit: 48c9d2ba0f238caa21492b8a031124ee609c4472
+workflow_sha256: 1aa6e99a641c04f551c1eb369b525a349f4be4058a5acfee2b31d95799196251
+app_size_mb: win-x64=145, mac-arm64=138
+closure_packages: ""
+decisions:
+  - no non-default settings - generated from the stock template

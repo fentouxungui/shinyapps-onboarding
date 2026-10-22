@@ -1,0 +1,30 @@
+id: sombrero
+name: SOMbrero
+status: active
+upstream: cran/SOMbrero
+fork: fentouxungui/SOMbrero
+license: See upstream
+app_mode: flat
+platforms: win-x64, mac-arm64
+version: 0.1.0
+tag: v0.1.0
+release_url: https://github.com/fentouxungui/SOMbrero/releases/tag/v0.1.0
+build_run: ""
+template: unknown (backfill)
+patch_file: ""
+recorded_at: 2026-10-22
+built_at: 2026-10-17T17:23:15Z
+source_repo: fentouxungui/SOMbrero
+source_commit: 15ba0f4575897359be0609e2d8095a71ec125d91
+upstream_repo: cran/SOMbrero
+upstream_head: f7430fc2c3676f5c497b9d005a72ed09612db9ce
+upstream_checked_at: 2026-10-22T09:59:06Z
+workflow_path: .github/workflows/build-app-bundle.yml
+workflow_commit: 15ba0f4575897359be0609e2d8095a71ec125d91
+workflow_sha256: fbd582072a32aabf457c54c90f3dfb027858f45ee6cac0660c2206f4d722588f
+app_size_mb: win-x64=167, mac-arm64=136
+closure_packages: ""
+decisions:
+  - APP_MODE=flat - app layout from the generated workflow
+  - EXTRA_PKGS=1 packages - extra dependencies declared in the workflow
+  - APP_SUBDIR=inst/shiny - app lives in a subdirectory

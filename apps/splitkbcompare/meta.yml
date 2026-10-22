@@ -1,0 +1,28 @@
+id: splitkbcompare
+name: splitKbCompare
+status: active
+upstream: jhelvy/splitKbCompare
+fork: fentouxungui/splitKbCompare
+license: MIT
+app_mode: auto
+platforms: win-x64, mac-arm64
+version: 0.1.0
+tag: v0.1.0
+release_url: https://github.com/fentouxungui/splitKbCompare/releases/tag/v0.1.0
+build_run: ""
+template: unknown (backfill)
+patch_file: ""
+recorded_at: 2026-10-22
+built_at: 2026-10-13T07:24:53Z
+source_repo: fentouxungui/splitKbCompare
+source_commit: 2bcf531ddb92917be3b875967ec1dccc89908ff1
+upstream_repo: jhelvy/splitKbCompare
+upstream_head: 03382445fc54d248b9c252c45a4af65275945b74
+upstream_checked_at: 2026-10-22T09:59:20Z
+workflow_path: .github/workflows/splitkbcompare-build-app-bundle.yml
+workflow_commit: 2bcf531ddb92917be3b875967ec1dccc89908ff1
+workflow_sha256: 5d6afd696073b2afd1e392bb100c88002413a3a1910c7eb59aaf561217a3c0ff
+app_size_mb: win-x64=90, mac-arm64=78
+closure_packages: ""
+decisions:
+  - EXTRA_PKGS=1 packages - extra dependencies declared in the workflow

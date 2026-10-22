@@ -94,6 +94,36 @@
 | `pressfreedom` | pressfreedom | active | win-x64, mac-arm64 | v0.1.0 | cran/pressfreedom | [NOTES](pressfreedom/NOTES.md) |
 | `projectlsa` | projectLSA | active | win-x64, mac-arm64 | v0.1.0 | hdmeasure/projectLSA | [NOTES](projectlsa/NOTES.md) |
 | `quallmer-app` | quallmer.app | active | win-x64, mac-arm64 | v0.1.0 | cran/quallmer.app | [NOTES](quallmer-app/NOTES.md) |
+| `quickexplore` | QuickExplore | active | win-x64, mac-arm64 | v0.1.2 | Ramsas88/QuickExplore | [NOTES](quickexplore/NOTES.md) |
+| `r3dmol` | r3dmol | active | win-x64, mac-arm64 | v0.1.0 | cran/r3dmol | [NOTES](r3dmol/NOTES.md) |
+| `reliashiny` | ReliaShiny | active | win-x64, mac-arm64 | v0.1.1 | paulgovan/ReliaShiny | [NOTES](reliashiny/NOTES.md) |
+| `repplabshiny` | REPPlabShiny | active | win-x64, mac-arm64 | v0.1.0 | cran/REPPlabShiny | [NOTES](repplabshiny/NOTES.md) |
+| `scconvert` | scConvertShiny | active | win-x64, mac-arm64 | v0.1.2 | fentouxungui/scConvertShiny | [NOTES](scconvert/NOTES.md) |
+| `sdstudio` | sdstudio | active | win-x64, mac-arm64 | v0.1.0 | cran/sdstudio | [NOTES](sdstudio/NOTES.md) |
+| `seasonalview` | seasonalview | active | win-x64, mac-arm64 | v0.1.0 | cran/seasonalview | [NOTES](seasonalview/NOTES.md) |
+| `seurat-explorer` | SeuratExplorer | active | win-x64, mac-arm64 | v0.1.9 | fentouxungui/SeuratExplorer | [NOTES](seurat-explorer/NOTES.md) |
+| `shinybrms` | shinybrms | active | win-x64, mac-arm64 | v0.1.0 | cran/shinybrms | [NOTES](shinybrms/NOTES.md) |
+| `shinycircos` | shinyCircos-V2.0 | active | win-x64, mac-arm64 | v0.1.0 | YaoLab-Bioinfo/shinyCircos-V2.0 | [NOTES](shinycircos/NOTES.md) |
+| `shinyinvoice` | shinyInvoice | active | win-x64, mac-arm64 | v0.1.0 | fernandoroa/invoice-public | [NOTES](shinyinvoice/NOTES.md) |
+| `shinykgode` | shinyKGode | active | win-x64, mac-arm64 | v0.1.0 | cran/shinyKGode | [NOTES](shinykgode/NOTES.md) |
+| `shinymergely` | shinyMergely | active | win-x64, mac-arm64 | v0.1.1 | stla/shinyMergely | [NOTES](shinymergely/NOTES.md) |
+| `shinymixr` | shinyMixR | active | win-x64, mac-arm64 | v0.1.0 | cran/shinyMixR | [NOTES](shinymixr/NOTES.md) |
+| `shinysbm` | shinySbm | active | win-x64, mac-arm64 | v0.2.0 | cran/shinySbm | [NOTES](shinysbm/NOTES.md) |
+| `shinystan` | ShinyStan | active | win-x64, mac-arm64 | v0.3.0 | stan-dev/shinystan | [NOTES](shinystan/NOTES.md) |
+| `sombrero` | SOMbrero | active | win-x64, mac-arm64 | v0.1.0 | cran/SOMbrero | [NOTES](sombrero/NOTES.md) |
+| `somenv` | SOMEnv | active | win-x64, mac-arm64 | v0.2.0 | cran/SOMEnv | [NOTES](somenv/NOTES.md) |
+| `southparkrshiny` | SouthParkRshiny | active | win-x64, mac-arm64 | v0.1.0 | Amalan-ConStat/SouthParkRshiny | [NOTES](southparkrshiny/NOTES.md) |
+| `spatiallibd` | spatialLIBD | active | win-x64, mac-arm64 | v0.1.0 | LieberInstitute/spatialLIBD | [NOTES](spatiallibd/NOTES.md) |
+| `splitkbcompare` | splitKbCompare | active | win-x64, mac-arm64 | v0.1.0 | jhelvy/splitKbCompare | [NOTES](splitkbcompare/NOTES.md) |
+| `squeakr` | SqueakR | active | win-x64, mac-arm64 | v0.1.0 | cran/SqueakR | [NOTES](squeakr/NOTES.md) |
+| `statnetweb` | statnetWeb | active | win-x64, mac-arm64 | v0.7.0 | statnet/statnetWeb | [NOTES](statnetweb/NOTES.md) |
+| `statteacherassistant` | StatTeacherAssistant | active | win-x64, mac-arm64 | v0.1.0 | ccasement/StatTeacherAssistant | [NOTES](statteacherassistant/NOTES.md) |
+| `stmgui` | stmgui | active | win-x64, mac-arm64 | v0.1.0 | dzangri/stmGUI | [NOTES](stmgui/NOTES.md) |
+| `stminsights` | stminsights | active | win-x64, mac-arm64 | v0.1.0 | cschwem2er/stminsights | [NOTES](stminsights/NOTES.md) |
+| `taipan` | taipan | active | win-x64, mac-arm64 | v0.1.1 | srkobakian/taipan | [NOTES](taipan/NOTES.md) |
+| `testanaapp` | TestAnaAPP | active | win-x64, mac-arm64 | v0.1.0 | jiangyouxiang/TestAnaAPP | [NOTES](testanaapp/NOTES.md) |
+| `tfrmtbuilder` | tfrmtbuilder | active | win-x64, mac-arm64 | v0.1.0 | GSK-Biostatistics/tfrmtbuilder | [NOTES](tfrmtbuilder/NOTES.md) |
+| `upsetr-shiny` | UpSetR-shiny | active | win-x64, mac-arm64 | v0.1.0 | hms-dbmi/UpSetR-shiny | [NOTES](upsetr-shiny/NOTES.md) |
 | `scrdavis` | ScRDAVis | pending | win-x64 | v1.0.2 | GudaLab/ScRDAVis | [NOTES](scrdavis/NOTES.md) |
 | `xomicsshiny` | xOmicsShiny | pending | win-x64, mac-arm64 | v3.0.2 | interactivereport/xOmicsShiny | [NOTES](xomicsshiny/NOTES.md) |
 

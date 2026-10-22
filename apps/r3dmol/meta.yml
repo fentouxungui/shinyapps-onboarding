@@ -1,0 +1,30 @@
+id: r3dmol
+name: r3dmol
+status: active
+upstream: cran/r3dmol
+fork: fentouxungui/r3dmol
+license: See upstream
+app_mode: flat
+platforms: win-x64, mac-arm64
+version: 0.1.0
+tag: v0.1.0
+release_url: https://github.com/fentouxungui/r3dmol/releases/tag/v0.1.0
+build_run: ""
+template: unknown (backfill)
+patch_file: ""
+recorded_at: 2026-10-22
+built_at: 2026-10-17T18:42:52Z
+source_repo: fentouxungui/r3dmol
+source_commit: 06bc69e219c1973615b2bd8daf1c94d1f39a5c82
+upstream_repo: cran/r3dmol
+upstream_head: f6b05868f07ded4618c46a4b2f7ca3a6e8e465de
+upstream_checked_at: 2026-10-22T09:58:12Z
+workflow_path: .github/workflows/build-app-bundle.yml
+workflow_commit: 06bc69e219c1973615b2bd8daf1c94d1f39a5c82
+workflow_sha256: bc4e0b130fade834175e42e152632fd3a3dfbacacdbaddcf8888f543217395f7
+app_size_mb: win-x64=60, mac-arm64=57
+closure_packages: ""
+decisions:
+  - APP_MODE=flat - app layout from the generated workflow
+  - EXTRA_PKGS=1 packages - extra dependencies declared in the workflow
+  - APP_SUBDIR=inst/example - app lives in a subdirectory

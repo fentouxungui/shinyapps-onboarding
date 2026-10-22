@@ -1,0 +1,28 @@
+id: squeakr
+name: SqueakR
+status: active
+upstream: cran/SqueakR
+fork: fentouxungui/SqueakR
+license: See upstream
+app_mode: package-fn
+platforms: win-x64, mac-arm64
+version: 0.1.0
+tag: v0.1.0
+release_url: https://github.com/fentouxungui/SqueakR/releases/tag/v0.1.0
+build_run: ""
+template: unknown (backfill)
+patch_file: ""
+recorded_at: 2026-10-22
+built_at: 2026-10-17T17:22:13Z
+source_repo: fentouxungui/SqueakR
+source_commit: 32e4e261e01fab89e35e295c2ab66d5506afa201
+upstream_repo: cran/SqueakR
+upstream_head: 39574bbb7c8ec1870361c4934d67d1e6e238798a
+upstream_checked_at: 2026-10-22T09:59:23Z
+workflow_path: .github/workflows/build-app-bundle.yml
+workflow_commit: 32e4e261e01fab89e35e295c2ab66d5506afa201
+workflow_sha256: 02ea652670f8502eaa316f0c226291b7d53b0c1aaa4ea0f93e26bb480690ba43
+app_size_mb: win-x64=188, mac-arm64=180
+closure_packages: ""
+decisions:
+  - APP_MODE=package-fn - app layout from the generated workflow

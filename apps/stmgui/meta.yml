@@ -1,0 +1,30 @@
+id: stmgui
+name: stmgui
+status: active
+upstream: dzangri/stmGUI
+fork: fentouxungui/stmGUI
+license: MIT
+app_mode: flat
+platforms: win-x64, mac-arm64
+version: 0.1.0
+tag: v0.1.0
+release_url: https://github.com/fentouxungui/stmGUI/releases/tag/v0.1.0
+build_run: ""
+template: unknown (backfill)
+patch_file: ""
+recorded_at: 2026-10-22
+built_at: 2026-10-17T15:23:46Z
+source_repo: fentouxungui/stmGUI
+source_commit: 0533845adc47f4a03b79ae1f8d23c5c3c919a2cf
+upstream_repo: dzangri/stmGUI
+upstream_head: c22a5e23c5f01d57045d52d68b25488fc6f113d9
+upstream_checked_at: 2026-10-22T09:59:35Z
+workflow_path: .github/workflows/stmgui-build-app-bundle.yml
+workflow_commit: 0533845adc47f4a03b79ae1f8d23c5c3c919a2cf
+workflow_sha256: 2170e2b47c949a13491a532634d506dfb0b617d805f25769c71a25b0f68cdbe9
+app_size_mb: win-x64=116, mac-arm64=112
+closure_packages: ""
+decisions:
+  - APP_MODE=flat - app layout from the generated workflow
+  - EXTRA_PKGS=1 packages - extra dependencies declared in the workflow
+  - APP_SUBDIR=inst/app - app lives in a subdirectory

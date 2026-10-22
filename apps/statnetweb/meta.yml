@@ -1,0 +1,31 @@
+id: statnetweb
+name: statnetWeb
+status: active
+upstream: statnet/statnetWeb
+fork: fentouxungui/statnetWeb
+license: GPL-3
+app_mode: flat
+platforms: win-x64, mac-arm64
+version: 0.7.0
+tag: v0.7.0
+release_url: https://github.com/fentouxungui/statnetWeb/releases/tag/v0.7.0
+build_run: ""
+template: unknown (backfill)
+patch_file: ""
+recorded_at: 2026-10-22
+built_at: 2026-10-19T00:46:20Z
+source_repo: fentouxungui/statnetWeb
+source_commit: e07d50b730ebaf271719e004f930728d351cb87f
+upstream_repo: statnet/statnetWeb
+upstream_head: d2492dd28aa02dd1463671401f0251f45864beb0
+upstream_checked_at: 2026-10-22T09:59:27Z
+workflow_path: .github/workflows/build-app-bundle.yml
+workflow_commit: e07d50b730ebaf271719e004f930728d351cb87f
+workflow_sha256: 827c5b71dfa618d47e6c5cb0dfb5cd482e6da43cdef72cf715c0616ad271b65a
+app_size_mb: win-x64=81, mac-arm64=79
+closure_packages: ""
+decisions:
+  - APP_MODE=flat - app layout from the generated workflow
+  - EXTRA_PKGS=1 packages - extra dependencies declared in the workflow
+  - SOURCE_REBUILD=gdtools - rebuilt from source for macOS
+  - APP_SUBDIR=inst/shiny/statnetWeb - app lives in a subdirectory

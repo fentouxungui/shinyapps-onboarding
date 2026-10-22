@@ -1,0 +1,30 @@
+id: shinybrms
+name: shinybrms
+status: active
+upstream: cran/shinybrms
+fork: fentouxungui/shinybrms
+license: See upstream
+app_mode: flat
+platforms: win-x64, mac-arm64
+version: 0.1.0
+tag: v0.1.0
+release_url: https://github.com/fentouxungui/shinybrms/releases/tag/v0.1.0
+build_run: ""
+template: unknown (backfill)
+patch_file: ""
+recorded_at: 2026-10-22
+built_at: 2026-10-17T23:46:25Z
+source_repo: fentouxungui/shinybrms
+source_commit: 62ca478091e3555a88743340a0c5cab1a007ac9e
+upstream_repo: cran/shinybrms
+upstream_head: 0e50a88b869b8ec28f7d386471622b333a19bc21
+upstream_checked_at: 2026-10-22T09:58:38Z
+workflow_path: .github/workflows/build-app-bundle.yml
+workflow_commit: 62ca478091e3555a88743340a0c5cab1a007ac9e
+workflow_sha256: b24406e02a1ac4cfc68d1cb55ce1c56f7462da67016f2e9e1d0a0841090b3307
+app_size_mb: win-x64=190, mac-arm64=187
+closure_packages: ""
+decisions:
+  - APP_MODE=flat - app layout from the generated workflow
+  - EXTRA_PKGS=1 packages - extra dependencies declared in the workflow
+  - APP_SUBDIR=inst/shinybrms_app - app lives in a subdirectory

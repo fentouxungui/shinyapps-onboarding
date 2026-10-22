@@ -1,0 +1,30 @@
+id: shinykgode
+name: shinyKGode
+status: active
+upstream: cran/shinyKGode
+fork: fentouxungui/shinyKGode
+license: See upstream
+app_mode: flat
+platforms: win-x64, mac-arm64
+version: 0.1.0
+tag: v0.1.0
+release_url: https://github.com/fentouxungui/shinyKGode/releases/tag/v0.1.0
+build_run: ""
+template: unknown (backfill)
+patch_file: ""
+recorded_at: 2026-10-22
+built_at: 2026-10-18T12:17:40Z
+source_repo: fentouxungui/shinyKGode
+source_commit: 85de1bb8b72dde8b13b0f84f3879394234874c5a
+upstream_repo: cran/shinyKGode
+upstream_head: 62f2968f9eb77a80ec76a26769d1dda110b48436
+upstream_checked_at: 2026-10-22T09:58:48Z
+workflow_path: .github/workflows/build-app-bundle.yml
+workflow_commit: 85de1bb8b72dde8b13b0f84f3879394234874c5a
+workflow_sha256: 35172e652d38c7704e5fb7aa8ae2198f4c0139f158209e12985d659bc39a641c
+app_size_mb: win-x64=68, mac-arm64=65
+closure_packages: ""
+decisions:
+  - APP_MODE=flat - app layout from the generated workflow
+  - EXTRA_PKGS=1 packages - extra dependencies declared in the workflow
+  - APP_SUBDIR=inst/application - app lives in a subdirectory

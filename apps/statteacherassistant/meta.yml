@@ -1,0 +1,30 @@
+id: statteacherassistant
+name: StatTeacherAssistant
+status: active
+upstream: ccasement/StatTeacherAssistant
+fork: fentouxungui/StatTeacherAssistant
+license: MIT + file LICENSE
+app_mode: flat
+platforms: win-x64, mac-arm64
+version: 0.1.0
+tag: v0.1.0
+release_url: https://github.com/fentouxungui/StatTeacherAssistant/releases/tag/v0.1.0
+build_run: ""
+template: unknown (backfill)
+patch_file: ""
+recorded_at: 2026-10-22
+built_at: 2026-10-18T23:42:28Z
+source_repo: fentouxungui/StatTeacherAssistant
+source_commit: 924c5441bc25cb40bc93cfb0bf3f399a6fae9a92
+upstream_repo: ccasement/StatTeacherAssistant
+upstream_head: efcd368ac1d5074ec475f8b7586078c913fc447c
+upstream_checked_at: 2026-10-22T09:59:31Z
+workflow_path: .github/workflows/build-app-bundle.yml
+workflow_commit: 924c5441bc25cb40bc93cfb0bf3f399a6fae9a92
+workflow_sha256: 93b54e854b7595d80ddf6b546f29d0a4cb5d17e30a8b633366d2df49a39ee16a
+app_size_mb: win-x64=132, mac-arm64=126
+closure_packages: ""
+decisions:
+  - APP_MODE=flat - app layout from the generated workflow
+  - SOURCE_REBUILD=gdtools - rebuilt from source for macOS
+  - APP_SUBDIR=inst/StatTeacherAssistant - app lives in a subdirectory

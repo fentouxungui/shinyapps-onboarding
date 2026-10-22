@@ -1,0 +1,30 @@
+id: seasonalview
+name: seasonalview
+status: active
+upstream: cran/seasonalview
+fork: fentouxungui/seasonalview
+license: See upstream
+app_mode: flat
+platforms: win-x64, mac-arm64
+version: 0.1.0
+tag: v0.1.0
+release_url: https://github.com/fentouxungui/seasonalview/releases/tag/v0.1.0
+build_run: ""
+template: unknown (backfill)
+patch_file: ""
+recorded_at: 2026-10-22
+built_at: 2026-10-18T04:28:24Z
+source_repo: fentouxungui/seasonalview
+source_commit: 93bf9f3ec151c6c6090cbbff929d4525f5da9c63
+upstream_repo: cran/seasonalview
+upstream_head: 06b242b2d4fb9049ec900ea3d55d99b13c68ba30
+upstream_checked_at: 2026-10-22T09:58:30Z
+workflow_path: .github/workflows/build-app-bundle.yml
+workflow_commit: 93bf9f3ec151c6c6090cbbff929d4525f5da9c63
+workflow_sha256: 4cade5454d9f22b90b544ecfbfdd3ff5ccea72d517bd87fd00a802d7c4eec08d
+app_size_mb: win-x64=106, mac-arm64=93
+closure_packages: ""
+decisions:
+  - APP_MODE=flat - app layout from the generated workflow
+  - EXTRA_PKGS=1 packages - extra dependencies declared in the workflow
+  - APP_SUBDIR=inst/app - app lives in a subdirectory
