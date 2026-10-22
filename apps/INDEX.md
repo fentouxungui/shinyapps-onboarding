@@ -133,5 +133,7 @@
 | `zscorer` | zscorer | active | win-x64, mac-arm64 | v0.3.2 | nutriverse/zscorer | [NOTES](zscorer/NOTES.md) |
 | `scrdavis` | ScRDAVis | pending | win-x64 | v1.0.2 | GudaLab/ScRDAVis | [NOTES](scrdavis/NOTES.md) |
 | `xomicsshiny` | xOmicsShiny | pending | win-x64, mac-arm64 | v3.0.2 | interactivereport/xOmicsShiny | [NOTES](xomicsshiny/NOTES.md) |
+| `insane` | insane | withdrawn | win-x64, mac-arm64 | v0.2.0 | mcanouil/insane | [NOTES](insane/NOTES.md) |
+| `nacho` | NACHO | withdrawn | win-x64, mac-arm64 | v0.1.1 | mcanouil/NACHO | [NOTES](nacho/NOTES.md) |
 
 Regenerate with `scripts/build-app-index.ps1`. Status semantics: `apps/README.md`.

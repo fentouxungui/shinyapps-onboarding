@@ -129,7 +129,7 @@ $dir = Join-Path $AppsDir $AppId
 if ((Test-Path -LiteralPath (Join-Path $dir 'meta.yml')) -and -not $Force) {
   throw "apps/$AppId already exists (use -Force to overwrite the snapshot)"
 }
-$artifacts = ($assetPlatforms | ForEach-Object { '  - `{0}-<version>-{1}.zip` (<N> MB)' -f $AppId, $_ }) -join "`n"
+$artifacts = ($assetPlatforms | ForEach-Object { '  - `{0}-{1}-{2}.zip` ({3} MB)' -f $AppId, $version, $_, $sizes[$_] }) -join "`n"
 $statusText = switch ($Status) {
   'active'    { 'listed in the ShinyApps catalog' }
   'pending'   { 'bundle builds; not listed in the catalog yet' }

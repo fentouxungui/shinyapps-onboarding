@@ -1,0 +1,28 @@
+id: nacho
+name: NACHO
+status: withdrawn
+upstream: mcanouil/NACHO
+fork: fentouxungui/NACHO
+license: GPL-3.0
+app_mode: flat
+platforms: win-x64, mac-arm64
+version: 0.1.1
+tag: v0.1.1
+release_url: https://github.com/fentouxungui/NACHO/releases/tag/v0.1.1
+build_run: ""
+template: unknown
+patch_file: ""
+recorded_at: 2026-10-22
+built_at: 2026-10-17T14:16:28Z
+source_repo: fentouxungui/NACHO
+source_commit: 531e71382ce354117bb92f47fbb0915802734cd8
+upstream_repo: mcanouil/NACHO
+upstream_head: cb0a865b80d406e45911bcbe96a60796511feb0f
+upstream_checked_at: 2026-10-22T10:05:21Z
+workflow_path: .github/workflows/nacho-build-app-bundle.yml
+workflow_commit: 531e71382ce354117bb92f47fbb0915802734cd8
+workflow_sha256: 66c3ace07ac34cd36fcdb813a30b6ee5b8d139e009ec914af88ce0661be8f4cd
+app_size_mb: win-x64=64, mac-arm64=60
+closure_packages: ""
+decisions:
+  - KEY=value - why it is set this way

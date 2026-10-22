@@ -75,6 +75,15 @@ function Get-RawWorkflow([string]$Repo, [string]$Branch, [string]$Path) {
   try { return (Invoke-WebRequest -Uri $url -Headers @{ Authorization = "token $tok" } -UseBasicParsing -TimeoutSec 60).Content }
   catch { return $null }
 }
+function Get-RawWorkflowAny([string]$Repo, [string]$Path) {
+  foreach ($b in @('main', 'master')) {
+    $wf = Get-RawWorkflow $Repo $b $Path
+    if ($wf) { return $wf }
+  }
+  $info = TryApi "https://api.github.com/repos/$Repo"
+  if ($info -and $info.default_branch) { return Get-RawWorkflow $Repo $info.default_branch $Path }
+  return $null
+}
 
 $results = @()
 foreach ($d in Get-ChildItem -LiteralPath $AppsDir -Directory | Where-Object { $_.Name -ne '_template' }) {
@@ -91,6 +100,14 @@ foreach ($d in Get-ChildItem -LiteralPath $AppsDir -Directory | Where-Object { $
     workflow = [ordered]@{ path = $m['workflow_path']; changed = $null; sha256 = $m['workflow_sha256'] }
   }
 
+  if (@('rejected', 'withdrawn') -contains $m['status']) {
+    $base.action = 'withheld'
+    $base.reasons = @('not distributed; no check')
+    $results += [pscustomobject]$base
+    Write-Host ("{0,-22} {1}" -f $id, 'withheld') -ForegroundColor DarkGray
+    continue
+  }
+
   $missing = @()
   foreach ($k in @('upstream_repo', 'upstream_head', 'source_repo', 'workflow_path', 'workflow_sha256', 'tag', 'built_at')) {
     if (-not $m[$k]) { $missing += $k }
@@ -103,8 +120,7 @@ foreach ($d in Get-ChildItem -LiteralPath $AppsDir -Directory | Where-Object { $
     continue
   }
 
-  $upRepo = Api "https://api.github.com/repos/$($m['upstream_repo'])"
-  $upHead = @(Api "https://api.github.com/repos/$($m['upstream_repo'])/commits?per_page=1")[0]
+  $upHead = @((Api "https://api.github.com/repos/$($m['upstream_repo'])/commits?per_page=1") | ForEach-Object { $_ })[0]
   $base.upstream.head = $upHead.sha
 
   if ($upHead.sha -ne $m['upstream_head']) {
@@ -132,22 +148,19 @@ foreach ($d in Get-ChildItem -LiteralPath $AppsDir -Directory | Where-Object { $
 
   if (-not $SkipFork) {
     $isFork = ($m['source_repo'] -ne $m['upstream_repo'])
-    $srcRepo = if ($isFork) { TryApi "https://api.github.com/repos/$($m['source_repo'])" } else { $upRepo }
-    if ($srcRepo) {
-      if ($isFork) {
-        $forkHead = @(Api "https://api.github.com/repos/$($m['source_repo'])/commits?per_page=1")[0]
-        $fcmp = TryApi "https://api.github.com/repos/$($m['upstream_repo'])/compare/$($upHead.sha)...$($forkHead.sha)"
-        if ($fcmp) {
-          $base.fork.behind_by = $fcmp.behind_by
-          $base.fork.ahead_by = $fcmp.ahead_by
-          if ($fcmp.behind_by -gt 0) { $base.reasons += "fork is $($fcmp.behind_by) commit(s) behind upstream" }
-        }
+    if ($isFork) {
+      $forkHead = @((Api "https://api.github.com/repos/$($m['source_repo'])/commits?per_page=1") | ForEach-Object { $_ })[0]
+      $fcmp = TryApi "https://api.github.com/repos/$($m['upstream_repo'])/compare/$($upHead.sha)...$($forkHead.sha)"
+      if ($fcmp) {
+        $base.fork.behind_by = $fcmp.behind_by
+        $base.fork.ahead_by = $fcmp.ahead_by
+        if ($fcmp.behind_by -gt 0) { $base.reasons += "fork is $($fcmp.behind_by) commit(s) behind upstream" }
       }
-      $rawWf = Get-RawWorkflow $m['source_repo'] $srcRepo.default_branch $m['workflow_path']
-      if ($rawWf) {
-        $base.workflow.changed = ((Get-LfSha256 $rawWf) -ne $m['workflow_sha256'])
-        if ($base.workflow.changed) { $base.reasons += 'workflow differs from the snapshot' }
-      }
+    }
+    $rawWf = Get-RawWorkflowAny $m['source_repo'] $m['workflow_path']
+    if ($rawWf) {
+      $base.workflow.changed = ((Get-LfSha256 $rawWf) -ne $m['workflow_sha256'])
+      if ($base.workflow.changed) { $base.reasons += 'workflow differs from the snapshot' }
     }
   }
 

@@ -1,0 +1,28 @@
+id: insane
+name: insane
+status: withdrawn
+upstream: mcanouil/insane
+fork: fentouxungui/insane
+license: MIT + file LICENSE
+app_mode: flat
+platforms: win-x64, mac-arm64
+version: 0.2.0
+tag: v0.2.0
+release_url: https://github.com/fentouxungui/insane/releases/tag/v0.2.0
+build_run: ""
+template: unknown
+patch_file: ""
+recorded_at: 2026-10-22
+built_at: 2026-10-18T14:46:56Z
+source_repo: fentouxungui/insane
+source_commit: fda152876f07d504a84734db527690de7f3f04fb
+upstream_repo: mcanouil/insane
+upstream_head: 3914f203b0c48943b46a53394ef3c1d852b98b3b
+upstream_checked_at: 2026-10-22T10:06:15Z
+workflow_path: .github/workflows/build-app-bundle.yml
+workflow_commit: fda152876f07d504a84734db527690de7f3f04fb
+workflow_sha256: 05109f0d729f37f9734e18bdade4b33512a0b66da32a5f7be7805bfdef826f36
+app_size_mb: win-x64=147, mac-arm64=143
+closure_packages: ""
+decisions:
+  - KEY=value - why it is set this way

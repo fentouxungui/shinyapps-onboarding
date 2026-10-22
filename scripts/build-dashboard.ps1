@@ -71,7 +71,7 @@ th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid rgba(127,1
 th { position: sticky; top: 0; background: Canvas; }
 .action { font-variant: small-caps; font-weight: 600; }
 .a-ok { color: #2e7d32; } .a-rebuild { color: #0277bd; } .a-workflow-drift { color: #b26a00; }
-.a-sync-first { color: #7b1fa2; } .a-unknown, .a-unknown-meta { color: #777; }
+.a-sync-first { color: #7b1fa2; } .a-withheld, .a-unknown, .a-unknown-meta { color: #777; }
 tr:hover { background: rgba(127,127,127,.08); }
 </style>
 </head>
