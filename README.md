@@ -27,6 +27,8 @@ splitKbCompare and ShinyStan.
 | `references/startup-data.md`   | First-launch data downloads: generate at build time into the bundle |
 | `references/store-contract.md` | Bundle/manifest/catalog contract and `publish-catalog` |
 | `references/release-hardening.md` | Tag/version policy, release-safety checklist, reviewer boundary |
+| `references/heavy-apps.md`     | Many modules / many dependencies / large data: census, size budget, build-time patches |
+| `references/macos-portability.md` | XQuartz/Homebrew dylib failures and the remediation ladder |
 | `references/pr-template.md`    | Structure for the upstream pull request |
 | `examples/`                    | Real working workflows (flat, package-fn, package-deploy) |
 
@@ -110,13 +112,22 @@ The workflow includes a **`Smoke test`** step: after building, it unzips the bun
 process (`callr::r` with a timeout) that cannot hang and prints the exact R error on failure. A failed
 start blocks the release. Toggle with `SMOKE: "on"|"off"` and `SMOKE_TIMEOUT_SEC` (default 300).
 
+The smoke test builds the UI only. A separate check fails the build when any
+`library()`/`require()`/`pkg::` name in the app sources is missing from `rlib/`, which
+catches packages loaded inside click handlers. It is still not a substitute for clicking
+through each module in the real ShinyApps shell.
+
 ## Reliability playbook (why this template is hardened)
 
 The workflow builds the dependency graph from the **source** index, installs
 per-package with `pkgType="both"` (binary, falling back to source), runs a **fix-up loop**
 over installed `DESCRIPTION`s, **load-validates** every required seed package from `rlib/`,
-excludes base packages, and on macOS audits binaries for non-portable
-XQuartz/Homebrew links. The smoke test runs with `R_LIBS_USER`/`R_LIBS_SITE` cleared and
+excludes base and recommended packages, and on macOS audits binaries for non-portable
+XQuartz/Homebrew links. Archived/GitHub-only packages are installed from `ARCHIVE_URLS` and
+verified against `FORCED_PKGS`; `PATCH_SCRIPT` applies build-time config patches inside
+`bundle/app/`. Heavy-app playbook:
+[references/heavy-apps.md](references/heavy-apps.md); macOS dylibs:
+[references/macos-portability.md](references/macos-portability.md). The smoke test runs with `R_LIBS_USER`/`R_LIBS_SITE` cleared and
 only `rlib` + base R on `.libPaths()`, so a runner library cannot mask a missing bundle
 dependency. The build job is `contents: read`; only the release job may write, and it
 publishes `*.sha256`, `meta-*.json` and `deps-*.json`. Full list:

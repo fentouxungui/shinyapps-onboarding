@@ -53,9 +53,15 @@ env:
   EXTRA_PKGS: "__EXTRA_PKGS__"
   EXCLUDE: "__EXCLUDE__"
   ARCHIVE_URLS: "__ARCHIVE_URLS__"
+  # Packages that must exist in rlib/ after ARCHIVE_URLS installs; the build
+  # fails if one is missing (a silent try() once shipped a broken bundle).
+  FORCED_PKGS: "__FORCED_PKGS__"
   EXTRA_REPOS: "__EXTRA_REPOS__"
   SOFT_PKGS: "__SOFT_PKGS__"
   SOURCE_REBUILD: "__SOURCE_REBUILD__"
+  # Optional R script run inside app/ after assembly, for build-time patches
+  # (absolute paths in config files, disabling a module that cannot ship).
+  PATCH_SCRIPT: "__PATCH_SCRIPT__"
   PREFETCH_SCRIPT: "__PREFETCH_SCRIPT__"
   APP_NOTES: "__APP_NOTES__"
   MAX_REQUEST_MB: "1024"
@@ -139,7 +145,7 @@ jobs:
           appdir  <- file.path(bundle, "app"); dir.create(appdir, recursive = TRUE)
           lib     <- file.path(bundle, "rlib"); dir.create(lib, recursive = TRUE)
           .libPaths(c(lib, .libPaths()))
-          base_pkgs <- rownames(installed.packages(priority = "base"))
+          base_pkgs <- rownames(installed.packages(priority = c("base", "recommended")))
           split_pkgs <- function(x) { p <- strsplit(trimws(x), "[ ,]+")[[1]]; p[nzchar(p)] }
           dcf_deps <- function(dcf, fields = c("Depends","Imports","LinkingTo")) {
             f <- intersect(fields, colnames(dcf)); if (!length(f)) return(character())
@@ -246,7 +252,16 @@ jobs:
             }
           }
           if (mode == "package-fn") { install.packages(pkgroot, lib = lib, repos = NULL, type = "source", dependencies = FALSE); if (!pkg_name %in% have()) stop("app package failed to install: ", pkg_name) }
-          for (u in split_pkgs(Sys.getenv("ARCHIVE_URLS"))) { f <- tempfile(fileext = ".tar.gz"); download.file(u, f, mode = "wb", quiet = TRUE); try(install.packages(f, lib = lib, repos = NULL, type = "source", dependencies = FALSE), silent = TRUE) }
+          for (u in split_pkgs(Sys.getenv("ARCHIVE_URLS"))) {
+            f <- file.path(tempdir(), basename(u)); download.file(u, f, mode = "wb", quiet = TRUE)
+            if (!file.exists(f) || file.size(f) < 1000) stop("ARCHIVE_URLS download failed: ", u)
+            cat("installing archived package:", basename(u), "\n")
+            install.packages(f, lib = lib, repos = NULL, type = "source", dependencies = FALSE)
+          }
+          forced <- split_pkgs(Sys.getenv("FORCED_PKGS"))
+          forced_missing <- setdiff(forced, have())
+          if (length(forced_missing)) stop("forced packages were not installed from ARCHIVE_URLS: ", paste(forced_missing, collapse = ", "))
+          if (length(forced)) cat("forced packages ok:", paste(forced, collapse = ", "), "\n")
 
           for (i in 1:5) {
             installed <- have(); need <- character()
@@ -259,12 +274,28 @@ jobs:
           if (identical(unname(Sys.info()[["sysname"]]), "Darwin")) {
             bins <- list.files(lib, pattern = "[.](so|dylib)$", recursive = TRUE, full.names = TRUE); bad <- character()
             for (b in bins) { o <- suppressWarnings(system2("otool", c("-L", shQuote(b)), stdout = TRUE, stderr = FALSE)); if (any(grepl("(/opt/X11|/opt/homebrew|/usr/local/opt)", o))) bad <- c(bad, b) }
-            if (length(bad)) stop("non-portable dylib references: ", paste(unique(basename(bad)), collapse = ", "))
+            if (length(bad)) stop("non-portable dylib references in ", length(bad), " file(s): ", paste(unique(basename(bad)), collapse = ", "), ". Rebuild with SOURCE_REBUILD=<pkg>, or drop the package/feature; see references/macos-portability.md")
           }
 
           required <- setdiff(seed, c(soft, base_pkgs)); miss <- setdiff(required, have())
           if (length(miss) && strict_deps == "on") stop("missing required packages: ", paste(miss, collapse = ", "))
           for (p in required) { ok <- tryCatch({ loadNamespace(p, lib.loc = lib); TRUE }, error = function(e) { cat("LOAD FAILED:", p, "->", conditionMessage(e), "\n"); FALSE }); if (!ok) stop("seed package cannot be loaded from rlib: ", p) }
+
+          # Every package named in a library()/require()/pkg:: call must be in rlib.
+          # The smoke test builds the UI only, so a package loaded inside a click
+          # handler would otherwise stay invisible until a user presses the button.
+          declared_pkgs <- function(dir) {
+            sf <- list.files(dir, pattern = "[.](R|r|Rmd|rmd)$", recursive = TRUE, full.names = TRUE)
+            lines <- unlist(lapply(sf, function(f) tryCatch(sub("#.*$", "", readLines(f, warn = FALSE)), error = function(e) character())))
+            txt <- paste(lines, collapse = "\n")
+            g <- function(pat) { x <- regmatches(txt, gregexpr(pat, txt))[[1]]; if (length(x)) unique(gsub("[()\"' ]", "", sub(".*?(library|require)", "", x))) else character() }
+            unique(c(g("library\\([A-Za-z0-9._]+"), g("require\\([A-Za-z0-9._]+"),
+                     sub("::.*$", "", regmatches(txt, gregexpr("([A-Za-z][A-Za-z0-9._]+)::", txt))[[1]])))
+          }
+          used <- setdiff(declared_pkgs(appdir), c(base_pkgs, soft))
+          not_bundled <- setdiff(used, have())
+          if (length(not_bundled)) stop("packages referenced by the app sources are not in rlib: ", paste(not_bundled, collapse = ", "), ". Add them to EXTRA_PKGS/SOFT_PKGS, or install them via ARCHIVE_URLS + FORCED_PKGS.")
+          cat("source-declared packages ok:", length(used), "\n")
           soft_missing <- setdiff(intersect(soft, seed), c(have(), base_pkgs))
           cat("rlib packages:", length(have()), "| soft missing:", paste(soft_missing, collapse = ","), "\n")
 
@@ -283,6 +314,19 @@ jobs:
             r_version = Sys.getenv("R_VERSION"), min_shell_version = "0.1.0", notes = notes,
             packages = lapply(seq_len(nrow(pkgs)), function(i) list(name = pkgs$Package[i], version = pkgs$Version[i], path = file.path("rlib", pkgs$Package[i]), source = "cran")))
           jsonlite::write_json(man, file.path(bundle, "manifest.json"), pretty = TRUE, auto_unbox = TRUE)
+
+      - name: Patch app for a desktop bundle (optional)
+        if: ${{ env.PATCH_SCRIPT != '' }}
+        shell: Rscript {0}
+        run: |
+          root   <- getwd()
+          script <- file.path(root, Sys.getenv("PATCH_SCRIPT"))
+          if (!file.exists(script)) stop("PATCH_SCRIPT not found: ", script)
+          appdir <- file.path(root, "bundle", "app")
+          .libPaths(c(file.path(root, "bundle", "rlib"), .libPaths()))
+          old <- setwd(appdir); on.exit(setwd(old), add = TRUE)
+          source(script)
+          cat("patch done\n")
 
       - name: Prefetch first-launch data (optional)
         if: ${{ env.PREFETCH_SCRIPT != '' }}

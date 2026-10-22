@@ -139,6 +139,32 @@ launcher's `shinyApp(ui, server)` from the package internals (`pkg:::`), or ask 
 export an app-returning function; bundle demo data if the entry needs one. See
 `references/app-shapes.md` (GateLabR).
 
+## Heavy apps and module-level failures
+
+These come from multi-module apps (xOmicsShiny, ScRDAVis). Full playbook:
+`references/heavy-apps.md`; macOS dylibs: `references/macos-portability.md`.
+
+- **A dependency is only loaded on click.** `library(PCSF)` inside an `observeEvent()`
+  never runs during `shinyAppDir()`, so the smoke test stays green while the module is
+  broken. The template now fails the build when any `library()`/`require()`/`pkg::` name
+  in the app sources is absent from `rlib/`. Test each module in the real shell anyway.
+- **An archived/GitHub-only install failed silently.** A `try()` around
+  `install.packages()` shipped a bundle without PCSF. The loop is now fatal on error, and
+  `FORCED_PKGS` must all be present in `rlib/` after `ARCHIVE_URLS` installs.
+- **Absolute paths from the author's machine.** xOmicsShiny's `config.csv` had
+  `server_dir = D:/customProjects_NEW/...`. Patch such files at build time with
+  `PATCH_SCRIPT`; never assume relative-path handling.
+- **Recommended packages as extras.** Listing `cluster` in `EXTRA_PKGS` forced a source
+  build on the runner and failed. Base **and recommended** packages now count as present;
+  remove them from the list.
+- **Reference genomes blow the size limit.** Two `BSgenome` packages are ~1.4 GB before
+  the dependency stack; the full ScRDAVis bundle cannot fit under the 2 GiB release limit.
+  Drop or guard the heavy feature, and say which module is disabled in `APP_NOTES`.
+- **Version assembled from several refs.** `mainv3.0.1` came from concatenating
+  `release.tag_name` + `ref_name` + `inputs.tag`. Use one source (`inputs.tag || github.ref_name`).
+- **No upstream license.** A repo with no `LICENSE` needs explicit permission from the
+  author before listing, independent of whether the CI now works.
+
 ## Ops
 
 15. **Fork names preserve the original case** (e.g. `fentouxungui/PlotsOfData`, not

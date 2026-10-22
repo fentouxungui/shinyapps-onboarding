@@ -44,7 +44,9 @@ cannot ship (give a feasibility caveat).
    extra repos via `EXTRA_REPOS`); that no unshippable runtime engine is required (else
    record it in `APP_NOTES`); that no successful start depends on a first-launch
    download (plan a build-time prefetch -- see `references/startup-data.md`); and the
-   license. Proceed only when high.
+   license. For a heavy app (many modules, a large `data/`/`db/`, GitHub-only packages,
+   `BSgenome.*`), also size the bundle and plan build-time patches before the first
+   build -- see `references/heavy-apps.md`. Proceed only when high.
 2. **Fork** the upstream repo.
 3. **Generate + push** `.github/workflows/<id>-build-app-bundle.yml` from
    `assets/build-app-bundle.yml`, filling the `env:` block -- every `__PLACEHOLDER__`,
@@ -97,8 +99,16 @@ once in a separate job and pass it as an artifact. Recipe: `references/startup-d
 
 The template builds the dependency graph from the **source** index, uses `pkgType="both"`
 (binary then source), runs a fix-up loop, load-validates seed packages from `rlib/`,
-excludes base packages, and audits macOS binaries for XQuartz/Homebrew links. Details and
-the full failure catalog: `references/failure-modes.md`.
+excludes base and recommended packages, and audits macOS binaries for XQuartz/Homebrew
+links. It also fails when any `library()`/`require()`/`pkg::` name in the app sources is
+missing from `rlib/`, because the smoke test builds the UI only -- a package loaded inside
+a click handler otherwise stays invisible until a user presses the button.
+
+Archived and GitHub-only packages go through `ARCHIVE_URLS` and must be named in
+`FORCED_PKGS`; a failed archive install aborts the build. Build-time config patches
+(absolute author paths, disabling a module that cannot ship) go in `PATCH_SCRIPT`, which
+runs inside `bundle/app/` before zipping. Recipes: `references/heavy-apps.md`. macOS
+portability: `references/macos-portability.md`.
 
 ## Field lessons (batch CRAN sweep)
 
@@ -114,8 +124,10 @@ the full failure catalog: `references/failure-modes.md`.
   adapter that returns the object.
 - `flat` bundles only the app directory. Paths in `ENTRY_FN` are relative to that directory, not the repo root.
 - macOS: an OpenMP symbol error (`___kmpc_barrier`, `kohonen.so`, ...) is fixed by
-  `SOURCE_REBUILD: "<pkg>"`. A package whose load needs XQuartz (`tcltk`, `summarytools`) is **not**
-  shippable on the mac runner; record Windows-only or skip.
+  `SOURCE_REBUILD: "<pkg>"`. A package whose load needs XQuartz (`tcltk`, `summarytools`,
+  `Cairo` via `ggrastr`) is **not** shippable as-is: rebuild, drop/guard the feature, or
+  record Windows-only. Never put `dylibbundler` in a loop -- it hangs; see
+  `references/macos-portability.md`.
 - Poll CI by workflow name **and** the tag on `head_branch`; otherwise a stale failed run matches first.
 - `cran/*` repos are read-only mirrors: onboard the fork but do not open an upstream PR.
 
@@ -138,5 +150,6 @@ policy, one immutable release per tag, clean-library smoke (only `rlib` + base R
 - `assets/catalog-entry.yml` - catalog entry template.
 - `scripts/onboard-shiny-app.ps1` - parameterized driver for steps 2-6.
 - `references/app-shapes.md`, `references/failure-modes.md`, `references/store-contract.md`,
-  `references/startup-data.md`, `references/release-hardening.md`, `references/pr-template.md`.
+  `references/startup-data.md`, `references/release-hardening.md`,
+  `references/heavy-apps.md`, `references/macos-portability.md`, `references/pr-template.md`.
 - `examples/` - real workflows for flat, package-fn and package-deploy apps.
