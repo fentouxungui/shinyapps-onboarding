@@ -1,0 +1,31 @@
+id: earthui
+name: earthUI
+status: active
+upstream: wcraytor/earthui
+fork: fentouxungui/earthui
+license: AGPL (>= 3)
+app_mode: flat
+platforms: win-x64, mac-arm64
+version: 0.12.0
+tag: v0.12.0
+release_url: https://github.com/fentouxungui/earthui/releases/tag/v0.12.0
+build_run: ""
+template: unknown (backfill)
+patch_file: ""
+recorded_at: 2026-10-22
+built_at: 2026-10-19T00:48:17Z
+source_repo: fentouxungui/earthui
+source_commit: 2f3456280766a6e249d75e7ecd97849482cda746
+upstream_repo: wcraytor/earthui
+upstream_head: 1ac56c303644c84c7fea81e34e22633b17b4fa08
+upstream_checked_at: 2026-10-22T09:47:45Z
+workflow_path: .github/workflows/build-app-bundle.yml
+workflow_commit: 2f3456280766a6e249d75e7ecd97849482cda746
+workflow_sha256: 4dce0b49b596016c53d00811b28b998d18a53b78c62671c87bc6bde193669632
+app_size_mb: win-x64=134, mac-arm64=122
+closure_packages: ""
+decisions:
+  - APP_MODE=flat - app layout from the generated workflow
+  - EXTRA_PKGS=1 packages - extra dependencies declared in the workflow
+  - SOURCE_REBUILD=gdtools - rebuilt from source for macOS
+  - APP_SUBDIR=pkg/inst/app_earth - app lives in a subdirectory

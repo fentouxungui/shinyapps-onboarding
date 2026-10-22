@@ -1,0 +1,29 @@
+id: activanalyzer
+name: activAnalyzer
+status: active
+upstream: cran/activAnalyzer
+fork: fentouxungui/activAnalyzer
+license: GPL (>= 3)
+app_mode: package-fn
+platforms: win-x64, mac-arm64
+version: 0.2.0
+tag: v0.2.0
+release_url: https://github.com/fentouxungui/activAnalyzer/releases/tag/v0.2.0
+build_run: ""
+template: unknown (backfill)
+patch_file: ""
+recorded_at: 2026-10-22
+built_at: 2026-10-18T12:37:05Z
+source_repo: fentouxungui/activAnalyzer
+source_commit: ea6e3fab83816fd115441368252219c728c3057c
+upstream_repo: cran/activAnalyzer
+upstream_head: b0774763cc7ab49339a05c0d377e5cbf2fa2715f
+upstream_checked_at: 2026-10-22T09:39:39Z
+workflow_path: .github/workflows/build-app-bundle.yml
+workflow_commit: ea6e3fab83816fd115441368252219c728c3057c
+workflow_sha256: b08383a71bc2b84a39eef86bae9267ada70a1ba5e118eda28c512f97f1c8294c
+app_size_mb: win-x64=134, mac-arm64=122
+closure_packages: ""
+decisions:
+  - APP_MODE=package-fn - app layout from the generated workflow
+  - SOURCE_REBUILD=gdtools - rebuilt from source for macOS

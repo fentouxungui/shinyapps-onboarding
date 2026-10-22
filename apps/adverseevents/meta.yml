@@ -1,0 +1,30 @@
+id: adverseevents
+name: AdverseEvents
+status: active
+upstream: cran/AdverseEvents
+fork: fentouxungui/AdverseEvents
+license: See upstream
+app_mode: flat
+platforms: win-x64, mac-arm64
+version: 0.1.0
+tag: v0.1.0
+release_url: https://github.com/fentouxungui/AdverseEvents/releases/tag/v0.1.0
+build_run: ""
+template: unknown (backfill)
+patch_file: ""
+recorded_at: 2026-10-22
+built_at: 2026-10-18T04:28:01Z
+source_repo: fentouxungui/AdverseEvents
+source_commit: 498e374453d3fde70e0bc3e856d19600b2a08abf
+upstream_repo: cran/AdverseEvents
+upstream_head: 5739a1ba607b17a9ec51722df35bdbf6008d3f5d
+upstream_checked_at: 2026-10-22T09:39:42Z
+workflow_path: .github/workflows/build-app-bundle.yml
+workflow_commit: 498e374453d3fde70e0bc3e856d19600b2a08abf
+workflow_sha256: 1f2e017c8e03656a564284a850132edf643cb46f718aa3df9a691b3ed78b08a9
+app_size_mb: win-x64=210, mac-arm64=198
+closure_packages: ""
+decisions:
+  - APP_MODE=flat - app layout from the generated workflow
+  - EXTRA_PKGS=1 packages - extra dependencies declared in the workflow
+  - APP_SUBDIR=inst/app - app lives in a subdirectory

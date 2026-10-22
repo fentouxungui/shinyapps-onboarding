@@ -1,0 +1,28 @@
+id: archeofrag-gui
+name: archeofrag.gui
+status: active
+upstream: cran/archeofrag.gui
+fork: fentouxungui/archeofrag.gui
+license: See upstream
+app_mode: package-fn
+platforms: win-x64, mac-arm64
+version: 0.2.0
+tag: v0.2.0
+release_url: https://github.com/fentouxungui/archeofrag.gui/releases/tag/v0.2.0
+build_run: ""
+template: unknown (backfill)
+patch_file: ""
+recorded_at: 2026-10-22
+built_at: 2026-10-18T00:03:41Z
+source_repo: fentouxungui/archeofrag.gui
+source_commit: 786b86828809c661089c51cbed0f484d8e4d36f2
+upstream_repo: cran/archeofrag.gui
+upstream_head: e86f408504c3ac5833023ec3cc01d12bcee919ff
+upstream_checked_at: 2026-10-22T09:39:50Z
+workflow_path: .github/workflows/build-app-bundle.yml
+workflow_commit: 786b86828809c661089c51cbed0f484d8e4d36f2
+workflow_sha256: f84bb6ba2355a44e1650cb721854be8c2666a0e01ecdb8d46c5d9d3c734ff3c3
+app_size_mb: win-x64=78, mac-arm64=74
+closure_packages: ""
+decisions:
+  - APP_MODE=package-fn - app layout from the generated workflow

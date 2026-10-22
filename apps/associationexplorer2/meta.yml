@@ -1,0 +1,30 @@
+id: associationexplorer2
+name: AssociationExplorer2
+status: active
+upstream: AntoineSoetewey/AssociationExplorer2
+fork: fentouxungui/AssociationExplorer2
+license: MIT
+app_mode: flat
+platforms: win-x64, mac-arm64
+version: 0.1.2
+tag: v0.1.2
+release_url: https://github.com/fentouxungui/AssociationExplorer2/releases/tag/v0.1.2
+build_run: ""
+template: unknown (backfill)
+patch_file: ""
+recorded_at: 2026-10-22
+built_at: 2026-10-17T13:07:26Z
+source_repo: fentouxungui/AssociationExplorer2
+source_commit: fffcbcdf087771ab85039eed9772799f8ec9f63e
+upstream_repo: AntoineSoetewey/AssociationExplorer2
+upstream_head: 2876891d30f723ba18d02ed97c2f9310a6e0e4bc
+upstream_checked_at: 2026-10-22T09:47:13Z
+workflow_path: .github/workflows/associationexplorer2-build-app-bundle.yml
+workflow_commit: fffcbcdf087771ab85039eed9772799f8ec9f63e
+workflow_sha256: 13ca789366ebeb4305eb2d8fa419e015723b904ef6d4770536d5cea7371535c9
+app_size_mb: win-x64=101, mac-arm64=92
+closure_packages: ""
+decisions:
+  - APP_MODE=flat - app layout from the generated workflow
+  - EXTRA_PKGS=1 packages - extra dependencies declared in the workflow
+  - APP_SUBDIR=inst/app - app lives in a subdirectory

@@ -1,0 +1,28 @@
+id: easysdctable
+name: easySdcTable
+status: active
+upstream: statisticsnorway/ssb-easysdctable
+fork: fentouxungui/ssb-easysdctable
+license: See upstream
+app_mode: package-fn
+platforms: win-x64, mac-arm64
+version: 0.1.0
+tag: v0.1.0
+release_url: https://github.com/fentouxungui/ssb-easysdctable/releases/tag/v0.1.0
+build_run: ""
+template: unknown (backfill)
+patch_file: ""
+recorded_at: 2026-10-22
+built_at: 2026-10-17T18:43:56Z
+source_repo: fentouxungui/ssb-easysdctable
+source_commit: cc9a1c3fe963505b1e64b72e3b3ae929b9600df4
+upstream_repo: statisticsnorway/ssb-easysdctable
+upstream_head: 1210ed502e464269277c9992ef269bc939adbe4c
+upstream_checked_at: 2026-10-22T09:47:48Z
+workflow_path: .github/workflows/build-app-bundle.yml
+workflow_commit: cc9a1c3fe963505b1e64b72e3b3ae929b9600df4
+workflow_sha256: 72e3843765d7b855148023cd083b9be6de7a15f853c845ae5bd5a35981c15033
+app_size_mb: win-x64=71, mac-arm64=70
+closure_packages: ""
+decisions:
+  - APP_MODE=package-fn - app layout from the generated workflow

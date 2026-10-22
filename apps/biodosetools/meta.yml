@@ -1,0 +1,28 @@
+id: biodosetools
+name: biodosetools
+status: active
+upstream: biodosetools-team/biodosetools
+fork: fentouxungui/biodosetools
+license: GPL-3.0
+app_mode: auto
+platforms: win-x64, mac-arm64
+version: 0.1.0
+tag: v0.1.0
+release_url: https://github.com/fentouxungui/biodosetools/releases/tag/v0.1.0
+build_run: ""
+template: unknown (backfill)
+patch_file: ""
+recorded_at: 2026-10-22
+built_at: 2026-10-13T16:06:19Z
+source_repo: fentouxungui/biodosetools
+source_commit: d85f420304c30ca453d5e9102d17a86ed6c213a1
+upstream_repo: biodosetools-team/biodosetools
+upstream_head: e4fa67e8bd311015df1443d2bea5400089834e29
+upstream_checked_at: 2026-10-22T09:47:21Z
+workflow_path: .github/workflows/biodosetools-build-app-bundle.yml
+workflow_commit: d85f420304c30ca453d5e9102d17a86ed6c213a1
+workflow_sha256: a0ec310743872fb1bfb3e92b4ee05e56b4d4d13edbb767d32c2861dfcda6b9c8
+app_size_mb: win-x64=142, mac-arm64=133
+closure_packages: ""
+decisions:
+  - no non-default settings - generated from the stock template

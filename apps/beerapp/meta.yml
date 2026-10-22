@@ -1,0 +1,28 @@
+id: beerapp
+name: beeRapp
+status: active
+upstream: anmabu/beeRapp
+fork: fentouxungui/beeRapp
+license: GPL-3.0-or-later
+app_mode: auto
+platforms: win-x64, mac-arm64
+version: 0.1.0
+tag: v0.1.0
+release_url: https://github.com/fentouxungui/beeRapp/releases/tag/v0.1.0
+build_run: ""
+template: unknown (backfill)
+patch_file: ""
+recorded_at: 2026-10-22
+built_at: 2026-10-12T02:29:04Z
+source_repo: fentouxungui/beeRapp
+source_commit: 566bc5111300d0f32302a640cb30f7349d52932f
+upstream_repo: anmabu/beeRapp
+upstream_head: d15c5803fa238fc9986102f1b493dfabffa9195e
+upstream_checked_at: 2026-10-22T09:39:57Z
+workflow_path: .github/workflows/beerapp-build-app-bundle.yml
+workflow_commit: 566bc5111300d0f32302a640cb30f7349d52932f
+workflow_sha256: a1afbedcd85c5fb0ff9eb0ba139a41fe4a29e57a8882ffba9d145bdaaac05555
+app_size_mb: win-x64=246, mac-arm64=237
+closure_packages: ""
+decisions:
+  - no non-default settings - generated from the stock template

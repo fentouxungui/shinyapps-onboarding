@@ -4,6 +4,36 @@
 
 | id | name | status | platforms | tag | upstream | notes |
 |---|---|---|---|---|---|---|
+| `activanalyzer` | activAnalyzer | active | win-x64, mac-arm64 | v0.2.0 | cran/activAnalyzer | [NOTES](activanalyzer/NOTES.md) |
+| `adverseevents` | AdverseEvents | active | win-x64, mac-arm64 | v0.1.0 | cran/AdverseEvents | [NOTES](adverseevents/NOTES.md) |
+| `allelobin` | AlleloBin | active | win-x64, mac-arm64 | v0.1.1 | vpprasanth/AlleloBin | [NOTES](allelobin/NOTES.md) |
+| `anca` | aNCA | active | win-x64, mac-arm64 | v0.2.0 | cran/aNCA | [NOTES](anca/NOTES.md) |
+| `archeofrag-gui` | archeofrag.gui | active | win-x64, mac-arm64 | v0.2.0 | cran/archeofrag.gui | [NOTES](archeofrag-gui/NOTES.md) |
+| `associationexplorer2` | AssociationExplorer2 | active | win-x64, mac-arm64 | v0.1.2 | AntoineSoetewey/AssociationExplorer2 | [NOTES](associationexplorer2/NOTES.md) |
+| `assumpsure` | AssumpSure | active | win-x64, mac-arm64 | v0.1.0 | cran/AssumpSure | [NOTES](assumpsure/NOTES.md) |
+| `beerapp` | beeRapp | active | win-x64, mac-arm64 | v0.1.0 | anmabu/beeRapp | [NOTES](beerapp/NOTES.md) |
+| `bestdeg` | bestDEG | active | win-x64, mac-arm64 | v0.1.0 | unitsa-sangket/bestDEG | [NOTES](bestdeg/NOTES.md) |
+| `biascorrector` | BiasCorrector | active | win-x64, mac-arm64 | v0.1.0 | kapsner/BiasCorrector | [NOTES](biascorrector/NOTES.md) |
+| `biodosetools` | biodosetools | active | win-x64, mac-arm64 | v0.1.0 | biodosetools-team/biodosetools | [NOTES](biodosetools/NOTES.md) |
+| `catascience` | cataScience | active | win-x64, mac-arm64 | v0.2.0 | cran/cataScience | [NOTES](catascience/NOTES.md) |
+| `censuspyrid` | censuspyrID | active | win-x64, mac-arm64 | v0.1.0 | cran/censuspyrID | [NOTES](censuspyrid/NOTES.md) |
+| `channelattributionapp` | ChannelAttributionApp | active | win-x64, mac-arm64 | v0.3.0 | cran/ChannelAttributionApp | [NOTES](channelattributionapp/NOTES.md) |
+| `clusterprofshinyora` | ClusterProfShinyORA | active | win-x64, mac-arm64 | v0.1.6 | nasqar/ClusterProfShinyORA | [NOTES](clusterprofshinyora/NOTES.md) |
+| `cocktailapp` | cocktailApp | active | win-x64, mac-arm64 | v0.2.0 | cran/cocktailApp | [NOTES](cocktailapp/NOTES.md) |
+| `complexr` | complexr | active | win-x64, mac-arm64 | v0.1.0 | stalynGuerrero/complexr | [NOTES](complexr/NOTES.md) |
+| `csbb-shiny` | CSBB-Shiny | active | win-x64, mac-arm64 | v0.1.1 | praneet1988/CSBB-Shiny | [NOTES](csbb-shiny/NOTES.md) |
+| `datacompare` | dataCompare | active | win-x64, mac-arm64 | v0.2.0 | cran/dataCompare | [NOTES](datacompare/NOTES.md) |
+| `dataviewr` | dataviewR | active | win-x64, mac-arm64 | v0.1.0 | madhankumarnagaraji/dataviewR | [NOTES](dataviewr/NOTES.md) |
+| `deepdep` | deepdep | active | win-x64, mac-arm64 | v0.1.0 | cran/deepdep | [NOTES](deepdep/NOTES.md) |
+| `deseq2shiny` | deseq2shiny | active | win-x64, mac-arm64 | v0.1.3 | nasqar/deseq2shiny | [NOTES](deseq2shiny/NOTES.md) |
+| `diagnostysize` | DiagnostySize | active | win-x64, mac-arm64 | v0.1.0 | JanaW09/DiagnostySize_App | [NOTES](diagnostysize/NOTES.md) |
+| `difshiny` | DIFshiny | active | win-x64, mac-arm64 | v0.1.0 | cran/DIFshiny | [NOTES](difshiny/NOTES.md) |
+| `distplotter` | DistPlotter | active | win-x64, mac-arm64 | v0.1.2 | ccasement/DistPlotter | [NOTES](distplotter/NOTES.md) |
+| `dqagui` | DQAgui | active | win-x64, mac-arm64 | v0.1.0 | miracum/dqa-dqagui | [NOTES](dqagui/NOTES.md) |
+| `dqcheckrgui` | dqcheckrGUI | active | win-x64, mac-arm64 | v0.1.0 | cran/dqcheckrGUI | [NOTES](dqcheckrgui/NOTES.md) |
+| `drdata` | DrData | active | win-x64, mac-arm64 | v0.1.0 | Mohsenmehdinia/DrData | [NOTES](drdata/NOTES.md) |
+| `earthui` | earthUI | active | win-x64, mac-arm64 | v0.12.0 | wcraytor/earthui | [NOTES](earthui/NOTES.md) |
+| `easysdctable` | easySdcTable | active | win-x64, mac-arm64 | v0.1.0 | statisticsnorway/ssb-easysdctable | [NOTES](easysdctable/NOTES.md) |
 | `scrdavis` | ScRDAVis | pending | win-x64 | v1.0.2 | GudaLab/ScRDAVis | [NOTES](scrdavis/NOTES.md) |
 | `xomicsshiny` | xOmicsShiny | pending | win-x64, mac-arm64 | v3.0.2 | interactivereport/xOmicsShiny | [NOTES](xomicsshiny/NOTES.md) |
 

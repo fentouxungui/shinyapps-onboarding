@@ -1,0 +1,31 @@
+id: catascience
+name: cataScience
+status: active
+upstream: cran/cataScience
+fork: fentouxungui/cataScience
+license: MIT + file LICENSE
+app_mode: flat
+platforms: win-x64, mac-arm64
+version: 0.2.0
+tag: v0.2.0
+release_url: https://github.com/fentouxungui/cataScience/releases/tag/v0.2.0
+build_run: ""
+template: unknown (backfill)
+patch_file: ""
+recorded_at: 2026-10-22
+built_at: 2026-10-18T14:02:33Z
+source_repo: fentouxungui/cataScience
+source_commit: ed4807720df3ae776f4926d7de8aae9173834dab
+upstream_repo: cran/cataScience
+upstream_head: 10ae915f5b3346ee169fdef0ea05d06d6ba3158d
+upstream_checked_at: 2026-10-22T09:40:07Z
+workflow_path: .github/workflows/build-app-bundle.yml
+workflow_commit: ed4807720df3ae776f4926d7de8aae9173834dab
+workflow_sha256: e70ae5c315e0ee6d1ef08ac3c9669130dbb5b096f3a76cbd752bf9528387845a
+app_size_mb: win-x64=196, mac-arm64=217
+closure_packages: ""
+decisions:
+  - APP_MODE=flat - app layout from the generated workflow
+  - EXTRA_PKGS=1 packages - extra dependencies declared in the workflow
+  - SOURCE_REBUILD=gdtools - rebuilt from source for macOS
+  - APP_SUBDIR=inst/app - app lives in a subdirectory

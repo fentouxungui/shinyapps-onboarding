@@ -1,0 +1,30 @@
+id: drdata
+name: DrData
+status: active
+upstream: Mohsenmehdinia/DrData
+fork: fentouxungui/DrData
+license: MIT + file LICENSE
+app_mode: flat
+platforms: win-x64, mac-arm64
+version: 0.1.0
+tag: v0.1.0
+release_url: https://github.com/fentouxungui/DrData/releases/tag/v0.1.0
+build_run: ""
+template: unknown (backfill)
+patch_file: ""
+recorded_at: 2026-10-22
+built_at: 2026-10-18T14:44:38Z
+source_repo: fentouxungui/DrData
+source_commit: 692026e5169fcacc2d29be34bed4ca2e4b39fcce
+upstream_repo: Mohsenmehdinia/DrData
+upstream_head: 4ab371141171556b58a0c62bb7fd40fb12eecc27
+upstream_checked_at: 2026-10-22T09:40:47Z
+workflow_path: .github/workflows/build-app-bundle.yml
+workflow_commit: 692026e5169fcacc2d29be34bed4ca2e4b39fcce
+workflow_sha256: 2c1d530e6c1e41a0c8733b42181513a53bb4cb9c3a54a2745de2c3b19d860215
+app_size_mb: win-x64=196, mac-arm64=187
+closure_packages: ""
+decisions:
+  - APP_MODE=flat - app layout from the generated workflow
+  - SOURCE_REBUILD=gdtools - rebuilt from source for macOS
+  - APP_SUBDIR=inst/app - app lives in a subdirectory

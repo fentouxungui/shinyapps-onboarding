@@ -1,0 +1,30 @@
+id: allelobin
+name: AlleloBin
+status: active
+upstream: vpprasanth/AlleloBin
+fork: fentouxungui/AlleloBin
+license: GPL-3.0
+app_mode: flat
+platforms: win-x64, mac-arm64
+version: 0.1.1
+tag: v0.1.1
+release_url: https://github.com/fentouxungui/AlleloBin/releases/tag/v0.1.1
+build_run: ""
+template: unknown (backfill)
+patch_file: ""
+recorded_at: 2026-10-22
+built_at: 2026-10-17T14:15:23Z
+source_repo: fentouxungui/AlleloBin
+source_commit: c8cbcbb28936f70aa074a4dce3af27f3439dd239
+upstream_repo: vpprasanth/AlleloBin
+upstream_head: 7a6f4ae7131c1d1db2a580a4595e7482cfc168b0
+upstream_checked_at: 2026-10-22T09:39:44Z
+workflow_path: .github/workflows/allelobin-build-app-bundle.yml
+workflow_commit: c8cbcbb28936f70aa074a4dce3af27f3439dd239
+workflow_sha256: 256fdb89e8742fdd7f5defff1c20cac5e994f05da975e9aacd185670e3622545
+app_size_mb: win-x64=62, mac-arm64=60
+closure_packages: ""
+decisions:
+  - APP_MODE=flat - app layout from the generated workflow
+  - EXTRA_PKGS=1 packages - extra dependencies declared in the workflow
+  - APP_SUBDIR=inst/shiny-examples/AlleloBinApp - app lives in a subdirectory

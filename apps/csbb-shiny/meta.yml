@@ -1,0 +1,28 @@
+id: csbb-shiny
+name: CSBB-Shiny
+status: active
+upstream: praneet1988/CSBB-Shiny
+fork: fentouxungui/CSBB-Shiny
+license: GPL-3.0
+app_mode: auto
+platforms: win-x64, mac-arm64
+version: 0.1.1
+tag: v0.1.1
+release_url: https://github.com/fentouxungui/CSBB-Shiny/releases/tag/v0.1.1
+build_run: ""
+template: unknown (backfill)
+patch_file: ""
+recorded_at: 2026-10-22
+built_at: 2026-10-13T05:19:50Z
+source_repo: fentouxungui/CSBB-Shiny
+source_commit: 037a1d404ccd6fa4417b959afaae1ea63357bead
+upstream_repo: praneet1988/CSBB-Shiny
+upstream_head: ce508bae333fed64093fcce46d1fbdd2ac132ae3
+upstream_checked_at: 2026-10-22T09:47:32Z
+workflow_path: .github/workflows/csbb-shiny-build-app-bundle.yml
+workflow_commit: 037a1d404ccd6fa4417b959afaae1ea63357bead
+workflow_sha256: 89dfa542a7236c7260609fe3b5cbdab87ab53f8f917b541174830b2667863ddf
+app_size_mb: win-x64=1121, mac-arm64=1085
+closure_packages: ""
+decisions:
+  - no non-default settings - generated from the stock template

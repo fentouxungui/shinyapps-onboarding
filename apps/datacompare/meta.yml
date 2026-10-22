@@ -1,0 +1,29 @@
+id: datacompare
+name: dataCompare
+status: active
+upstream: cran/dataCompare
+fork: fentouxungui/dataCompare
+license: MIT + file LICENSE
+app_mode: package-fn
+platforms: win-x64, mac-arm64
+version: 0.2.0
+tag: v0.2.0
+release_url: https://github.com/fentouxungui/dataCompare/releases/tag/v0.2.0
+build_run: ""
+template: unknown (backfill)
+patch_file: ""
+recorded_at: 2026-10-22
+built_at: 2026-10-19T00:44:58Z
+source_repo: fentouxungui/dataCompare
+source_commit: d03fbe9dcc59232863492425fb588dd480eed3f3
+upstream_repo: cran/dataCompare
+upstream_head: 5c173030d51c293c18bad9a3fcb58b472bac07b7
+upstream_checked_at: 2026-10-22T09:40:23Z
+workflow_path: .github/workflows/build-app-bundle.yml
+workflow_commit: d03fbe9dcc59232863492425fb588dd480eed3f3
+workflow_sha256: 566966ac053b941425445a64e74a2ea1e5d03a200942c4221e6327bfee0ccc83
+app_size_mb: win-x64=144, mac-arm64=132
+closure_packages: ""
+decisions:
+  - APP_MODE=package-fn - app layout from the generated workflow
+  - SOURCE_REBUILD=gdtools - rebuilt from source for macOS

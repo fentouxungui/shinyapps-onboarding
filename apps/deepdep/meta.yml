@@ -1,0 +1,30 @@
+id: deepdep
+name: deepdep
+status: active
+upstream: cran/deepdep
+fork: fentouxungui/deepdep
+license: See upstream
+app_mode: flat
+platforms: win-x64, mac-arm64
+version: 0.1.0
+tag: v0.1.0
+release_url: https://github.com/fentouxungui/deepdep/releases/tag/v0.1.0
+build_run: ""
+template: unknown (backfill)
+patch_file: ""
+recorded_at: 2026-10-22
+built_at: 2026-10-17T18:42:41Z
+source_repo: fentouxungui/deepdep
+source_commit: ac69b33744f401c1e196d17b5d9e6a2b6d6e1d27
+upstream_repo: cran/deepdep
+upstream_head: 9c7f6955a1d7792999ec008c7efa2298c11a6fcc
+upstream_checked_at: 2026-10-22T09:40:28Z
+workflow_path: .github/workflows/build-app-bundle.yml
+workflow_commit: ac69b33744f401c1e196d17b5d9e6a2b6d6e1d27
+workflow_sha256: 82e7e0d78934ab3b314b1232d51d9966618ca1d96bff87c6734cdc9c33338ca5
+app_size_mb: win-x64=37, mac-arm64=33
+closure_packages: ""
+decisions:
+  - APP_MODE=flat - app layout from the generated workflow
+  - EXTRA_PKGS=1 packages - extra dependencies declared in the workflow
+  - APP_SUBDIR=inst/shiny_app - app lives in a subdirectory

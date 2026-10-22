@@ -1,0 +1,30 @@
+id: assumpsure
+name: AssumpSure
+status: active
+upstream: cran/AssumpSure
+fork: fentouxungui/AssumpSure
+license: See upstream
+app_mode: flat
+platforms: win-x64, mac-arm64
+version: 0.1.0
+tag: v0.1.0
+release_url: https://github.com/fentouxungui/AssumpSure/releases/tag/v0.1.0
+build_run: ""
+template: unknown (backfill)
+patch_file: ""
+recorded_at: 2026-10-22
+built_at: 2026-10-18T12:20:21Z
+source_repo: fentouxungui/AssumpSure
+source_commit: 78d206be6586fb58824ce16c40420a5d5e94cabb
+upstream_repo: cran/AssumpSure
+upstream_head: 16f9ce09bcced5e3edb7c3102bafe5aa11f7985b
+upstream_checked_at: 2026-10-22T09:39:54Z
+workflow_path: .github/workflows/build-app-bundle.yml
+workflow_commit: 78d206be6586fb58824ce16c40420a5d5e94cabb
+workflow_sha256: 717ffd9fe87c27e5c4ad48f50230d92cb7b20d07e25cb0d86ee212906d3c04e2
+app_size_mb: win-x64=306, mac-arm64=290
+closure_packages: ""
+decisions:
+  - APP_MODE=flat - app layout from the generated workflow
+  - EXTRA_PKGS=1 packages - extra dependencies declared in the workflow
+  - APP_SUBDIR=inst/app - app lives in a subdirectory

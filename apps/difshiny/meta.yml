@@ -1,0 +1,28 @@
+id: difshiny
+name: DIFshiny
+status: active
+upstream: cran/DIFshiny
+fork: fentouxungui/DIFshiny
+license: See upstream
+app_mode: auto
+platforms: win-x64, mac-arm64
+version: 0.1.0
+tag: v0.1.0
+release_url: https://github.com/fentouxungui/DIFshiny/releases/tag/v0.1.0
+build_run: ""
+template: unknown (backfill)
+patch_file: ""
+recorded_at: 2026-10-22
+built_at: 2026-10-17T15:44:07Z
+source_repo: fentouxungui/DIFshiny
+source_commit: 5f3a58f69836ee26bce519128241c7bda6ad4d5a
+upstream_repo: cran/DIFshiny
+upstream_head: 899275a385414b1615500b6cbc388dbecde596bc
+upstream_checked_at: 2026-10-22T09:40:35Z
+workflow_path: .github/workflows/difshiny-build-app-bundle.yml
+workflow_commit: 5f3a58f69836ee26bce519128241c7bda6ad4d5a
+workflow_sha256: 2e2bf470180f3539d00d226e5610d76861995858c231952374e774cacd05ee58
+app_size_mb: win-x64=175, mac-arm64=163
+closure_packages: ""
+decisions:
+  - no non-default settings - generated from the stock template

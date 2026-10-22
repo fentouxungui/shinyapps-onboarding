@@ -1,0 +1,29 @@
+id: clusterprofshinyora
+name: ClusterProfShinyORA
+status: active
+upstream: nasqar/ClusterProfShinyORA
+fork: fentouxungui/ClusterProfShinyORA
+license: Unspecified (upstream declares no license)
+app_mode: auto
+platforms: win-x64, mac-arm64
+version: 0.1.6
+tag: v0.1.6
+release_url: https://github.com/fentouxungui/ClusterProfShinyORA/releases/tag/v0.1.6
+build_run: ""
+template: unknown (backfill)
+patch_file: ""
+recorded_at: 2026-10-22
+built_at: 2026-10-14T08:34:51Z
+source_repo: fentouxungui/ClusterProfShinyORA
+source_commit: d62fde81b4642a9ba49bb74a99254375ad911fe3
+upstream_repo: nasqar/ClusterProfShinyORA
+upstream_head: 756a9fc317fa36419d05601f72c9e62001fbbfa5
+upstream_checked_at: 2026-10-22T09:47:28Z
+workflow_path: .github/workflows/clusterprofshinyora-build-app-bundle.yml
+workflow_commit: d62fde81b4642a9ba49bb74a99254375ad911fe3
+workflow_sha256: 6b5b3658b0667c11412607bb0359091fc30e0a1d04081945531f60281a3a2a6f
+app_size_mb: win-x64=345, mac-arm64=323
+closure_packages: ""
+decisions:
+  - EXTRA_PKGS=1 packages - extra dependencies declared in the workflow
+  - SOURCE_REBUILD=gdtools - rebuilt from source for macOS

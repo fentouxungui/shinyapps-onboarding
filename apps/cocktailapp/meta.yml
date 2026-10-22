@@ -1,0 +1,28 @@
+id: cocktailapp
+name: cocktailApp
+status: active
+upstream: cran/cocktailApp
+fork: fentouxungui/cocktailApp
+license: See upstream
+app_mode: package-fn
+platforms: win-x64, mac-arm64
+version: 0.2.0
+tag: v0.2.0
+release_url: https://github.com/fentouxungui/cocktailApp/releases/tag/v0.2.0
+build_run: ""
+template: unknown (backfill)
+patch_file: ""
+recorded_at: 2026-10-22
+built_at: 2026-10-18T00:03:49Z
+source_repo: fentouxungui/cocktailApp
+source_commit: 643ffd0403fe06f80d0029078fe1c33c07b741c9
+upstream_repo: cran/cocktailApp
+upstream_head: 3152c3ca6fc0ac4a32910e8f33a6b685fce25b8c
+upstream_checked_at: 2026-10-22T09:40:17Z
+workflow_path: .github/workflows/build-app-bundle.yml
+workflow_commit: 643ffd0403fe06f80d0029078fe1c33c07b741c9
+workflow_sha256: 64f18fd43f193be74e2c96abb678784a58cb6b403770299ee251c33bf7d9addc
+app_size_mb: win-x64=76, mac-arm64=74
+closure_packages: ""
+decisions:
+  - APP_MODE=package-fn - app layout from the generated workflow

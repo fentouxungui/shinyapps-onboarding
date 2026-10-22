@@ -1,0 +1,297 @@
+# CSBB-Shiny app-layer bundle builder for the ShinyApps store (Route A).
+# Place at  fentouxungui/CSBB-Shiny/.github/workflows/csbb-shiny-build-app-bundle.yml
+#           on the DEFAULT branch = master.  No shell rebuild is required.
+#
+# Produces, per platform:  csbb-shiny-<store-version>-<platform>.zip
+#   bundle/  +- manifest.json  +- app/app.R  +- app/app_bin/**  +- app/data/**
+#            +- app/www/**  +- app/Sample_Files/**  +- rlib/<Pkg>/
+#            (prebuilt CRAN/Bioconductor binaries, pinned to R 4.6.1)
+#
+# Contract check (same onboarding as iSEE / UCSCXenaShiny / spatialLIBD / beeRapp):
+#   * CSBB-Shiny is a plain single-file Shiny app (NOT an R package):
+#       app.R defines `ui` + `server` and ends with shinyApp(ui = ui, server = server)
+#       -> the entry RETURNS a shiny.appobj and never calls shiny::runApp().
+#     The shell launches it with shiny::runApp("app"), i.e. exactly what
+#     shiny::runGitHub("CSBB-Shiny", "praneet1988") does upstream.
+#   * Two runtime-bootstrap lines must change for a self-contained, offline bundle:
+#       app.R line 1: source("install_R_packages.R")   # installs deps from CRAN/Bioc AT RUNTIME
+#       app.R line 6: library(devtools)                # dev-only; errors if not installed
+#       app.R line 7: require(usethis)                 # dev-only; unused at runtime
+#     The build strips these lines and bakes the full dependency closure into
+#     rlib/ instead, so first launch needs no package installation.
+#
+# Notes / gotchas handled here:
+#   * No DESCRIPTION / no `R CMD build`: this is not a package. The dependency
+#     seed is the top-level library()/require() calls in app.R plus the DT:: use,
+#     minus the stripped dev-only packages (devtools, usethis).
+#   * Mix of CRAN and Bioconductor (RUVSeq, M3C, DESeq2, ReactomePA, clusterProfiler,
+#     ChIPseeker, EnhancedVolcano, scater, MAST, org.*.eg.db, TxDb.*); all resolved
+#     via BiocManager::repositories(). Installed in two passes: prebuilt
+#     binaries first, then a source fallback for packages that have no binary
+#     for the pinned R release (the Bioconductor annotation/data set).
+#   * enrichR is now on CRAN (v3.4), so no devtools::install_github() is required.
+#   * `zscore()` used by app_bin/Zscore_Norm.r comes from dtwclust (in the seed).
+#   * base-priority packages are excluded from the closure; recommended ones
+#     (Matrix, MASS, survival, ...) are kept so the bundle is self-contained.
+#   * RUNTIME NETWORK: the Function/Pathway Enrichment module calls the Enrichr
+#     web API (enrichR) and KEGG (clusterProfiler::enrichKEGG); those need
+#     outbound network at run time. Everything else is offline. Disclosed in
+#     the manifest `notes`.
+#   * Windows HDF5: the Single Cell module uses hdf5r (HDF5 1.12 stack). The
+#     store README flags this as a known Windows limitation; the bundle pins the
+#     CRAN binary so `.h5` input works where the runtime supports it.
+#   * BUNDLE SIZE: the Bioconductor annotation set (4 x TxDb.*, org.Hs/Mm.eg.db)
+#     plus Seurat/MAST/scater makes this the heaviest app in the catalog. Keep an
+#     eye on the 2 GiB per-asset GitHub Release limit; see the size guard below.
+
+name: Build app bundle
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Existing tag to attach bundles to"
+        required: false
+        type: string
+        default: "v0.1.0"
+
+permissions:
+  contents: write
+
+env:
+  APP_ID: csbb-shiny
+  APP_NAME: CSBB-Shiny
+  APP_AUTHOR: "Praneet Chaturvedi"
+  APP_DESC: "Computational Suite for Bioinformaticians and Biologists (CSBB): 8 downstream NGS modules - normalization, basic stats, differential expression, correlation profiles, functional/pathway enrichment, ChIP-ATAC seq and single-cell RNA-seq"
+  APP_HOMEPAGE: "https://github.com/fentouxungui/CSBB-Shiny"
+  APP_LICENSE: "GPL-3.0"
+  R_VERSION: "4.6.1"
+
+jobs:
+  bundle:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: windows-latest, platform: "win-x64" }
+          - { os: macos-14,       platform: "mac-arm64" }
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: ${{ env.R_VERSION }}
+          use-public-rspm: true
+
+      - name: Install build helpers
+        shell: bash
+        run: Rscript -e 'install.packages(c("jsonlite","zip","digest","BiocManager"), repos="https://cloud.r-project.org")'
+
+      - name: Resolve store version
+        shell: bash
+        run: |
+          V="${{ github.event.release.tag_name }}${{ inputs.tag }}"
+          V="${V#v}"
+          if [ -z "$V" ]; then V="0.1.0"; fi
+          echo "VERSION=$V" >> "$GITHUB_ENV"
+
+      - name: Assemble bundle (app/ + rlib/ + manifest.json)
+        shell: Rscript {0}
+        env:
+          GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          bundle <- file.path(getwd(), "bundle")
+          unlink(bundle, recursive = TRUE); dir.create(bundle, recursive = TRUE)
+          appdir <- file.path(bundle, "app"); dir.create(appdir, recursive = TRUE)
+          lib <- file.path(bundle, "rlib"); dir.create(lib, recursive = TRUE)
+
+          # --- 1. copy the app sources verbatim ------------------------------
+          src <- getwd()
+          for (f in c("app.R", "app_bin", "data", "www", "Sample_Files",
+                      "CSBB.png", "LICENSE", "README.md")) {
+            from <- file.path(src, f)
+            if (file.exists(from)) file.copy(from, appdir, recursive = TRUE)
+          }
+          if (!file.exists(file.path(appdir, "app.R"))) stop("app.R missing after copy")
+          if (!file.exists(file.path(appdir, "app_bin", "UQ_Norm.r"))) stop("app_bin/ missing after copy")
+          if (!file.exists(file.path(appdir, "data", "CellCycle_Human.txt"))) stop("data/ missing after copy")
+          if (!file.exists(file.path(appdir, "www", "CSBB.png"))) stop("www/ missing after copy")
+
+          # --- 2. strip runtime/dev bootstrap lines (offline bundle) --------
+          app_r <- file.path(appdir, "app.R")
+          txt <- readLines(app_r, warn = FALSE)
+          drop <- grepl('^\\s*source\\("install_R_packages.R"', txt) |
+                  grepl('^\\s*library\\(devtools\\)', txt) |
+                  grepl('^\\s*require\\(usethis\\)', txt)
+          cat("stripped lines:", sum(drop), "\n")
+          txt <- txt[!drop]
+          if (!any(grepl('shinyApp\\(', txt))) stop("entry no longer returns a shinyApp object")
+          if (any(grepl('runApp\\(', txt))) stop("entry must not call runApp()")
+          writeLines(txt, app_r)
+
+          # --- 3. install the dependency closure into bundle/rlib -----------
+          repos <- BiocManager::repositories()
+          options(repos = repos)
+
+          # Top-level library()/require() in app.R + DT::, minus the stripped
+          # dev-only packages (devtools, usethis).
+          seed <- c("shiny", "servr", "ggplot2", "pheatmap", "M3C", "RUVSeq",
+                    "scales", "dtwclust", "dplyr", "DESeq2", "ggcorrplot", "tibble",
+                    "ReactomePA", "org.Hs.eg.db", "org.Mm.eg.db", "AnnotationDbi",
+                    "EnhancedVolcano", "ChIPseeker",
+                    "TxDb.Hsapiens.UCSC.hg19.knownGene",
+                    "TxDb.Mmusculus.UCSC.mm10.knownGene",
+                    "TxDb.Hsapiens.UCSC.hg38.knownGene",
+                    "TxDb.Mmusculus.UCSC.mm9.knownGene",
+                    "clusterProfiler", "cowplot", "scater", "MAST", "Seurat",
+                    "shinycssloaders", "shinyWidgets", "hdf5r", "enrichR", "DT")
+
+          # Dependency graph from the SOURCE index, not the binary index: on a
+          # brand-new R release the binary PACKAGES index is incomplete, and a
+          # binary-only index silently drops dependency edges (this is how
+          # ReactomePA -> enrichplot -> fgsea was missed before). The source
+          # index always lists every package and its declared dependencies.
+          db <- available.packages(repos = repos, type = "source")
+          cat("available packages (source index):", nrow(db), "\n")
+          base_pkgs <- rownames(installed.packages(priority = "base"))
+          closure <- unique(c(seed,
+                     unlist(tools::package_dependencies(seed, db = db, recursive = TRUE))))
+          closure <- setdiff(closure, base_pkgs)
+          closure <- closure[closure %in% rownames(db)]
+          cat("closure packages to install:", length(closure), "\n")
+
+          lib_pkgs <- function() basename(list.dirs(lib, recursive = FALSE))
+          install_into <- function(pkgs, type) {
+            if (!length(pkgs)) return(invisible())
+            install.packages(pkgs, lib = lib, repos = repos, type = type,
+                             dependencies = FALSE, Ncpus = 2)
+          }
+          # Two passes: prebuilt binaries first, then a source fallback for
+          # packages with no binary for this R release (the Bioconductor
+          # annotation/data set, and any compiled package not yet built).
+          install_two_pass <- function(pkgs) {
+            install_into(pkgs, "binary")
+            left <- setdiff(pkgs, lib_pkgs())
+            if (length(left)) {
+              cat("source fallback for", length(left), "package(s) with no binary\n")
+              install_into(left, "source")
+            }
+          }
+
+          install_two_pass(closure)
+
+          # --- 3b. closure repair loop --------------------------------------
+          # Read the ACTUAL installed DESCRIPTIONs and pull in any transitive
+          # dependency the repo-index closure missed. This is authoritative
+          # (it uses the versions that are really in rlib) and independent of
+          # repo-index completeness.
+          get_deps <- function(p) {
+            d <- utils::packageDescription(p, lib.loc = lib)
+            if (is.null(d)) return(character())
+            f <- paste(c(d$Depends, d$Imports, d$LinkingTo), collapse = ",")
+            f <- gsub("\\([^)]*\\)", "", f)
+            pk <- trimws(unlist(strsplit(f, ",")))
+            setdiff(pk[nzchar(pk)], c("R", base_pkgs))
+          }
+          for (iter in 1:8) {
+            pkgs_present <- lib_pkgs()
+            need <- unique(unlist(lapply(pkgs_present, get_deps)))
+            need <- setdiff(need, pkgs_present)
+            unresolvable <- setdiff(need, rownames(db))
+            if (length(unresolvable))
+              cat("WARNING: dependencies not in any repo index:", paste(unresolvable, collapse = ", "), "\n")
+            need <- intersect(need, rownames(db))
+            if (!length(need)) break
+            cat("repair iteration", iter, "- installing", length(need), "missing dependency(ies)\n")
+            install_two_pass(need)
+          }
+          pkgs_present <- lib_pkgs()
+          cat("rlib packages:", length(pkgs_present), "\n")
+
+          # --- 3c. verify the seed packages actually LOAD from rlib ---------
+          # A missing transitive dependency (e.g. fgsea) only shows up at
+          # namespace-load time, so assert it here rather than at first launch.
+          old_libpaths <- .libPaths()
+          .libPaths(c(lib, old_libpaths))
+          hard <- setdiff(seed, base_pkgs)
+          bad <- hard[!vapply(hard, function(p)
+                   suppressWarnings(requireNamespace(p, lib.loc = lib, quietly = TRUE)),
+                   logical(1))]
+          .libPaths(old_libpaths)
+          if (length(bad)) stop("seed packages failed to load from rlib: ", paste(bad, collapse = ", "))
+          cat("all", length(hard), "seed packages load from rlib\n")
+
+
+          # --- 4. write manifest.json ---------------------------------------
+          pkgs <- as.data.frame(installed.packages(lib.loc = lib))
+          man <- list(
+            schema = 1L,
+            id = Sys.getenv("APP_ID"), name = Sys.getenv("APP_NAME"), version = Sys.getenv("VERSION"),
+            author = Sys.getenv("APP_AUTHOR"), description = Sys.getenv("APP_DESC"),
+            homepage = Sys.getenv("APP_HOMEPAGE"), license = Sys.getenv("APP_LICENSE"),
+            runtime = "r-shiny", entry = "app/app.R",
+            platform = "${{ matrix.platform }}",
+            r_version = Sys.getenv("R_VERSION"), min_shell_version = "0.1.0",
+            notes = paste(
+              "Plain single-file Shiny app (not an R package). app.R's runtime",
+              "source(install_R_packages.R) bootstrap and the dev-only",
+              "library(devtools)/require(usethis) lines were stripped; the full",
+              "CRAN/Bioconductor closure is prebuilt in rlib. Function/Pathway",
+              "Enrichment needs outbound network (Enrichr + KEGG). The Single Cell",
+              "module uses hdf5r (HDF5); Windows support is a known store limitation."),
+            packages = lapply(seq_len(nrow(pkgs)), function(i) list(
+              name = pkgs$Package[i], version = pkgs$Version[i],
+              path = file.path("rlib", pkgs$Package[i]), source = "cran"))
+          )
+          jsonlite::write_json(man, file.path(bundle, "manifest.json"), pretty = TRUE, auto_unbox = TRUE)
+
+      - name: Zip + sha256
+        shell: Rscript {0}
+        run: |
+          out <- sprintf("%s-%s-%s.zip", Sys.getenv("APP_ID"), Sys.getenv("VERSION"), "${{ matrix.platform }}")
+          bundle <- file.path(getwd(), "bundle")
+          old <- setwd(bundle); on.exit(setwd(old))
+          zip::zipr(out, files = list.files(".", all.files = TRUE, no.. = TRUE))
+          entries <- utils::unzip(out, list = TRUE)$Name
+          if (!any(grepl("^rlib/", entries))) stop("zip is missing rlib/ -- aborting")
+          if (!any(grepl("^app/app[.]R$", entries))) stop("zip is missing app/app.R -- aborting")
+          if (!any(grepl("^app/app_bin/", entries))) stop("zip is missing app/app_bin/ -- aborting")
+          setwd(old)
+          file.rename(file.path(bundle, out), out)
+          sha <- digest::digest(out, algo = "sha256", file = TRUE)
+          sz <- file.size(out)
+          cat("bundle zip size (bytes):", sz, "\n")
+          if (sz > 2 * 1024^3) {
+            warning("bundle exceeds the 2 GiB GitHub Release asset limit; ",
+                    "trim heavy modules (Seurat/hdf5r/scater/MAST, ChIPseeker/TxDb.*) or split the app.")
+          }
+          writeLines(sprintf('{"platform":"%s","file":"%s","sha256":"%s","size":%d}',
+                     "${{ matrix.platform }}", out, sha, sz),
+                     sprintf("meta-%s.json", "${{ matrix.platform }}"))
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: bundle-${{ matrix.platform }}
+          path: |
+            *.zip
+            meta-*.json
+
+  release:
+    needs: bundle
+    if: github.event_name == 'release' || startsWith(github.ref, 'refs/tags/v') || inputs.tag != ''
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ inputs.tag || github.ref_name }}
+          files: artifacts/*.zip

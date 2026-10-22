@@ -1,0 +1,30 @@
+id: distplotter
+name: DistPlotter
+status: active
+upstream: ccasement/DistPlotter
+fork: fentouxungui/DistPlotter
+license: MIT
+app_mode: flat
+platforms: win-x64, mac-arm64
+version: 0.1.2
+tag: v0.1.2
+release_url: https://github.com/fentouxungui/DistPlotter/releases/tag/v0.1.2
+build_run: ""
+template: unknown (backfill)
+patch_file: ""
+recorded_at: 2026-10-22
+built_at: 2026-10-17T13:09:04Z
+source_repo: fentouxungui/DistPlotter
+source_commit: 2b0628b931dc84be12cce4fce72eee538d109eee
+upstream_repo: ccasement/DistPlotter
+upstream_head: e4325d00c63855a0cd0a8e2fc7f0196577933231
+upstream_checked_at: 2026-10-22T09:40:38Z
+workflow_path: .github/workflows/distplotter-build-app-bundle.yml
+workflow_commit: 2b0628b931dc84be12cce4fce72eee538d109eee
+workflow_sha256: 86ca04d209f3da63ea113151a3528966deff61ff5370cd82db4f9e24c5b401d6
+app_size_mb: win-x64=99, mac-arm64=94
+closure_packages: ""
+decisions:
+  - APP_MODE=flat - app layout from the generated workflow
+  - EXTRA_PKGS=1 packages - extra dependencies declared in the workflow
+  - APP_SUBDIR=inst/DistPlotter - app lives in a subdirectory

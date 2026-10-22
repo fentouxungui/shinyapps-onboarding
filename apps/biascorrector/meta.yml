@@ -1,0 +1,28 @@
+id: biascorrector
+name: BiasCorrector
+status: active
+upstream: kapsner/BiasCorrector
+fork: fentouxungui/BiasCorrector
+license: GPL-3.0
+app_mode: auto
+platforms: win-x64, mac-arm64
+version: 0.1.0
+tag: v0.1.0
+release_url: https://github.com/fentouxungui/BiasCorrector/releases/tag/v0.1.0
+build_run: ""
+template: unknown (backfill)
+patch_file: ""
+recorded_at: 2026-10-22
+built_at: 2026-10-17T12:52:52Z
+source_repo: fentouxungui/BiasCorrector
+source_commit: 88d2a12d71045239bc7adb0bcac2764bd8c121b3
+upstream_repo: kapsner/BiasCorrector
+upstream_head: a11c8d1c50e6c469349c17befc0e2f5ab66d76e2
+upstream_checked_at: 2026-10-22T09:47:16Z
+workflow_path: .github/workflows/biascorrector-build-app-bundle.yml
+workflow_commit: 88d2a12d71045239bc7adb0bcac2764bd8c121b3
+workflow_sha256: bbe647c871e820f0c20e81e62a4cec482952f45a35639bf9809749347c62827c
+app_size_mb: win-x64=61, mac-arm64=59
+closure_packages: ""
+decisions:
+  - no non-default settings - generated from the stock template

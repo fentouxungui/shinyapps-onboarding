@@ -1,0 +1,30 @@
+id: dqcheckrgui
+name: dqcheckrGUI
+status: active
+upstream: cran/dqcheckrGUI
+fork: fentouxungui/dqcheckrGUI
+license: See upstream
+app_mode: flat
+platforms: win-x64, mac-arm64
+version: 0.1.0
+tag: v0.1.0
+release_url: https://github.com/fentouxungui/dqcheckrGUI/releases/tag/v0.1.0
+build_run: ""
+template: unknown (backfill)
+patch_file: ""
+recorded_at: 2026-10-22
+built_at: 2026-10-18T06:38:08Z
+source_repo: fentouxungui/dqcheckrGUI
+source_commit: 88e69a1efff2b8db9f973900a42c67d8776b3cd1
+upstream_repo: cran/dqcheckrGUI
+upstream_head: 1c3dc2d476ccaa44df1973c3a970c16d04935988
+upstream_checked_at: 2026-10-22T09:40:44Z
+workflow_path: .github/workflows/build-app-bundle.yml
+workflow_commit: 88e69a1efff2b8db9f973900a42c67d8776b3cd1
+workflow_sha256: 761e1b6adbb81c3d992ff84b58c474f3d90ade3478f23141f2d8612a29c77eb4
+app_size_mb: win-x64=100, mac-arm64=90
+closure_packages: ""
+decisions:
+  - APP_MODE=flat - app layout from the generated workflow
+  - EXTRA_PKGS=1 packages - extra dependencies declared in the workflow
+  - APP_SUBDIR=inst/app - app lives in a subdirectory

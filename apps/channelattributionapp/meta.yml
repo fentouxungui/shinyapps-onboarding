@@ -1,0 +1,28 @@
+id: channelattributionapp
+name: ChannelAttributionApp
+status: active
+upstream: cran/ChannelAttributionApp
+fork: fentouxungui/ChannelAttributionApp
+license: GPL-3.0
+app_mode: auto
+platforms: win-x64, mac-arm64
+version: 0.3.0
+tag: v0.3.0
+release_url: https://github.com/fentouxungui/ChannelAttributionApp/releases/tag/v0.3.0
+build_run: ""
+template: unknown (backfill)
+patch_file: ""
+recorded_at: 2026-10-22
+built_at: 2026-10-17T16:07:37Z
+source_repo: fentouxungui/ChannelAttributionApp
+source_commit: 3a5c2dac94dcc226c7d4f6b4a329490b48b8da14
+upstream_repo: cran/ChannelAttributionApp
+upstream_head: 8efa0e608eb39658debb49e1d5b4cdf1c6cbdb85
+upstream_checked_at: 2026-10-22T09:47:24Z
+workflow_path: .github/workflows/channelattributionapp-build-app-bundle.yml
+workflow_commit: ef8caaa79ce7e9982788f8b26af860c6266f4564
+workflow_sha256: 4e096167022e3bacdf94db984d86fa082e692236af6b86994e970ca237d30fad
+app_size_mb: win-x64=50, mac-arm64=48
+closure_packages: ""
+decisions:
+  - no non-default settings - generated from the stock template

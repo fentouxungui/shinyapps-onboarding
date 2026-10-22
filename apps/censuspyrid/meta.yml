@@ -1,0 +1,30 @@
+id: censuspyrid
+name: censuspyrID
+status: active
+upstream: cran/censuspyrID
+fork: fentouxungui/censuspyrID
+license: See upstream
+app_mode: flat
+platforms: win-x64, mac-arm64
+version: 0.1.0
+tag: v0.1.0
+release_url: https://github.com/fentouxungui/censuspyrID/releases/tag/v0.1.0
+build_run: ""
+template: unknown (backfill)
+patch_file: ""
+recorded_at: 2026-10-22
+built_at: 2026-10-18T03:27:58Z
+source_repo: fentouxungui/censuspyrID
+source_commit: 302b83249e4f64cf1b660c9590f427174773361a
+upstream_repo: cran/censuspyrID
+upstream_head: 88c388072f832d30dc957e64a8c943f26967130b
+upstream_checked_at: 2026-10-22T09:40:11Z
+workflow_path: .github/workflows/build-app-bundle.yml
+workflow_commit: 302b83249e4f64cf1b660c9590f427174773361a
+workflow_sha256: 71197a3ec9025036675e9667b71729d701216393735b146fb8234d773e19784b
+app_size_mb: win-x64=93, mac-arm64=90
+closure_packages: ""
+decisions:
+  - APP_MODE=flat - app layout from the generated workflow
+  - EXTRA_PKGS=1 packages - extra dependencies declared in the workflow
+  - APP_SUBDIR=inst/app/censuspyrIDExplorer - app lives in a subdirectory

@@ -1,0 +1,31 @@
+id: anca
+name: aNCA
+status: active
+upstream: cran/aNCA
+fork: fentouxungui/aNCA
+license: See upstream
+app_mode: flat
+platforms: win-x64, mac-arm64
+version: 0.2.0
+tag: v0.2.0
+release_url: https://github.com/fentouxungui/aNCA/releases/tag/v0.2.0
+build_run: ""
+template: unknown (backfill)
+patch_file: ""
+recorded_at: 2026-10-22
+built_at: 2026-10-18T07:17:42Z
+source_repo: fentouxungui/aNCA
+source_commit: bede981633ebf0b4fedfc13583bffd73b6016b7d
+upstream_repo: cran/aNCA
+upstream_head: c4522c1ef8b53590ea6e505d0b0317497c68d326
+upstream_checked_at: 2026-10-22T09:39:47Z
+workflow_path: .github/workflows/build-app-bundle.yml
+workflow_commit: bede981633ebf0b4fedfc13583bffd73b6016b7d
+workflow_sha256: 7a8d2ff8e4b7ae5cd0d2870c9712649f8c32ac6183be867e0e4100ca9513bef6
+app_size_mb: win-x64=229, mac-arm64=214
+closure_packages: ""
+decisions:
+  - APP_MODE=flat - app layout from the generated workflow
+  - EXTRA_PKGS=1 packages - extra dependencies declared in the workflow
+  - SOURCE_REBUILD=gdtools - rebuilt from source for macOS
+  - APP_SUBDIR=inst/shiny - app lives in a subdirectory
