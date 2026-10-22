@@ -1,0 +1,30 @@
+id: metsizer
+name: MetSizeR
+status: active
+upstream: 1danjordan/MetSizeR
+fork: fentouxungui/MetSizeR
+license: GPL-2.0-or-later
+app_mode: flat
+platforms: win-x64, mac-arm64
+version: 0.1.0
+tag: v0.1.0
+release_url: https://github.com/fentouxungui/MetSizeR/releases/tag/v0.1.0
+build_run: ""
+template: unknown (backfill)
+patch_file: ""
+recorded_at: 2026-10-22
+built_at: 2026-10-17T15:22:35Z
+source_repo: fentouxungui/MetSizeR
+source_commit: fbde0f5b9194d77e0d3e8b408c0ac449a3e84d4a
+upstream_repo: 1danjordan/MetSizeR
+upstream_head: d2772b9c231d0ab26854f55eb5372874c1939b79
+upstream_checked_at: 2026-10-22T09:55:10Z
+workflow_path: .github/workflows/metsizer-build-app-bundle.yml
+workflow_commit: fbde0f5b9194d77e0d3e8b408c0ac449a3e84d4a
+workflow_sha256: 1d5867dc05d34f9d3cfc89e6cf124227544522b57f66e88a10e685e9f0f2aadd
+app_size_mb: win-x64=71, mac-arm64=67
+closure_packages: ""
+decisions:
+  - APP_MODE=flat - app layout from the generated workflow
+  - EXTRA_PKGS=1 packages - extra dependencies declared in the workflow
+  - APP_SUBDIR=inst/shiny/MetSizeR - app lives in a subdirectory

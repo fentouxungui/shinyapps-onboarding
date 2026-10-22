@@ -1,0 +1,28 @@
+id: kesernetwork
+name: kesernetwork
+status: active
+upstream: cran/kesernetwork
+fork: fentouxungui/kesernetwork
+license: See upstream
+app_mode: package-fn
+platforms: win-x64, mac-arm64
+version: 0.1.0
+tag: v0.1.0
+release_url: https://github.com/fentouxungui/kesernetwork/releases/tag/v0.1.0
+build_run: ""
+template: unknown (backfill)
+patch_file: ""
+recorded_at: 2026-10-22
+built_at: 2026-10-18T12:17:30Z
+source_repo: fentouxungui/kesernetwork
+source_commit: 00e018366e0ebcfff54ec3f5c017ca60347a4682
+upstream_repo: cran/kesernetwork
+upstream_head: a5bcbd07e756aa96548af0b68eabef9c1cf5cd76
+upstream_checked_at: 2026-10-22T09:54:45Z
+workflow_path: .github/workflows/build-app-bundle.yml
+workflow_commit: 00e018366e0ebcfff54ec3f5c017ca60347a4682
+workflow_sha256: b7f5e32fc607229d7fb9569a65c7be1959a1c21b00a571a89c245419acf270d2
+app_size_mb: win-x64=102, mac-arm64=97
+closure_packages: ""
+decisions:
+  - APP_MODE=package-fn - app layout from the generated workflow

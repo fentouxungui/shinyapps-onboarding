@@ -1,0 +1,28 @@
+id: plotsofdata
+name: PlotsOfData
+status: active
+upstream: JoachimGoedhart/PlotsOfData
+fork: fentouxungui/PlotsOfData
+license: GPL-3.0
+app_mode: auto
+platforms: win-x64, mac-arm64
+version: 0.1.0
+tag: v0.1.0
+release_url: https://github.com/fentouxungui/PlotsOfData/releases/tag/v0.1.0
+build_run: ""
+template: unknown (backfill)
+patch_file: ""
+recorded_at: 2026-10-22
+built_at: 2026-10-13T13:44:26Z
+source_repo: fentouxungui/PlotsOfData
+source_commit: 2791c94679606a15cd0def448d9c61be68e48a0d
+upstream_repo: JoachimGoedhart/PlotsOfData
+upstream_head: c41b53c37ca93c4c75fd4b5ddc6a51874617bd25
+upstream_checked_at: 2026-10-22T09:56:06Z
+workflow_path: .github/workflows/plotsofdata-build-app-bundle.yml
+workflow_commit: 2791c94679606a15cd0def448d9c61be68e48a0d
+workflow_sha256: 85cd82f43f469ce698a7ed5b7d0e9a975ce99b46fa7a781e968a50c9c2ac95ea
+app_size_mb: win-x64=129, mac-arm64=114
+closure_packages: ""
+decisions:
+  - no non-default settings - generated from the stock template

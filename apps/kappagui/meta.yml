@@ -1,0 +1,30 @@
+id: kappagui
+name: KappaGUI
+status: active
+upstream: cran/KappaGUI
+fork: fentouxungui/KappaGUI
+license: GPL-2.0-or-later
+app_mode: flat
+platforms: win-x64, mac-arm64
+version: 0.1.0
+tag: v0.1.0
+release_url: https://github.com/fentouxungui/KappaGUI/releases/tag/v0.1.0
+build_run: ""
+template: unknown (backfill)
+patch_file: ""
+recorded_at: 2026-10-22
+built_at: 2026-10-17T15:20:44Z
+source_repo: fentouxungui/KappaGUI
+source_commit: 1a8c4d8ae9938849779ed6e0c253b0d208fc01e7
+upstream_repo: cran/KappaGUI
+upstream_head: 992a522287caeed8d1126b984c626225e102c72b
+upstream_checked_at: 2026-10-22T09:54:41Z
+workflow_path: .github/workflows/kappagui-build-app-bundle.yml
+workflow_commit: 1a8c4d8ae9938849779ed6e0c253b0d208fc01e7
+workflow_sha256: 166bdd7e4ee2dd5735c5058b92d6c0ed4186576fcde7543b3fb43661ec4b9712
+app_size_mb: win-x64=29, mac-arm64=27
+closure_packages: ""
+decisions:
+  - APP_MODE=flat - app layout from the generated workflow
+  - EXTRA_PKGS=1 packages - extra dependencies declared in the workflow
+  - APP_SUBDIR=inst/KappaShinyApp - app lives in a subdirectory

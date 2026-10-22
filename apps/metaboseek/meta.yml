@@ -1,0 +1,29 @@
+id: metaboseek
+name: Metaboseek
+status: active
+upstream: mjhelf/Metaboseek
+fork: fentouxungui/Metaboseek
+license: GPL-3.0
+app_mode: auto
+platforms: win-x64, mac-arm64
+version: 0.1.0
+tag: v0.1.0
+release_url: https://github.com/fentouxungui/Metaboseek/releases/tag/v0.1.0
+build_run: ""
+template: unknown (backfill)
+patch_file: ""
+recorded_at: 2026-10-22
+built_at: 2026-10-16T10:25:58Z
+source_repo: fentouxungui/Metaboseek
+source_commit: 96f7a3459d769b5c38869e68dbabb86697c085b6
+upstream_repo: mjhelf/Metaboseek
+upstream_head: 72ca25c28b82e36d2e9b5ac48b095f3409b92af2
+upstream_checked_at: 2026-10-22T09:55:06Z
+workflow_path: .github/workflows/metaboseek-build-app-bundle.yml
+workflow_commit: 96f7a3459d769b5c38869e68dbabb86697c085b6
+workflow_sha256: d4029ecf189ac427d9a0f9910dbc978d32a00dd6c707e301d58d4fc6d315eb76
+app_size_mb: win-x64=374, mac-arm64=375
+closure_packages: ""
+decisions:
+  - ARCHIVE_URLS=2 source tarball(s) - packages outside CRAN/Bioconductor
+  - APP_SUBDIR=app - app lives in a subdirectory

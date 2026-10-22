@@ -1,0 +1,28 @@
+id: isocor
+name: IsoCor
+status: active
+upstream: cran/IsoCor
+fork: fentouxungui/IsoCor
+license: See upstream
+app_mode: package-fn
+platforms: win-x64, mac-arm64
+version: 0.1.0
+tag: v0.1.0
+release_url: https://github.com/fentouxungui/IsoCor/releases/tag/v0.1.0
+build_run: ""
+template: unknown (backfill)
+patch_file: ""
+recorded_at: 2026-10-22
+built_at: 2026-10-18T04:27:24Z
+source_repo: fentouxungui/IsoCor
+source_commit: 32f090d382758744c762bc047085b2718f00c1e6
+upstream_repo: cran/IsoCor
+upstream_head: 20ac3c4e19cd2c9025c0c04763db939a6faf02cb
+upstream_checked_at: 2026-10-22T09:54:37Z
+workflow_path: .github/workflows/build-app-bundle.yml
+workflow_commit: 32f090d382758744c762bc047085b2718f00c1e6
+workflow_sha256: 80403349e1db628fd12af7c43937037c32b2c389bdb15aa5c5ac08fff20e1b9d
+app_size_mb: win-x64=47, mac-arm64=45
+closure_packages: ""
+decisions:
+  - APP_MODE=package-fn - app layout from the generated workflow

@@ -1,0 +1,30 @@
+id: phyloprofile
+name: PhyloProfile
+status: active
+upstream: BIONF/PhyloProfile
+fork: fentouxungui/PhyloProfile
+license: MIT
+app_mode: flat
+platforms: win-x64, mac-arm64
+version: 0.1.1
+tag: v0.1.1
+release_url: https://github.com/fentouxungui/PhyloProfile/releases/tag/v0.1.1
+build_run: ""
+template: unknown (backfill)
+patch_file: ""
+recorded_at: 2026-10-22
+built_at: 2026-10-16T06:14:45Z
+source_repo: fentouxungui/PhyloProfile
+source_commit: b9b206610693956f446008a22b80da5e768b29a7
+upstream_repo: BIONF/PhyloProfile
+upstream_head: 424b6e8834ebf4515d23dd52dc111c4cf190cc8f
+upstream_checked_at: 2026-10-22T09:56:02Z
+workflow_path: .github/workflows/phyloprofile-build-app-bundle.yml
+workflow_commit: b9b206610693956f446008a22b80da5e768b29a7
+workflow_sha256: a74d5f3e005c4631139b77cd7930346f7de3b3b9b6e3159e746ecf9679c8be22
+app_size_mb: win-x64=183, mac-arm64=170
+closure_packages: ""
+decisions:
+  - APP_MODE=flat - app layout from the generated workflow
+  - EXTRA_PKGS=1 packages - extra dependencies declared in the workflow
+  - APP_SUBDIR=inst/PhyloProfile - app lives in a subdirectory

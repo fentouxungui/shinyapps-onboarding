@@ -1,0 +1,30 @@
+id: lavaanshiny
+name: lavaan.shiny
+status: active
+upstream: kylehamilton/lavaan.shiny
+fork: fentouxungui/lavaan.shiny
+license: GPL-3.0
+app_mode: flat
+platforms: win-x64, mac-arm64
+version: 0.1.1
+tag: v0.1.1
+release_url: https://github.com/fentouxungui/lavaan.shiny/releases/tag/v0.1.1
+build_run: ""
+template: unknown (backfill)
+patch_file: ""
+recorded_at: 2026-10-22
+built_at: 2026-10-17T14:39:36Z
+source_repo: fentouxungui/lavaan.shiny
+source_commit: 34a4cca18fba84b2050cd9f7d437b9b9206a2d8b
+upstream_repo: kylehamilton/lavaan.shiny
+upstream_head: 49c228cf960283d808e6751ae36e0638cd3530f2
+upstream_checked_at: 2026-10-22T09:54:52Z
+workflow_path: .github/workflows/lavaanshiny-build-app-bundle.yml
+workflow_commit: 34a4cca18fba84b2050cd9f7d437b9b9206a2d8b
+workflow_sha256: 925db15e6c65af8d9d4a91a5eb7ba6264aea4ddafd93e6a6db5b479c9be0b9cb
+app_size_mb: win-x64=113, mac-arm64=108
+closure_packages: ""
+decisions:
+  - APP_MODE=flat - app layout from the generated workflow
+  - EXTRA_PKGS=1 packages - extra dependencies declared in the workflow
+  - APP_SUBDIR=inst/shiny - app lives in a subdirectory

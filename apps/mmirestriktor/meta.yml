@@ -1,0 +1,28 @@
+id: mmirestriktor
+name: mmirestriktor
+status: active
+upstream: mightymetrika/mmirestriktor
+fork: fentouxungui/mmirestriktor
+license: See upstream
+app_mode: package-fn
+platforms: win-x64, mac-arm64
+version: 0.1.0
+tag: v0.1.0
+release_url: https://github.com/fentouxungui/mmirestriktor/releases/tag/v0.1.0
+build_run: ""
+template: unknown (backfill)
+patch_file: ""
+recorded_at: 2026-10-22
+built_at: 2026-10-17T18:44:31Z
+source_repo: fentouxungui/mmirestriktor
+source_commit: a04bbdc7d62c35db4b96fcf80adb9e6044cd42da
+upstream_repo: mightymetrika/mmirestriktor
+upstream_head: e752cb2e87a23f6120e8e4d6b8f1339d79e03567
+upstream_checked_at: 2026-10-22T09:55:29Z
+workflow_path: .github/workflows/build-app-bundle.yml
+workflow_commit: a04bbdc7d62c35db4b96fcf80adb9e6044cd42da
+workflow_sha256: 913377331e626a0204ac526d471437221ccc7e4ca8141380a3397c04e22e07ef
+app_size_mb: win-x64=88, mac-arm64=85
+closure_packages: ""
+decisions:
+  - APP_MODE=package-fn - app layout from the generated workflow

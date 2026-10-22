@@ -1,0 +1,28 @@
+id: miadash
+name: miaDash
+status: active
+upstream: microbiome/miaDash
+fork: fentouxungui/miaDash
+license: Artistic-2.0
+app_mode: auto
+platforms: win-x64, mac-arm64
+version: 0.1.1
+tag: v0.1.1
+release_url: https://github.com/fentouxungui/miaDash/releases/tag/v0.1.1
+build_run: ""
+template: unknown (backfill)
+patch_file: ""
+recorded_at: 2026-10-22
+built_at: 2026-10-16T08:39:59Z
+source_repo: fentouxungui/miaDash
+source_commit: e367cadf51d70a1137a3dd65d3c4b04367d9681f
+upstream_repo: microbiome/miaDash
+upstream_head: 27b79e157eb1d07fec74f6235cfcb70d1075d519
+upstream_checked_at: 2026-10-22T09:55:14Z
+workflow_path: .github/workflows/miadash-build-app-bundle.yml
+workflow_commit: e367cadf51d70a1137a3dd65d3c4b04367d9681f
+workflow_sha256: f8a9f24f6933a6b21e7a36434e32570bfb8882da0c4917221aedb8b04d9419f8
+app_size_mb: win-x64=317, mac-arm64=320
+closure_packages: ""
+decisions:
+  - SOURCE_REBUILD=gdtools - rebuilt from source for macOS

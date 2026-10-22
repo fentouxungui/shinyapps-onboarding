@@ -1,0 +1,30 @@
+id: projectlsa
+name: projectLSA
+status: active
+upstream: hdmeasure/projectLSA
+fork: fentouxungui/projectLSA
+license: MIT + file LICENSE
+app_mode: flat
+platforms: win-x64, mac-arm64
+version: 0.1.0
+tag: v0.1.0
+release_url: https://github.com/fentouxungui/projectLSA/releases/tag/v0.1.0
+build_run: ""
+template: unknown (backfill)
+patch_file: ""
+recorded_at: 2026-10-22
+built_at: 2026-10-19T00:46:00Z
+source_repo: fentouxungui/projectLSA
+source_commit: 1d4d3c98ba969ca83e4ce66204e45ce986d18398
+upstream_repo: hdmeasure/projectLSA
+upstream_head: 9544d37160c04b191822dcd6f7f390037cc4cb51
+upstream_checked_at: 2026-10-22T09:56:21Z
+workflow_path: .github/workflows/build-app-bundle.yml
+workflow_commit: 1d4d3c98ba969ca83e4ce66204e45ce986d18398
+workflow_sha256: b4a675c66a0bb41d93181f63c6410c59d5e1388add183427372f5463252d29ae
+app_size_mb: win-x64=240, mac-arm64=261
+closure_packages: ""
+decisions:
+  - APP_MODE=flat - app layout from the generated workflow
+  - SOURCE_REBUILD=gdtools - rebuilt from source for macOS
+  - APP_SUBDIR=inst/app - app lives in a subdirectory

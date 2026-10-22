@@ -1,0 +1,28 @@
+id: phecodemap
+name: phecodemap
+status: active
+upstream: cran/phecodemap
+fork: fentouxungui/phecodemap
+license: See upstream
+app_mode: package-fn
+platforms: win-x64, mac-arm64
+version: 0.1.0
+tag: v0.1.0
+release_url: https://github.com/fentouxungui/phecodemap/releases/tag/v0.1.0
+build_run: ""
+template: unknown (backfill)
+patch_file: ""
+recorded_at: 2026-10-22
+built_at: 2026-10-18T06:39:34Z
+source_repo: fentouxungui/phecodemap
+source_commit: afb8a626f12154cee14a6a1dadcd6cabf6622cba
+upstream_repo: cran/phecodemap
+upstream_head: 6b709aa67e56c20969a34bcb737b190bc3ce5283
+upstream_checked_at: 2026-10-22T09:55:59Z
+workflow_path: .github/workflows/build-app-bundle.yml
+workflow_commit: afb8a626f12154cee14a6a1dadcd6cabf6622cba
+workflow_sha256: 941fe56a4731642d82a4bbe700b2fe77e6640cc2297cb5738c0178abade90975
+app_size_mb: win-x64=103, mac-arm64=98
+closure_packages: ""
+decisions:
+  - APP_MODE=package-fn - app layout from the generated workflow

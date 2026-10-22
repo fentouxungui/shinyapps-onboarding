@@ -1,0 +1,28 @@
+id: isee
+name: iSEE
+status: active
+upstream: iSEE/iSEE
+fork: fentouxungui/iSEE
+license: MIT
+app_mode: auto
+platforms: win-x64, mac-arm64
+version: 0.1.1
+tag: v0.1.1
+release_url: https://github.com/fentouxungui/iSEE/releases/tag/v0.1.1
+build_run: ""
+template: unknown (backfill)
+patch_file: ""
+recorded_at: 2026-10-22
+built_at: 2026-10-10T02:07:42Z
+source_repo: fentouxungui/iSEE
+source_commit: 5c95d35a436d4ba56abd35eb2344894938d21481
+upstream_repo: iSEE/iSEE
+upstream_head: f6c190304e95e35503a5cc9444c9e0607ddc58ab
+upstream_checked_at: 2026-10-22T09:54:33Z
+workflow_path: .github/workflows/isee-build-app-bundle.yml
+workflow_commit: 5c95d35a436d4ba56abd35eb2344894938d21481
+workflow_sha256: 9288f93639065e960619edc468b3f553fd4060ec02f4baf943210b96869e802d
+app_size_mb: win-x64=119, mac-arm64=116
+closure_packages: ""
+decisions:
+  - no non-default settings - generated from the stock template

@@ -1,0 +1,30 @@
+id: mispitools
+name: mispitools
+status: active
+upstream: cran/mispitools
+fork: fentouxungui/mispitools
+license: See upstream
+app_mode: flat
+platforms: win-x64, mac-arm64
+version: 0.1.0
+tag: v0.1.0
+release_url: https://github.com/fentouxungui/mispitools/releases/tag/v0.1.0
+build_run: ""
+template: unknown (backfill)
+patch_file: ""
+recorded_at: 2026-10-22
+built_at: 2026-10-17T23:47:02Z
+source_repo: fentouxungui/mispitools
+source_commit: 89dc89ae7c97de867da08d191d60d3e3c6b828a7
+upstream_repo: cran/mispitools
+upstream_head: 446744dbee4c78c85df0d419198a37f4d973b9c7
+upstream_checked_at: 2026-10-22T09:55:22Z
+workflow_path: .github/workflows/build-app-bundle.yml
+workflow_commit: 89dc89ae7c97de867da08d191d60d3e3c6b828a7
+workflow_sha256: d2c9c89e3f7bb9d5be218483e5d61044fdb2b5fdacc64508c2ead41ab5a5a3be
+app_size_mb: win-x64=85, mac-arm64=82
+closure_packages: ""
+decisions:
+  - APP_MODE=flat - app layout from the generated workflow
+  - EXTRA_PKGS=1 packages - extra dependencies declared in the workflow
+  - APP_SUBDIR=inst/shinyapp - app lives in a subdirectory

@@ -1,0 +1,31 @@
+id: paramgui
+name: paramGUI
+status: active
+upstream: glotaran/paramGUI
+fork: fentouxungui/paramGUI
+license: GPL (>= 2)
+app_mode: flat
+platforms: win-x64, mac-arm64
+version: 0.1.0
+tag: v0.1.0
+release_url: https://github.com/fentouxungui/paramGUI/releases/tag/v0.1.0
+build_run: ""
+template: unknown (backfill)
+patch_file: ""
+recorded_at: 2026-10-22
+built_at: 2026-10-18T14:45:52Z
+source_repo: fentouxungui/paramGUI
+source_commit: 239d330a865d72bb8f2506144af239094be53a66
+upstream_repo: glotaran/paramGUI
+upstream_head: b7908ab79709f2c217b8c59a5923bf210b2669fc
+upstream_checked_at: 2026-10-22T09:55:47Z
+workflow_path: .github/workflows/build-app-bundle.yml
+workflow_commit: 239d330a865d72bb8f2506144af239094be53a66
+workflow_sha256: 4372f962a481a5285b21f84d861ef4f9930e4019b5fb41a5376e11e2347579ab
+app_size_mb: win-x64=64, mac-arm64=62
+closure_packages: ""
+decisions:
+  - APP_MODE=flat - app layout from the generated workflow
+  - EXTRA_PKGS=1 packages - extra dependencies declared in the workflow
+  - SOURCE_REBUILD=gdtools - rebuilt from source for macOS
+  - APP_SUBDIR=inst/shinyApps/paramGUI - app lives in a subdirectory

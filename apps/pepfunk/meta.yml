@@ -1,0 +1,29 @@
+id: pepfunk
+name: pepFunk
+status: active
+upstream: northomics/pepFunk
+fork: fentouxungui/pepFunk
+license: GPL-3.0
+app_mode: auto
+platforms: win-x64, mac-arm64
+version: 0.1.1
+tag: v0.1.1
+release_url: https://github.com/fentouxungui/pepFunk/releases/tag/v0.1.1
+build_run: ""
+template: unknown (backfill)
+patch_file: ""
+recorded_at: 2026-10-22
+built_at: 2026-10-16T08:28:16Z
+source_repo: fentouxungui/pepFunk
+source_commit: d51c48e83bda0b385f49bd9a78fa2fed0299338f
+upstream_repo: northomics/pepFunk
+upstream_head: 2fc98bdf6754fe760ad538be70b3f4a046c18dbc
+upstream_checked_at: 2026-10-22T09:55:55Z
+workflow_path: .github/workflows/pepfunk-build-app-bundle.yml
+workflow_commit: d51c48e83bda0b385f49bd9a78fa2fed0299338f
+workflow_sha256: d6c8bdd49c041cd45e4644abf0e2c24a23a791ef4d18af4bd5c43a868480db49
+app_size_mb: win-x64=344, mac-arm64=326
+closure_packages: ""
+decisions:
+  - EXTRA_PKGS=1 packages - extra dependencies declared in the workflow
+  - ARCHIVE_URLS=1 source tarball(s) - packages outside CRAN/Bioconductor

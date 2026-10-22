@@ -1,0 +1,30 @@
+id: ngstoolkit
+name: NGSToolKit
+status: active
+upstream: bigfacilityiisr/NGS-Tool-Kit
+fork: fentouxungui/NGS-Tool-Kit
+license: GPL-3.0
+app_mode: flat
+platforms: win-x64, mac-arm64
+version: 0.1.1
+tag: v0.1.1
+release_url: https://github.com/fentouxungui/NGS-Tool-Kit/releases/tag/v0.1.1
+build_run: ""
+template: unknown (backfill)
+patch_file: ""
+recorded_at: 2026-10-22
+built_at: 2026-10-17T13:43:49Z
+source_repo: fentouxungui/NGS-Tool-Kit
+source_commit: 6a8bd7aa1baf4dd251fec3a7a89fea9961cacef7
+upstream_repo: bigfacilityiisr/NGS-Tool-Kit
+upstream_head: 2340308d76e98727cfa4832bfb7836ce8138b0d4
+upstream_checked_at: 2026-10-22T09:55:37Z
+workflow_path: .github/workflows/ngstoolkit-build-app-bundle.yml
+workflow_commit: 6a8bd7aa1baf4dd251fec3a7a89fea9961cacef7
+workflow_sha256: ca196dd662a9fd19ec85933ec87cba7ab85d2ee22dc6bd4192fc4af80b71a250
+app_size_mb: win-x64=166, mac-arm64=156
+closure_packages: ""
+decisions:
+  - APP_MODE=flat - app layout from the generated workflow
+  - EXTRA_PKGS=1 packages - extra dependencies declared in the workflow
+  - APP_SUBDIR=shinyapps - app lives in a subdirectory

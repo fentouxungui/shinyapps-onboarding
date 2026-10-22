@@ -1,0 +1,28 @@
+id: quallmer-app
+name: quallmer.app
+status: active
+upstream: cran/quallmer.app
+fork: fentouxungui/quallmer.app
+license: See upstream
+app_mode: package-fn
+platforms: win-x64, mac-arm64
+version: 0.1.0
+tag: v0.1.0
+release_url: https://github.com/fentouxungui/quallmer.app/releases/tag/v0.1.0
+build_run: ""
+template: unknown (backfill)
+patch_file: ""
+recorded_at: 2026-10-22
+built_at: 2026-10-18T00:40:20Z
+source_repo: fentouxungui/quallmer.app
+source_commit: 12ad6daf2d8643e504cd8637da90540bfd6bb774
+upstream_repo: cran/quallmer.app
+upstream_head: 1ac9035d89c32608e4c218636fb8c1671793db1a
+upstream_checked_at: 2026-10-22T09:56:25Z
+workflow_path: .github/workflows/build-app-bundle.yml
+workflow_commit: 12ad6daf2d8643e504cd8637da90540bfd6bb774
+workflow_sha256: 2fe6f053f26d48e73386bc3c09800fc19e6f6c39d2d1034c280589d838a0723d
+app_size_mb: win-x64=64, mac-arm64=60
+closure_packages: ""
+decisions:
+  - APP_MODE=package-fn - app layout from the generated workflow

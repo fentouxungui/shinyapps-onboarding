@@ -1,0 +1,28 @@
+id: pomashiny
+name: POMAShiny
+status: active
+upstream: pcastellanoescuder/POMAShiny
+fork: fentouxungui/POMAShiny
+license: GPL-3.0
+app_mode: auto
+platforms: win-x64, mac-arm64
+version: 0.1.0
+tag: v0.1.0
+release_url: https://github.com/fentouxungui/POMAShiny/releases/tag/v0.1.0
+build_run: ""
+template: unknown (backfill)
+patch_file: ""
+recorded_at: 2026-10-22
+built_at: 2026-10-16T08:51:29Z
+source_repo: fentouxungui/POMAShiny
+source_commit: aec649d56e5dcc8bab61d3dbaecff19660efb1d8
+upstream_repo: pcastellanoescuder/POMAShiny
+upstream_head: 476a727264a2ed9e30edfa84546a0b86b001c830
+upstream_checked_at: 2026-10-22T09:56:10Z
+workflow_path: .github/workflows/pomashiny-build-app-bundle.yml
+workflow_commit: aec649d56e5dcc8bab61d3dbaecff19660efb1d8
+workflow_sha256: edc3b240ff0d6b2d2ffa2da67cd885aafa38ffc2277b4cb62a7f11f2616ec708
+app_size_mb: win-x64=449, mac-arm64=434
+closure_packages: ""
+decisions:
+  - APP_SUBDIR=app - app lives in a subdirectory

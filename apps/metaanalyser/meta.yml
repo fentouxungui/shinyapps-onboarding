@@ -1,0 +1,30 @@
+id: metaanalyser
+name: MetaAnalyser
+status: active
+upstream: chjackson/MetaAnalyser
+fork: fentouxungui/MetaAnalyser
+license: GPL-2.0-or-later
+app_mode: flat
+platforms: win-x64, mac-arm64
+version: 0.1.1
+tag: v0.1.1
+release_url: https://github.com/fentouxungui/MetaAnalyser/releases/tag/v0.1.1
+build_run: ""
+template: unknown (backfill)
+patch_file: ""
+recorded_at: 2026-10-22
+built_at: 2026-10-17T14:15:30Z
+source_repo: fentouxungui/MetaAnalyser
+source_commit: 4a2a5590b647a089a6568eedb314e25d41ad0702
+upstream_repo: chjackson/MetaAnalyser
+upstream_head: 26967fd95c05555e162eac3e7fa3140202845b6e
+upstream_checked_at: 2026-10-22T09:55:02Z
+workflow_path: .github/workflows/metaanalyser-build-app-bundle.yml
+workflow_commit: 4a2a5590b647a089a6568eedb314e25d41ad0702
+workflow_sha256: c9c8bece5af7be761743eaa7a1e3da42ac79c00381224bc7a228bc5f4326349b
+app_size_mb: win-x64=43, mac-arm64=41
+closure_packages: ""
+decisions:
+  - APP_MODE=flat - app layout from the generated workflow
+  - EXTRA_PKGS=1 packages - extra dependencies declared in the workflow
+  - APP_SUBDIR=inst/MetaAnalyser - app lives in a subdirectory

@@ -1,0 +1,30 @@
+id: minmeta
+name: miniMeta
+status: active
+upstream: cran/miniMeta
+fork: fentouxungui/miniMeta
+license: See upstream
+app_mode: flat
+platforms: win-x64, mac-arm64
+version: 0.1.0
+tag: v0.1.0
+release_url: https://github.com/fentouxungui/miniMeta/releases/tag/v0.1.0
+build_run: ""
+template: unknown (backfill)
+patch_file: ""
+recorded_at: 2026-10-22
+built_at: 2026-10-18T04:29:26Z
+source_repo: fentouxungui/miniMeta
+source_commit: 2df5e6856834a3795a55719d3ad30fe55fa7f503
+upstream_repo: cran/miniMeta
+upstream_head: 153a5d28e4befadc1a5f12bee82274ff40f3b489
+upstream_checked_at: 2026-10-22T09:55:17Z
+workflow_path: .github/workflows/build-app-bundle.yml
+workflow_commit: 2df5e6856834a3795a55719d3ad30fe55fa7f503
+workflow_sha256: 08cc8a547223da55a9d7d8d6fcfd0fa2e8fb7d7aec3a1b5b0d1fba844ffe5068
+app_size_mb: win-x64=133, mac-arm64=126
+closure_packages: ""
+decisions:
+  - APP_MODE=flat - app layout from the generated workflow
+  - EXTRA_PKGS=1 packages - extra dependencies declared in the workflow
+  - APP_SUBDIR=inst/shiny - app lives in a subdirectory

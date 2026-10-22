@@ -1,0 +1,31 @@
+id: monobinshiny
+name: monobinShiny
+status: active
+upstream: andrija-djurovic/monobinShiny
+fork: fentouxungui/monobinShiny
+license: GPL (>= 3)
+app_mode: package-deploy
+platforms: win-x64, mac-arm64
+version: 0.1.0
+tag: v0.1.0
+release_url: https://github.com/fentouxungui/monobinShiny/releases/tag/v0.1.0
+build_run: ""
+template: unknown (backfill)
+patch_file: ""
+recorded_at: 2026-10-22
+built_at: 2026-10-18T14:45:00Z
+source_repo: fentouxungui/monobinShiny
+source_commit: f7c3507d82e8b4e1342ffe93dca61cbcc9794818
+upstream_repo: andrija-djurovic/monobinShiny
+upstream_head: ae3b62d5e6c24c6ea387f7e7e526f5dff232c9cb
+upstream_checked_at: 2026-10-22T09:55:33Z
+workflow_path: .github/workflows/build-app-bundle.yml
+workflow_commit: f7c3507d82e8b4e1342ffe93dca61cbcc9794818
+workflow_sha256: 3f62f2f26d6564705c6ee0d079d31e138cfbc4833b6504de9ada3b43ef6c6695
+app_size_mb: win-x64=85, mac-arm64=83
+closure_packages: ""
+decisions:
+  - APP_MODE=package-deploy - app layout from the generated workflow
+  - EXTRA_PKGS=1 packages - extra dependencies declared in the workflow
+  - SOURCE_REBUILD=gdtools - rebuilt from source for macOS
+  - APP_SUBDIR=monobinShiny - app lives in a subdirectory

@@ -64,6 +64,36 @@
 | `html2r` | html2R | active | win-x64, mac-arm64 | v0.1.0 | cran/html2R | [NOTES](html2r/NOTES.md) |
 | `icsshiny` | ICSShiny | active | win-x64, mac-arm64 | v0.1.0 | cran/ICSShiny | [NOTES](icsshiny/NOTES.md) |
 | `irtshiny` | IRTShiny | active | win-x64, mac-arm64 | v0.1.0 | kylehamilton/IRTShiny | [NOTES](irtshiny/NOTES.md) |
+| `isee` | iSEE | active | win-x64, mac-arm64 | v0.1.1 | iSEE/iSEE | [NOTES](isee/NOTES.md) |
+| `isocor` | IsoCor | active | win-x64, mac-arm64 | v0.1.0 | cran/IsoCor | [NOTES](isocor/NOTES.md) |
+| `kappagui` | KappaGUI | active | win-x64, mac-arm64 | v0.1.0 | cran/KappaGUI | [NOTES](kappagui/NOTES.md) |
+| `kesernetwork` | kesernetwork | active | win-x64, mac-arm64 | v0.1.0 | cran/kesernetwork | [NOTES](kesernetwork/NOTES.md) |
+| `lande` | lande | active | win-x64, mac-arm64 | v0.1.0 | cran/lande | [NOTES](lande/NOTES.md) |
+| `lavaanshiny` | lavaan.shiny | active | win-x64, mac-arm64 | v0.1.1 | kylehamilton/lavaan.shiny | [NOTES](lavaanshiny/NOTES.md) |
+| `memapp` | memapp | active | win-x64, mac-arm64 | v0.1.0 | cran/memapp | [NOTES](memapp/NOTES.md) |
+| `metaanalyser` | MetaAnalyser | active | win-x64, mac-arm64 | v0.1.1 | chjackson/MetaAnalyser | [NOTES](metaanalyser/NOTES.md) |
+| `metaboseek` | Metaboseek | active | win-x64, mac-arm64 | v0.1.0 | mjhelf/Metaboseek | [NOTES](metaboseek/NOTES.md) |
+| `metsizer` | MetSizeR | active | win-x64, mac-arm64 | v0.1.0 | 1danjordan/MetSizeR | [NOTES](metsizer/NOTES.md) |
+| `miadash` | miaDash | active | win-x64, mac-arm64 | v0.1.1 | microbiome/miaDash | [NOTES](miadash/NOTES.md) |
+| `minmeta` | miniMeta | active | win-x64, mac-arm64 | v0.1.0 | cran/miniMeta | [NOTES](minmeta/NOTES.md) |
+| `mispitools` | mispitools | active | win-x64, mac-arm64 | v0.1.0 | cran/mispitools | [NOTES](mispitools/NOTES.md) |
+| `mmibain` | mmibain | active | win-x64, mac-arm64 | v0.1.0 | cran/mmibain | [NOTES](mmibain/NOTES.md) |
+| `mmirestriktor` | mmirestriktor | active | win-x64, mac-arm64 | v0.1.0 | mightymetrika/mmirestriktor | [NOTES](mmirestriktor/NOTES.md) |
+| `monobinshiny` | monobinShiny | active | win-x64, mac-arm64 | v0.1.0 | andrija-djurovic/monobinShiny | [NOTES](monobinshiny/NOTES.md) |
+| `ngstoolkit` | NGSToolKit | active | win-x64, mac-arm64 | v0.1.1 | bigfacilityiisr/NGS-Tool-Kit | [NOTES](ngstoolkit/NOTES.md) |
+| `normalityassessment` | NormalityAssessment | active | win-x64, mac-arm64 | v0.1.0 | cran/NormalityAssessment | [NOTES](normalityassessment/NOTES.md) |
+| `olympicrshiny` | OlympicRshiny | active | win-x64, mac-arm64 | v0.1.0 | Amalan-ConStat/OlympicRshiny | [NOTES](olympicrshiny/NOTES.md) |
+| `paramgui` | paramGUI | active | win-x64, mac-arm64 | v0.1.0 | glotaran/paramGUI | [NOTES](paramgui/NOTES.md) |
+| `parcc` | ParCC | active | win-x64, mac-arm64 | v0.1.0 | drpakhare/ParCC | [NOTES](parcc/NOTES.md) |
+| `pepfunk` | pepFunk | active | win-x64, mac-arm64 | v0.1.1 | northomics/pepFunk | [NOTES](pepfunk/NOTES.md) |
+| `phecodemap` | phecodemap | active | win-x64, mac-arm64 | v0.1.0 | cran/phecodemap | [NOTES](phecodemap/NOTES.md) |
+| `phyloprofile` | PhyloProfile | active | win-x64, mac-arm64 | v0.1.1 | BIONF/PhyloProfile | [NOTES](phyloprofile/NOTES.md) |
+| `plotsofdata` | PlotsOfData | active | win-x64, mac-arm64 | v0.1.0 | JoachimGoedhart/PlotsOfData | [NOTES](plotsofdata/NOTES.md) |
+| `pomashiny` | POMAShiny | active | win-x64, mac-arm64 | v0.1.0 | pcastellanoescuder/POMAShiny | [NOTES](pomashiny/NOTES.md) |
+| `portfoliooptimizer` | Portfolio Optimizer | active | win-x64, mac-arm64 | v0.1.4 | mschoenhart/portfoliooptimizer | [NOTES](portfoliooptimizer/NOTES.md) |
+| `pressfreedom` | pressfreedom | active | win-x64, mac-arm64 | v0.1.0 | cran/pressfreedom | [NOTES](pressfreedom/NOTES.md) |
+| `projectlsa` | projectLSA | active | win-x64, mac-arm64 | v0.1.0 | hdmeasure/projectLSA | [NOTES](projectlsa/NOTES.md) |
+| `quallmer-app` | quallmer.app | active | win-x64, mac-arm64 | v0.1.0 | cran/quallmer.app | [NOTES](quallmer-app/NOTES.md) |
 | `scrdavis` | ScRDAVis | pending | win-x64 | v1.0.2 | GudaLab/ScRDAVis | [NOTES](scrdavis/NOTES.md) |
 | `xomicsshiny` | xOmicsShiny | pending | win-x64, mac-arm64 | v3.0.2 | interactivereport/xOmicsShiny | [NOTES](xomicsshiny/NOTES.md) |
 
