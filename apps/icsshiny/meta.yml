@@ -1,0 +1,30 @@
+id: icsshiny
+name: ICSShiny
+status: active
+upstream: cran/ICSShiny
+fork: fentouxungui/ICSShiny
+license: GPL-2.0-or-later
+app_mode: flat
+platforms: win-x64, mac-arm64
+version: 0.1.0
+tag: v0.1.0
+release_url: https://github.com/fentouxungui/ICSShiny/releases/tag/v0.1.0
+build_run: ""
+template: unknown (backfill)
+patch_file: ""
+recorded_at: 2026-10-22
+built_at: 2026-10-17T15:21:33Z
+source_repo: fentouxungui/ICSShiny
+source_commit: 080c55cf4580dfc703bdcf8481dfb276435aaea5
+upstream_repo: cran/ICSShiny
+upstream_head: 05076fde79a32330a65190431b67189ef499fc3a
+upstream_checked_at: 2026-10-22T09:52:52Z
+workflow_path: .github/workflows/icsshiny-build-app-bundle.yml
+workflow_commit: 080c55cf4580dfc703bdcf8481dfb276435aaea5
+workflow_sha256: ccf41669d881c43d93ad9db170fbdd4d016ad8511074f3722c293338a281ebae
+app_size_mb: win-x64=71, mac-arm64=69
+closure_packages: ""
+decisions:
+  - APP_MODE=flat - app layout from the generated workflow
+  - EXTRA_PKGS=1 packages - extra dependencies declared in the workflow
+  - APP_SUBDIR=inst/ICSShiny - app lives in a subdirectory

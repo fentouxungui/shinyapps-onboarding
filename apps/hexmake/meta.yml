@@ -1,0 +1,28 @@
+id: hexmake
+name: hexmake
+status: active
+upstream: ColinFay/hexmake
+fork: fentouxungui/hexmake
+license: MIT
+app_mode: auto
+platforms: win-x64, mac-arm64
+version: 0.1.0
+tag: v0.1.0
+release_url: https://github.com/fentouxungui/hexmake/releases/tag/v0.1.0
+build_run: ""
+template: unknown (backfill)
+patch_file: ""
+recorded_at: 2026-10-22
+built_at: 2026-10-13T13:47:00Z
+source_repo: fentouxungui/hexmake
+source_commit: 876b971aa48e7f49739b8effd745057561151b31
+upstream_repo: ColinFay/hexmake
+upstream_head: de5bb2fd8c3ab798b4602e37757880e5da172c6a
+upstream_checked_at: 2026-10-22T09:52:33Z
+workflow_path: .github/workflows/hexmake-build-app-bundle.yml
+workflow_commit: 876b971aa48e7f49739b8effd745057561151b31
+workflow_sha256: 616c56b1966f7924c10d0a215b7d2bbf2243cbe35eacc5cb295adb377abe7a88
+app_size_mb: win-x64=119, mac-arm64=103
+closure_packages: ""
+decisions:
+  - SOURCE_REBUILD=gdtools - rebuilt from source for macOS

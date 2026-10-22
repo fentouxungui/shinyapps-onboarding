@@ -1,0 +1,28 @@
+id: familia
+name: Familia
+status: active
+upstream: Breeding-Insight/familia
+fork: fentouxungui/Familia
+license: Apache-2.0
+app_mode: auto
+platforms: win-x64, mac-arm64
+version: 0.1.0
+tag: v0.1.0
+release_url: https://github.com/fentouxungui/Familia/releases/tag/v0.1.0
+build_run: ""
+template: unknown (backfill)
+patch_file: ""
+recorded_at: 2026-10-22
+built_at: 2026-10-17T11:42:55Z
+source_repo: fentouxungui/Familia
+source_commit: 1a8db4481d166b368d738556331f4e04dbaa58e2
+upstream_repo: Breeding-Insight/familia
+upstream_head: 03a5beded1e2f96f118cac87bc5ad94737d5ef88
+upstream_checked_at: 2026-10-22T09:51:25Z
+workflow_path: .github/workflows/familia-build-app-bundle.yml
+workflow_commit: 1a8db4481d166b368d738556331f4e04dbaa58e2
+workflow_sha256: 8d4e33f249bff257bd58c17fdacfcea2f1090972330f7abf72f563196b775637
+app_size_mb: win-x64=125, mac-arm64=119
+closure_packages: ""
+decisions:
+  - no non-default settings - generated from the stock template

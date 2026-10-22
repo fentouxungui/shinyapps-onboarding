@@ -1,0 +1,30 @@
+id: glossa
+name: glossa
+status: active
+upstream: cran/glossa
+fork: fentouxungui/glossa
+license: See upstream
+app_mode: flat
+platforms: win-x64, mac-arm64
+version: 0.1.0
+tag: v0.1.0
+release_url: https://github.com/fentouxungui/glossa/releases/tag/v0.1.0
+build_run: ""
+template: unknown (backfill)
+patch_file: ""
+recorded_at: 2026-10-22
+built_at: 2026-10-18T06:41:44Z
+source_repo: fentouxungui/glossa
+source_commit: f02fb20fa704576ce0b4afe5e3062041ec90112f
+upstream_repo: cran/glossa
+upstream_head: 3a3ba6184a031321408c1a34431fbed0653c9861
+upstream_checked_at: 2026-10-22T09:52:12Z
+workflow_path: .github/workflows/build-app-bundle.yml
+workflow_commit: f02fb20fa704576ce0b4afe5e3062041ec90112f
+workflow_sha256: 03f8f7bc182da79fd70317b435cc6454bfc471d90d13fb4462dd61c20b3bc390
+app_size_mb: win-x64=305, mac-arm64=253
+closure_packages: ""
+decisions:
+  - APP_MODE=flat - app layout from the generated workflow
+  - EXTRA_PKGS=1 packages - extra dependencies declared in the workflow
+  - APP_SUBDIR=inst/app - app lives in a subdirectory

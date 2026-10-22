@@ -1,0 +1,30 @@
+id: esdm
+name: eSDM
+status: active
+upstream: cran/eSDM
+fork: fentouxungui/eSDM
+license: See upstream
+app_mode: flat
+platforms: win-x64, mac-arm64
+version: 0.1.0
+tag: v0.1.0
+release_url: https://github.com/fentouxungui/eSDM/releases/tag/v0.1.0
+build_run: ""
+template: unknown (backfill)
+patch_file: ""
+recorded_at: 2026-10-22
+built_at: 2026-10-18T04:28:34Z
+source_repo: fentouxungui/eSDM
+source_commit: 1bbb2fca72e253fd648ee487133c2b8ea62d5fa7
+upstream_repo: cran/eSDM
+upstream_head: 085bc0ed71823de1bea1deb3c6eb4c3ab73d2d3a
+upstream_checked_at: 2026-10-22T09:51:04Z
+workflow_path: .github/workflows/build-app-bundle.yml
+workflow_commit: 1bbb2fca72e253fd648ee487133c2b8ea62d5fa7
+workflow_sha256: 55617e33f2a378aa1424c002b803f116806f096b7eb830f80c817245c16941a8
+app_size_mb: win-x64=246, mac-arm64=188
+closure_packages: ""
+decisions:
+  - APP_MODE=flat - app layout from the generated workflow
+  - EXTRA_PKGS=1 packages - extra dependencies declared in the workflow
+  - APP_SUBDIR=inst/shiny - app lives in a subdirectory

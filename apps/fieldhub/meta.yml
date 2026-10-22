@@ -1,0 +1,28 @@
+id: fieldhub
+name: FielDHub
+status: active
+upstream: DidierMurilloF/FielDHub
+fork: fentouxungui/FielDHub
+license: MIT
+app_mode: auto
+platforms: win-x64, mac-arm64
+version: 0.1.0
+tag: v0.1.0
+release_url: https://github.com/fentouxungui/FielDHub/releases/tag/v0.1.0
+build_run: ""
+template: unknown (backfill)
+patch_file: ""
+recorded_at: 2026-10-22
+built_at: 2026-10-17T11:48:17Z
+source_repo: fentouxungui/FielDHub
+source_commit: be94d3c1c09b88f50b8573c59a84adacdc3a3fc5
+upstream_repo: DidierMurilloF/FielDHub
+upstream_head: 720449effcebfb525ef9cfaab128134f99c5ebda
+upstream_checked_at: 2026-10-22T09:51:33Z
+workflow_path: .github/workflows/fieldhub-build-app-bundle.yml
+workflow_commit: be94d3c1c09b88f50b8573c59a84adacdc3a3fc5
+workflow_sha256: db850938b194e3c14126c4e923a9b0736380cc0f649193ab0d9ad51bad97e36d
+app_size_mb: win-x64=102, mac-arm64=97
+closure_packages: ""
+decisions:
+  - no non-default settings - generated from the stock template

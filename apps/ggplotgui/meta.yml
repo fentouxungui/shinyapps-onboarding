@@ -1,0 +1,28 @@
+id: ggplotgui
+name: ggplotgui
+status: active
+upstream: cran/ggplotgui
+fork: fentouxungui/ggplotgui
+license: See upstream
+app_mode: package-fn
+platforms: win-x64, mac-arm64
+version: 0.1.0
+tag: v0.1.0
+release_url: https://github.com/fentouxungui/ggplotgui/releases/tag/v0.1.0
+build_run: ""
+template: unknown (backfill)
+patch_file: ""
+recorded_at: 2026-10-22
+built_at: 2026-10-17T23:47:11Z
+source_repo: fentouxungui/ggplotgui
+source_commit: cd63e6887de5ec457ff5dd9486f37a65cdbe7226
+upstream_repo: cran/ggplotgui
+upstream_head: 325d4affe2fd1ded1b2cb42db4768f935dc55f9a
+upstream_checked_at: 2026-10-22T09:52:03Z
+workflow_path: .github/workflows/build-app-bundle.yml
+workflow_commit: cd63e6887de5ec457ff5dd9486f37a65cdbe7226
+workflow_sha256: 0cb2724f04c7d04d31cd5a8559fb603c4f0c1b35e78bf01fc5af377911f83de9
+app_size_mb: win-x64=93, mac-arm64=88
+closure_packages: ""
+decisions:
+  - APP_MODE=package-fn - app layout from the generated workflow

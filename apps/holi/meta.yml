@@ -1,0 +1,28 @@
+id: holi
+name: holi
+status: active
+upstream: mightymetrika/holi
+fork: fentouxungui/holi
+license: See upstream
+app_mode: package-fn
+platforms: win-x64, mac-arm64
+version: 0.1.0
+tag: v0.1.0
+release_url: https://github.com/fentouxungui/holi/releases/tag/v0.1.0
+build_run: ""
+template: unknown (backfill)
+patch_file: ""
+recorded_at: 2026-10-22
+built_at: 2026-10-17T18:44:46Z
+source_repo: fentouxungui/holi
+source_commit: f82c7e6c176049c33eee3761f41f1786cd3ed1f9
+upstream_repo: mightymetrika/holi
+upstream_head: 6599efdaa53a1267bc54d4c3e4c2a787a7768745
+upstream_checked_at: 2026-10-22T09:52:41Z
+workflow_path: .github/workflows/build-app-bundle.yml
+workflow_commit: f82c7e6c176049c33eee3761f41f1786cd3ed1f9
+workflow_sha256: 4356457af9374aaed0ae115a1dcbd8664a367fbc367259e96115f20ba3c1b3ca
+app_size_mb: win-x64=89, mac-arm64=86
+closure_packages: ""
+decisions:
+  - APP_MODE=package-fn - app layout from the generated workflow

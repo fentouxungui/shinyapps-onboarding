@@ -1,0 +1,30 @@
+id: irtshiny
+name: IRTShiny
+status: active
+upstream: kylehamilton/IRTShiny
+fork: fentouxungui/IRTShiny
+license: GPL-3.0
+app_mode: flat
+platforms: win-x64, mac-arm64
+version: 0.1.0
+tag: v0.1.0
+release_url: https://github.com/fentouxungui/IRTShiny/releases/tag/v0.1.0
+build_run: ""
+template: unknown (backfill)
+patch_file: ""
+recorded_at: 2026-10-22
+built_at: 2026-10-17T15:21:17Z
+source_repo: fentouxungui/IRTShiny
+source_commit: 72967a50744b187acdcfc56d66e847cfd2ba086c
+upstream_repo: kylehamilton/IRTShiny
+upstream_head: ae4b86d8fafb8df787b72eebb6f4cb1efc0b766f
+upstream_checked_at: 2026-10-22T09:52:56Z
+workflow_path: .github/workflows/irtshiny-build-app-bundle.yml
+workflow_commit: 72967a50744b187acdcfc56d66e847cfd2ba086c
+workflow_sha256: 4199d137941b18fc33dcd53c64bf53d1d87626f1c1b9edfd9e13ef972581abaf
+app_size_mb: win-x64=61, mac-arm64=59
+closure_packages: ""
+decisions:
+  - APP_MODE=flat - app layout from the generated workflow
+  - EXTRA_PKGS=1 packages - extra dependencies declared in the workflow
+  - APP_SUBDIR=inst/IRT - app lives in a subdirectory

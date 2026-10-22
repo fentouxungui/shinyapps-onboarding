@@ -1,0 +1,28 @@
+id: genome-stats
+name: shiny-genome-stats
+status: active
+upstream: MPUSP/shiny-genome-stats
+fork: fentouxungui/shiny-genome-stats
+license: GPL-3.0
+app_mode: auto
+platforms: win-x64, mac-arm64
+version: 0.1.7
+tag: v0.1.7
+release_url: https://github.com/fentouxungui/shiny-genome-stats/releases/tag/v0.1.7
+build_run: ""
+template: unknown (backfill)
+patch_file: ""
+recorded_at: 2026-10-22
+built_at: 2026-10-16T10:15:26Z
+source_repo: fentouxungui/shiny-genome-stats
+source_commit: e15f2313102a547b4988e2793697e83b0e7ab590
+upstream_repo: MPUSP/shiny-genome-stats
+upstream_head: c68909d8c799cc3c53f50b3cd06716dd6c5730c1
+upstream_checked_at: 2026-10-22T09:52:00Z
+workflow_path: .github/workflows/genome-stats-build-app-bundle.yml
+workflow_commit: e15f2313102a547b4988e2793697e83b0e7ab590
+workflow_sha256: 33f896a751751c04ad9bcef0fe4b652ce446515a050b699c90fe8e36a907f0e2
+app_size_mb: win-x64=216, mac-arm64=193
+closure_packages: ""
+decisions:
+  - no non-default settings - generated from the stock template

@@ -1,0 +1,29 @@
+id: holomics
+name: Holomics
+status: active
+upstream: MolinLab/Holomics
+fork: fentouxungui/Holomics
+license: GPL (>= 3)
+app_mode: package-fn
+platforms: win-x64, mac-arm64
+version: 0.1.0
+tag: v0.1.0
+release_url: https://github.com/fentouxungui/Holomics/releases/tag/v0.1.0
+build_run: ""
+template: unknown (backfill)
+patch_file: ""
+recorded_at: 2026-10-22
+built_at: 2026-10-19T00:42:50Z
+source_repo: fentouxungui/Holomics
+source_commit: 71aee59998fe837ef00f5df379c16f47b8e339c3
+upstream_repo: MolinLab/Holomics
+upstream_head: 24129f9210f201552ac5ff61a629f6813f11e5c7
+upstream_checked_at: 2026-10-22T09:52:45Z
+workflow_path: .github/workflows/build-app-bundle.yml
+workflow_commit: 71aee59998fe837ef00f5df379c16f47b8e339c3
+workflow_sha256: bec230d112e5b78474aebb79151470d4cef066913dec651b1201a086d05913db
+app_size_mb: win-x64=167, mac-arm64=161
+closure_packages: ""
+decisions:
+  - APP_MODE=package-fn - app layout from the generated workflow
+  - SOURCE_REBUILD=gdtools - rebuilt from source for macOS

@@ -1,0 +1,28 @@
+id: greymodels
+name: Greymodels
+status: active
+upstream: havishaJ/Greymodels
+fork: fentouxungui/Greymodels
+license: See upstream
+app_mode: auto
+platforms: win-x64, mac-arm64
+version: 0.1.0
+tag: v0.1.0
+release_url: https://github.com/fentouxungui/Greymodels/releases/tag/v0.1.0
+build_run: ""
+template: unknown (backfill)
+patch_file: ""
+recorded_at: 2026-10-22
+built_at: 2026-10-17T14:57:59Z
+source_repo: fentouxungui/Greymodels
+source_commit: c587f3ab08adf9c0ab0ce39830213e632cc76f82
+upstream_repo: havishaJ/Greymodels
+upstream_head: 3fc19ebe91832d358c1c8f5f4d8027e1c7d6b1eb
+upstream_checked_at: 2026-10-22T09:52:21Z
+workflow_path: .github/workflows/greymodels-build-app-bundle.yml
+workflow_commit: c587f3ab08adf9c0ab0ce39830213e632cc76f82
+workflow_sha256: 059b51cfb1d7fef29c851aca45fdfe4f06ea767c7a9de8afa645314f9b91c2b2
+app_size_mb: win-x64=102, mac-arm64=97
+closure_packages: ""
+decisions:
+  - no non-default settings - generated from the stock template

@@ -1,0 +1,28 @@
+id: explor
+name: explor
+status: active
+upstream: juba/explor
+fork: fentouxungui/explor
+license: GPL-3.0
+app_mode: auto
+platforms: win-x64, mac-arm64
+version: 0.1.2
+tag: v0.1.2
+release_url: https://github.com/fentouxungui/explor/releases/tag/v0.1.2
+build_run: ""
+template: unknown (backfill)
+patch_file: ""
+recorded_at: 2026-10-22
+built_at: 2026-10-14T10:47:54Z
+source_repo: fentouxungui/explor
+source_commit: 12aa4134a49b2510751b934928c5867d84257d44
+upstream_repo: juba/explor
+upstream_head: ea3b35713a74793e205701982e76f671e27177f3
+upstream_checked_at: 2026-10-22T09:51:21Z
+workflow_path: .github/workflows/explor-build-app-bundle.yml
+workflow_commit: 12aa4134a49b2510751b934928c5867d84257d44
+workflow_sha256: a04c647fff0d589955e48c8c9045ccf5572ac7299e6f7c164cbadc47a596c8c7
+app_size_mb: win-x64=146, mac-arm64=141
+closure_packages: ""
+decisions:
+  - EXTRA_PKGS=1 packages - extra dependencies declared in the workflow

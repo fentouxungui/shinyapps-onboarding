@@ -1,0 +1,29 @@
+id: handwriterapp
+name: handwriterApp
+status: active
+upstream: CSAFE-ISU/handwriterApp
+fork: fentouxungui/handwriterApp
+license: GPL (>= 3)
+app_mode: package-fn
+platforms: win-x64, mac-arm64
+version: 0.1.0
+tag: v0.1.0
+release_url: https://github.com/fentouxungui/handwriterApp/releases/tag/v0.1.0
+build_run: ""
+template: unknown (backfill)
+patch_file: ""
+recorded_at: 2026-10-22
+built_at: 2026-10-19T01:38:57Z
+source_repo: fentouxungui/handwriterApp
+source_commit: 8af34ed8baaa8ad51861a3ed76a4b7e83adbb2a0
+upstream_repo: CSAFE-ISU/handwriterApp
+upstream_head: 4dcd6152be93c6b3ada355f3f11e37e9e59bcc0b
+upstream_checked_at: 2026-10-22T09:52:29Z
+workflow_path: .github/workflows/build-app-bundle.yml
+workflow_commit: 8af34ed8baaa8ad51861a3ed76a4b7e83adbb2a0
+workflow_sha256: b3678c335312b967684cb4981b8e0c53b24178c503802cf3db4edbf6aa912608
+app_size_mb: win-x64=195, mac-arm64=177
+closure_packages: ""
+decisions:
+  - APP_MODE=package-fn - app layout from the generated workflow
+  - SOURCE_REBUILD=gdtools - rebuilt from source for macOS

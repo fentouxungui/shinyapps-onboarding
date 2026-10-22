@@ -1,0 +1,28 @@
+id: gwsdat
+name: GWSDAT
+status: active
+upstream: WayneGitShell/GWSDAT
+fork: fentouxungui/GWSDAT
+license: See upstream
+app_mode: package-fn
+platforms: win-x64, mac-arm64
+version: 0.1.0
+tag: v0.1.0
+release_url: https://github.com/fentouxungui/GWSDAT/releases/tag/v0.1.0
+build_run: ""
+template: unknown (backfill)
+patch_file: ""
+recorded_at: 2026-10-22
+built_at: 2026-10-17T17:38:11Z
+source_repo: fentouxungui/GWSDAT
+source_commit: ee47136d52f46144e6c65bd1dde9ea907f8c423d
+upstream_repo: WayneGitShell/GWSDAT
+upstream_head: 0ac4e237239a86c9adef4166f1c1db93bead06fe
+upstream_checked_at: 2026-10-22T09:52:25Z
+workflow_path: .github/workflows/build-app-bundle.yml
+workflow_commit: ee47136d52f46144e6c65bd1dde9ea907f8c423d
+workflow_sha256: 45d42ae9e663d42cac8608c1ba9541ca290847caef0ede0fc18c647069f42893
+app_size_mb: win-x64=210, mac-arm64=163
+closure_packages: ""
+decisions:
+  - APP_MODE=package-fn - app layout from the generated workflow

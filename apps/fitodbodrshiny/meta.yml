@@ -1,0 +1,29 @@
+id: fitodbodrshiny
+name: fitODBODRshiny
+status: active
+upstream: cran/fitODBODRshiny
+fork: fentouxungui/fitODBODRshiny
+license: See upstream
+app_mode: package-fn
+platforms: win-x64, mac-arm64
+version: 0.2.0
+tag: v0.2.0
+release_url: https://github.com/fentouxungui/fitODBODRshiny/releases/tag/v0.2.0
+build_run: ""
+template: unknown (backfill)
+patch_file: ""
+recorded_at: 2026-10-22
+built_at: 2026-10-18T03:35:14Z
+source_repo: fentouxungui/fitODBODRshiny
+source_commit: 997b53dcbd2749c890470395b0b1c426dc8fce56
+upstream_repo: cran/fitODBODRshiny
+upstream_head: f247e23bb8324d24d3c72dfdfdf9f92af2bbb79c
+upstream_checked_at: 2026-10-22T09:51:37Z
+workflow_path: .github/workflows/build-app-bundle.yml
+workflow_commit: 997b53dcbd2749c890470395b0b1c426dc8fce56
+workflow_sha256: 30044675de28d571353601e1762021ada81492f9c31edb1b52f26e7944bd699e
+app_size_mb: win-x64=106, mac-arm64=99
+closure_packages: ""
+decisions:
+  - APP_MODE=package-fn - app layout from the generated workflow
+  - SOURCE_REBUILD=gdtools - rebuilt from source for macOS

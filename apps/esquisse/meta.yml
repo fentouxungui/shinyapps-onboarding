@@ -1,0 +1,28 @@
+id: esquisse
+name: esquisse
+status: active
+upstream: dreamRs/esquisse
+fork: fentouxungui/esquisse
+license: GPL-3.0
+app_mode: auto
+platforms: win-x64, mac-arm64
+version: 0.1.0
+tag: v0.1.0
+release_url: https://github.com/fentouxungui/esquisse/releases/tag/v0.1.0
+build_run: ""
+template: unknown (backfill)
+patch_file: ""
+recorded_at: 2026-10-22
+built_at: 2026-10-13T12:57:14Z
+source_repo: fentouxungui/esquisse
+source_commit: 986b150f5cc162edf146da5ad5b179d424760110
+upstream_repo: dreamRs/esquisse
+upstream_head: 77437aff8ca2c6095243c944686354865ebd1b4d
+upstream_checked_at: 2026-10-22T09:51:08Z
+workflow_path: .github/workflows/esquisse-build-app-bundle.yml
+workflow_commit: 986b150f5cc162edf146da5ad5b179d424760110
+workflow_sha256: 999941155d6f2aecca7d5c928ead221c53ec1b5b0ea19c396d0d9870cc77bec3
+app_size_mb: win-x64=113, mac-arm64=106
+closure_packages: ""
+decisions:
+  - EXTRA_PKGS=1 packages - extra dependencies declared in the workflow

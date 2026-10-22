@@ -1,0 +1,30 @@
+id: exmort
+name: exmort
+status: active
+upstream: shanlong-who/exmort
+fork: fentouxungui/exmort
+license: GPL-3
+app_mode: flat
+platforms: win-x64, mac-arm64
+version: 0.1.1
+tag: v0.1.1
+release_url: https://github.com/fentouxungui/exmort/releases/tag/v0.1.1
+build_run: ""
+template: unknown (backfill)
+patch_file: ""
+recorded_at: 2026-10-22
+built_at: 2026-10-21T02:10:55Z
+source_repo: fentouxungui/exmort
+source_commit: 9720409687cd3106fe3b5983d4b93c429839d5a2
+upstream_repo: shanlong-who/exmort
+upstream_head: 2774e32f883c9018db3036c6a0110b1cd50ddd79
+upstream_checked_at: 2026-10-22T09:51:12Z
+workflow_path: .github/workflows/build-app-bundle.yml
+workflow_commit: 9720409687cd3106fe3b5983d4b93c429839d5a2
+workflow_sha256: c43d3110b15f3881117b58cd44f4a6951e62036725238800955ce0ec2b866d49
+app_size_mb: win-x64=158, mac-arm64=145
+closure_packages: ""
+decisions:
+  - APP_MODE=flat - app layout from the generated workflow
+  - SOURCE_REBUILD=gdtools - rebuilt from source for macOS
+  - APP_SUBDIR=inst/app - app lives in a subdirectory

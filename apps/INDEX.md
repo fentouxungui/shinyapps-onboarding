@@ -34,6 +34,36 @@
 | `drdata` | DrData | active | win-x64, mac-arm64 | v0.1.0 | Mohsenmehdinia/DrData | [NOTES](drdata/NOTES.md) |
 | `earthui` | earthUI | active | win-x64, mac-arm64 | v0.12.0 | wcraytor/earthui | [NOTES](earthui/NOTES.md) |
 | `easysdctable` | easySdcTable | active | win-x64, mac-arm64 | v0.1.0 | statisticsnorway/ssb-easysdctable | [NOTES](easysdctable/NOTES.md) |
+| `elaborator` | elaborator | active | win-x64, mac-arm64 | v0.2.0 | cran/elaborator | [NOTES](elaborator/NOTES.md) |
+| `esdm` | eSDM | active | win-x64, mac-arm64 | v0.1.0 | cran/eSDM | [NOTES](esdm/NOTES.md) |
+| `esquisse` | esquisse | active | win-x64, mac-arm64 | v0.1.0 | dreamRs/esquisse | [NOTES](esquisse/NOTES.md) |
+| `exmort` | exmort | active | win-x64, mac-arm64 | v0.1.1 | shanlong-who/exmort | [NOTES](exmort/NOTES.md) |
+| `expandar` | ExPanDaR | active | win-x64, mac-arm64 | v0.1.0 | cran/ExPanDaR | [NOTES](expandar/NOTES.md) |
+| `explor` | explor | active | win-x64, mac-arm64 | v0.1.2 | juba/explor | [NOTES](explor/NOTES.md) |
+| `familia` | Familia | active | win-x64, mac-arm64 | v0.1.0 | Breeding-Insight/familia | [NOTES](familia/NOTES.md) |
+| `fdapaceshiny` | fdapaceShiny | active | win-x64, mac-arm64 | v0.1.0 | cran/fdapaceShiny | [NOTES](fdapaceshiny/NOTES.md) |
+| `fieldhub` | FielDHub | active | win-x64, mac-arm64 | v0.1.0 | DidierMurilloF/FielDHub | [NOTES](fieldhub/NOTES.md) |
+| `fitodbodrshiny` | fitODBODRshiny | active | win-x64, mac-arm64 | v0.2.0 | cran/fitODBODRshiny | [NOTES](fitodbodrshiny/NOTES.md) |
+| `fluxtools` | fluxtools | active | win-x64, mac-arm64 | v0.1.3 | kesondrakey/fluxtools | [NOTES](fluxtools/NOTES.md) |
+| `fossilsimshiny` | FossilSimShiny | active | win-x64, mac-arm64 | v0.1.0 | fossilsim/FossilSimShiny | [NOTES](fossilsimshiny/NOTES.md) |
+| `gatelabr` | GateLabR | active | win-x64, mac-arm64 | v0.2.1 | david-priest/GateLabR | [NOTES](gatelabr/NOTES.md) |
+| `gde` | gde | active | win-x64, mac-arm64 | v0.1.0 | cran/gde | [NOTES](gde/NOTES.md) |
+| `genest` | GenEst | active | win-x64, mac-arm64 | v0.1.0 | ddalthorp/GenEst | [NOTES](genest/NOTES.md) |
+| `genome-stats` | shiny-genome-stats | active | win-x64, mac-arm64 | v0.1.7 | MPUSP/shiny-genome-stats | [NOTES](genome-stats/NOTES.md) |
+| `ggplotgui` | ggplotgui | active | win-x64, mac-arm64 | v0.1.0 | cran/ggplotgui | [NOTES](ggplotgui/NOTES.md) |
+| `ggraptr` | ggraptR | active | win-x64, mac-arm64 | v0.1.0 | cran/ggraptR | [NOTES](ggraptr/NOTES.md) |
+| `glossa` | glossa | active | win-x64, mac-arm64 | v0.1.0 | cran/glossa | [NOTES](glossa/NOTES.md) |
+| `graphbio` | GraphBio | active | win-x64, mac-arm64 | v0.1.0 | databio2022/GraphBio | [NOTES](graphbio/NOTES.md) |
+| `greymodels` | Greymodels | active | win-x64, mac-arm64 | v0.1.0 | havishaJ/Greymodels | [NOTES](greymodels/NOTES.md) |
+| `gwsdat` | GWSDAT | active | win-x64, mac-arm64 | v0.1.0 | WayneGitShell/GWSDAT | [NOTES](gwsdat/NOTES.md) |
+| `handwriterapp` | handwriterApp | active | win-x64, mac-arm64 | v0.1.0 | CSAFE-ISU/handwriterApp | [NOTES](handwriterapp/NOTES.md) |
+| `hexmake` | hexmake | active | win-x64, mac-arm64 | v0.1.0 | ColinFay/hexmake | [NOTES](hexmake/NOTES.md) |
+| `hiviz` | HIViz | active | win-x64, mac-arm64 | v0.1.2 | AtefehRashidi/HIViz | [NOTES](hiviz/NOTES.md) |
+| `holi` | holi | active | win-x64, mac-arm64 | v0.1.0 | mightymetrika/holi | [NOTES](holi/NOTES.md) |
+| `holomics` | Holomics | active | win-x64, mac-arm64 | v0.1.0 | MolinLab/Holomics | [NOTES](holomics/NOTES.md) |
+| `html2r` | html2R | active | win-x64, mac-arm64 | v0.1.0 | cran/html2R | [NOTES](html2r/NOTES.md) |
+| `icsshiny` | ICSShiny | active | win-x64, mac-arm64 | v0.1.0 | cran/ICSShiny | [NOTES](icsshiny/NOTES.md) |
+| `irtshiny` | IRTShiny | active | win-x64, mac-arm64 | v0.1.0 | kylehamilton/IRTShiny | [NOTES](irtshiny/NOTES.md) |
 | `scrdavis` | ScRDAVis | pending | win-x64 | v1.0.2 | GudaLab/ScRDAVis | [NOTES](scrdavis/NOTES.md) |
 | `xomicsshiny` | xOmicsShiny | pending | win-x64, mac-arm64 | v3.0.2 | interactivereport/xOmicsShiny | [NOTES](xomicsshiny/NOTES.md) |
 

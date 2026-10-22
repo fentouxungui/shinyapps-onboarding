@@ -1,0 +1,28 @@
+id: html2r
+name: html2R
+status: active
+upstream: cran/html2R
+fork: fentouxungui/html2R
+license: See upstream
+app_mode: package-fn
+platforms: win-x64, mac-arm64
+version: 0.1.0
+tag: v0.1.0
+release_url: https://github.com/fentouxungui/html2R/releases/tag/v0.1.0
+build_run: ""
+template: unknown (backfill)
+patch_file: ""
+recorded_at: 2026-10-22
+built_at: 2026-10-17T17:21:19Z
+source_repo: fentouxungui/html2R
+source_commit: d1bac32d416471c9f8edc996135c54c849b0d5b4
+upstream_repo: cran/html2R
+upstream_head: cfeec3dd1bdd846a7d9a7c3f034babea16c3bbf4
+upstream_checked_at: 2026-10-22T09:52:49Z
+workflow_path: .github/workflows/build-app-bundle.yml
+workflow_commit: d1bac32d416471c9f8edc996135c54c849b0d5b4
+workflow_sha256: 0ef17dd853bd0bf6ca61781599961fd920ec4f6c3ca106db03ea9fe6062a8aff
+app_size_mb: win-x64=37, mac-arm64=36
+closure_packages: ""
+decisions:
+  - APP_MODE=package-fn - app layout from the generated workflow

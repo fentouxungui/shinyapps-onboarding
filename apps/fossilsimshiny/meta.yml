@@ -1,0 +1,30 @@
+id: fossilsimshiny
+name: FossilSimShiny
+status: active
+upstream: fossilsim/FossilSimShiny
+fork: fentouxungui/FossilSimShiny
+license: GPL-3.0
+app_mode: flat
+platforms: win-x64, mac-arm64
+version: 0.1.0
+tag: v0.1.0
+release_url: https://github.com/fentouxungui/FossilSimShiny/releases/tag/v0.1.0
+build_run: ""
+template: unknown (backfill)
+patch_file: ""
+recorded_at: 2026-10-22
+built_at: 2026-10-17T15:20:26Z
+source_repo: fentouxungui/FossilSimShiny
+source_commit: 3e8f3885aedf1b5966e5cb38980bd87ea526d455
+upstream_repo: fossilsim/FossilSimShiny
+upstream_head: dc537f1ac19281212d6a32352a8797d6e85394ed
+upstream_checked_at: 2026-10-22T09:51:44Z
+workflow_path: .github/workflows/fossilsimshiny-build-app-bundle.yml
+workflow_commit: 3e8f3885aedf1b5966e5cb38980bd87ea526d455
+workflow_sha256: 61810acbfea4d7a87b5a7cd2f6bc63aa2cd3f77ecce3b2361f5f29516c93cb11
+app_size_mb: win-x64=103, mac-arm64=99
+closure_packages: ""
+decisions:
+  - APP_MODE=flat - app layout from the generated workflow
+  - EXTRA_PKGS=1 packages - extra dependencies declared in the workflow
+  - APP_SUBDIR=inst/shinyApp - app lives in a subdirectory

@@ -1,0 +1,28 @@
+id: graphbio
+name: GraphBio
+status: active
+upstream: databio2022/GraphBio
+fork: fentouxungui/GraphBio
+license: GPL-3.0
+app_mode: auto
+platforms: win-x64, mac-arm64
+version: 0.1.0
+tag: v0.1.0
+release_url: https://github.com/fentouxungui/GraphBio/releases/tag/v0.1.0
+build_run: ""
+template: unknown (backfill)
+patch_file: ""
+recorded_at: 2026-10-22
+built_at: 2026-10-12T09:36:49Z
+source_repo: fentouxungui/GraphBio
+source_commit: 8e26ef82e5d83fb79ddcb8ee3b5072e1f647b66a
+upstream_repo: databio2022/GraphBio
+upstream_head: 2a606f600393695a9bce72cce93285525aab374b
+upstream_checked_at: 2026-10-22T09:52:17Z
+workflow_path: .github/workflows/graphbio-build-app-bundle.yml
+workflow_commit: 8e26ef82e5d83fb79ddcb8ee3b5072e1f647b66a
+workflow_sha256: 2502eb7b83817459358b64678815d03443f36deeebf26322d3c4157bcec8534c
+app_size_mb: win-x64=222, mac-arm64=211
+closure_packages: ""
+decisions:
+  - no non-default settings - generated from the stock template

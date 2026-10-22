@@ -1,0 +1,31 @@
+id: gatelabr
+name: GateLabR
+status: active
+upstream: david-priest/GateLabR
+fork: fentouxungui/GateLabR
+license: MIT
+app_mode: flat
+platforms: win-x64, mac-arm64
+version: 0.2.1
+tag: v0.2.1
+release_url: https://github.com/fentouxungui/GateLabR/releases/tag/v0.2.1
+build_run: ""
+template: unknown (backfill)
+patch_file: ""
+recorded_at: 2026-10-22
+built_at: 2026-10-16T14:27:23Z
+source_repo: fentouxungui/GateLabR
+source_commit: cb41fa916140cca1ef9a5edf81d02a7ecc1b2943
+upstream_repo: david-priest/GateLabR
+upstream_head: 8bfaf09b819b730cb4198118fd66d1b488d89485
+upstream_checked_at: 2026-10-22T09:51:48Z
+workflow_path: .github/workflows/gatelabr-build-app-bundle.yml
+workflow_commit: cb41fa916140cca1ef9a5edf81d02a7ecc1b2943
+workflow_sha256: 2311afcd722be2e9eccd0e8716a957bc93cda832dcc3bc9b2f9190e3e2d9d411
+app_size_mb: win-x64=150, mac-arm64=164
+closure_packages: ""
+decisions:
+  - APP_MODE=flat - app layout from the generated workflow
+  - EXTRA_PKGS=1 packages - extra dependencies declared in the workflow
+  - ARCHIVE_URLS=1 source tarball(s) - packages outside CRAN/Bioconductor
+  - APP_SUBDIR=shinyapps - app lives in a subdirectory

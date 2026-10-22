@@ -1,0 +1,30 @@
+id: genest
+name: GenEst
+status: active
+upstream: ddalthorp/GenEst
+fork: fentouxungui/GenEst
+license: CC0
+app_mode: flat
+platforms: win-x64, mac-arm64
+version: 0.1.0
+tag: v0.1.0
+release_url: https://github.com/fentouxungui/GenEst/releases/tag/v0.1.0
+build_run: ""
+template: unknown (backfill)
+patch_file: ""
+recorded_at: 2026-10-22
+built_at: 2026-10-17T15:20:37Z
+source_repo: fentouxungui/GenEst
+source_commit: af4d49bfeb948214943afd6aeca5ea115941d065
+upstream_repo: ddalthorp/GenEst
+upstream_head: 7dfc443913da2fb7d66d7a3553ac69714468422c
+upstream_checked_at: 2026-10-22T09:51:56Z
+workflow_path: .github/workflows/genest-build-app-bundle.yml
+workflow_commit: af4d49bfeb948214943afd6aeca5ea115941d065
+workflow_sha256: d20032520c13fe526e3dcccf1e16cbf9a4dd08c03474ce792af89ca799ddfde9
+app_size_mb: win-x64=60, mac-arm64=58
+closure_packages: ""
+decisions:
+  - APP_MODE=flat - app layout from the generated workflow
+  - EXTRA_PKGS=1 packages - extra dependencies declared in the workflow
+  - APP_SUBDIR=inst/app - app lives in a subdirectory

@@ -1,0 +1,30 @@
+id: gde
+name: gde
+status: active
+upstream: cran/gde
+fork: fentouxungui/gde
+license: See upstream
+app_mode: flat
+platforms: win-x64, mac-arm64
+version: 0.1.0
+tag: v0.1.0
+release_url: https://github.com/fentouxungui/gde/releases/tag/v0.1.0
+build_run: ""
+template: unknown (backfill)
+patch_file: ""
+recorded_at: 2026-10-22
+built_at: 2026-10-18T04:29:11Z
+source_repo: fentouxungui/gde
+source_commit: 7edb7abbfc93a3735e18f484f723d9ec7ee34df8
+upstream_repo: cran/gde
+upstream_head: b69a9a049442afc8ac8093a0fb2e88fa3b94af5a
+upstream_checked_at: 2026-10-22T09:51:53Z
+workflow_path: .github/workflows/build-app-bundle.yml
+workflow_commit: 7edb7abbfc93a3735e18f484f723d9ec7ee34df8
+workflow_sha256: 3e35dbf397dddc3a8e9107f0fe7396e5b3352034ecdc869532922e0dfbd348e3
+app_size_mb: win-x64=220, mac-arm64=165
+closure_packages: ""
+decisions:
+  - APP_MODE=flat - app layout from the generated workflow
+  - EXTRA_PKGS=1 packages - extra dependencies declared in the workflow
+  - APP_SUBDIR=inst/shinyApp - app lives in a subdirectory

@@ -1,0 +1,28 @@
+id: elaborator
+name: elaborator
+status: active
+upstream: cran/elaborator
+fork: fentouxungui/elaborator
+license: See upstream
+app_mode: package-fn
+platforms: win-x64, mac-arm64
+version: 0.2.0
+tag: v0.2.0
+release_url: https://github.com/fentouxungui/elaborator/releases/tag/v0.2.0
+build_run: ""
+template: unknown (backfill)
+patch_file: ""
+recorded_at: 2026-10-22
+built_at: 2026-10-18T04:45:01Z
+source_repo: fentouxungui/elaborator
+source_commit: 1e63efdcfcf248abab0a6625b47011bc14dec58a
+upstream_repo: cran/elaborator
+upstream_head: 904c1a5dcf25fe25ebdd2f9351360580bc9c59c8
+upstream_checked_at: 2026-10-22T09:51:00Z
+workflow_path: .github/workflows/build-app-bundle.yml
+workflow_commit: 1e63efdcfcf248abab0a6625b47011bc14dec58a
+workflow_sha256: 19ac6aafff61d3631aa979c18597c356eca1795f36989a9cfab9665368106108
+app_size_mb: win-x64=107, mac-arm64=103
+closure_packages: ""
+decisions:
+  - APP_MODE=package-fn - app layout from the generated workflow
