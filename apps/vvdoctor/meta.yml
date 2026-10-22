@@ -1,0 +1,28 @@
+id: vvdoctor
+name: vvdoctor
+status: active
+upstream: cran/vvdoctor
+fork: fentouxungui/vvdoctor
+license: See upstream
+app_mode: package-fn
+platforms: win-x64, mac-arm64
+version: 0.2.0
+tag: v0.2.0
+release_url: https://github.com/fentouxungui/vvdoctor/releases/tag/v0.2.0
+build_run: ""
+template: unknown (backfill)
+patch_file: ""
+recorded_at: 2026-10-22
+built_at: 2026-10-18T00:05:23Z
+source_repo: fentouxungui/vvdoctor
+source_commit: b36e29dc2ef9e0b0330f25fe4f17a696a314b4b3
+upstream_repo: cran/vvdoctor
+upstream_head: 40ac07c5b6ea5037c468510efee8235c00ddf3ab
+upstream_checked_at: 2026-10-22T10:01:54Z
+workflow_path: .github/workflows/build-app-bundle.yml
+workflow_commit: b36e29dc2ef9e0b0330f25fe4f17a696a314b4b3
+workflow_sha256: 675f8bcec0f1d730c26f9d6b993c89e5eb3e30b477d2c4def7714b1dd3a5e738
+app_size_mb: win-x64=187, mac-arm64=178
+closure_packages: ""
+decisions:
+  - APP_MODE=package-fn - app layout from the generated workflow

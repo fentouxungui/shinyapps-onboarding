@@ -1,0 +1,28 @@
+id: xenashiny
+name: UCSCXenaShiny
+status: active
+upstream: openbiox/UCSCXenaShiny
+fork: fentouxungui/UCSCXenaShiny
+license: GPL-3.0-or-later
+app_mode: auto
+platforms: win-x64, mac-arm64
+version: 0.1.0
+tag: v0.1.0
+release_url: https://github.com/fentouxungui/UCSCXenaShiny/releases/tag/v0.1.0
+build_run: ""
+template: unknown (backfill)
+patch_file: ""
+recorded_at: 2026-10-22
+built_at: 2026-10-10T06:43:25Z
+source_repo: fentouxungui/UCSCXenaShiny
+source_commit: 46d37db8386f839b34f41fcd14b1ca8f4ea05e9d
+upstream_repo: openbiox/UCSCXenaShiny
+upstream_head: e012e4a3e77702863dc639bfc8ee23c8e48e3231
+upstream_checked_at: 2026-10-22T10:01:58Z
+workflow_path: .github/workflows/xenashiny-build-app-bundle.yml
+workflow_commit: 46d37db8386f839b34f41fcd14b1ca8f4ea05e9d
+workflow_sha256: 3d2e145474462d93f4a239e6b292dadc4878cdb30f571b216b83ccbdc63abd9d
+app_size_mb: win-x64=272, mac-arm64=259
+closure_packages: ""
+decisions:
+  - no non-default settings - generated from the stock template

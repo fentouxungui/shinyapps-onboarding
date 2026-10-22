@@ -1,0 +1,28 @@
+id: viewpoly
+name: viewpoly
+status: active
+upstream: cran/viewpoly
+fork: fentouxungui/viewpoly
+license: See upstream
+app_mode: package-fn
+platforms: win-x64, mac-arm64
+version: 0.1.0
+tag: v0.1.0
+release_url: https://github.com/fentouxungui/viewpoly/releases/tag/v0.1.0
+build_run: ""
+template: unknown (backfill)
+patch_file: ""
+recorded_at: 2026-10-22
+built_at: 2026-10-18T12:19:07Z
+source_repo: fentouxungui/viewpoly
+source_commit: b7f74e27ce9df5b10d9f95d9994f3a7aff3d4b99
+upstream_repo: cran/viewpoly
+upstream_head: 631252b63d12ea591421ea12270d044b06fe3357
+upstream_checked_at: 2026-10-22T10:01:42Z
+workflow_path: .github/workflows/build-app-bundle.yml
+workflow_commit: b7f74e27ce9df5b10d9f95d9994f3a7aff3d4b99
+workflow_sha256: 0c80e2c37e464befc584b5227ac773d0ade07e466887d6197245eeaeee8363d2
+app_size_mb: win-x64=188, mac-arm64=179
+closure_packages: ""
+decisions:
+  - APP_MODE=package-fn - app layout from the generated workflow

@@ -124,6 +124,13 @@
 | `testanaapp` | TestAnaAPP | active | win-x64, mac-arm64 | v0.1.0 | jiangyouxiang/TestAnaAPP | [NOTES](testanaapp/NOTES.md) |
 | `tfrmtbuilder` | tfrmtbuilder | active | win-x64, mac-arm64 | v0.1.0 | GSK-Biostatistics/tfrmtbuilder | [NOTES](tfrmtbuilder/NOTES.md) |
 | `upsetr-shiny` | UpSetR-shiny | active | win-x64, mac-arm64 | v0.1.0 | hms-dbmi/UpSetR-shiny | [NOTES](upsetr-shiny/NOTES.md) |
+| `viewpoly` | viewpoly | active | win-x64, mac-arm64 | v0.1.0 | cran/viewpoly | [NOTES](viewpoly/NOTES.md) |
+| `visxhclust` | visxhclust | active | win-x64, mac-arm64 | v0.1.0 | cran/visxhclust | [NOTES](visxhclust/NOTES.md) |
+| `vosondash` | VOSONDash | active | win-x64, mac-arm64 | v0.1.0 | vosonlab/VOSONDash | [NOTES](vosondash/NOTES.md) |
+| `vvdoctor` | vvdoctor | active | win-x64, mac-arm64 | v0.2.0 | cran/vvdoctor | [NOTES](vvdoctor/NOTES.md) |
+| `xenashiny` | UCSCXenaShiny | active | win-x64, mac-arm64 | v0.1.0 | openbiox/UCSCXenaShiny | [NOTES](xenashiny/NOTES.md) |
+| `yuima-gui` | yuimaGUI | active | win-x64, mac-arm64 | v0.1.0 | cran/yuimaGUI | [NOTES](yuima-gui/NOTES.md) |
+| `zscorer` | zscorer | active | win-x64, mac-arm64 | v0.3.2 | nutriverse/zscorer | [NOTES](zscorer/NOTES.md) |
 | `scrdavis` | ScRDAVis | pending | win-x64 | v1.0.2 | GudaLab/ScRDAVis | [NOTES](scrdavis/NOTES.md) |
 | `xomicsshiny` | xOmicsShiny | pending | win-x64, mac-arm64 | v3.0.2 | interactivereport/xOmicsShiny | [NOTES](xomicsshiny/NOTES.md) |
 

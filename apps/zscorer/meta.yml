@@ -1,0 +1,31 @@
+id: zscorer
+name: zscorer
+status: active
+upstream: nutriverse/zscorer
+fork: fentouxungui/zscorer
+license: AGPL-3
+app_mode: flat
+platforms: win-x64, mac-arm64
+version: 0.3.2
+tag: v0.3.2
+release_url: https://github.com/fentouxungui/zscorer/releases/tag/v0.3.2
+build_run: ""
+template: unknown (backfill)
+patch_file: ""
+recorded_at: 2026-10-22
+built_at: 2026-10-18T23:42:37Z
+source_repo: fentouxungui/zscorer
+source_commit: 7bb3c93479888c80d41156535644e8005951fd4a
+upstream_repo: nutriverse/zscorer
+upstream_head: c9ae0c96a7b3aaf9679fab029eb13ad615e66af7
+upstream_checked_at: 2026-10-22T10:02:05Z
+workflow_path: .github/workflows/build-app-bundle.yml
+workflow_commit: 7bb3c93479888c80d41156535644e8005951fd4a
+workflow_sha256: 991220eac35a464a285e324e8607fc9faad028c7c541ac0db97d6a54bcb41eed
+app_size_mb: win-x64=40, mac-arm64=38
+closure_packages: ""
+decisions:
+  - APP_MODE=flat - app layout from the generated workflow
+  - EXTRA_PKGS=1 packages - extra dependencies declared in the workflow
+  - SOURCE_REBUILD=gdtools - rebuilt from source for macOS
+  - APP_SUBDIR=inst/zscorer - app lives in a subdirectory

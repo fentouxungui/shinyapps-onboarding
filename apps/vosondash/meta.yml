@@ -1,0 +1,31 @@
+id: vosondash
+name: VOSONDash
+status: active
+upstream: vosonlab/VOSONDash
+fork: fentouxungui/VOSONDash
+license: GPL (>= 3)
+app_mode: flat
+platforms: win-x64, mac-arm64
+version: 0.1.0
+tag: v0.1.0
+release_url: https://github.com/fentouxungui/VOSONDash/releases/tag/v0.1.0
+build_run: ""
+template: unknown (backfill)
+patch_file: ""
+recorded_at: 2026-10-22
+built_at: 2026-10-18T23:42:31Z
+source_repo: fentouxungui/VOSONDash
+source_commit: 24cc510a129f56c18e64328d173dadace2124597
+upstream_repo: vosonlab/VOSONDash
+upstream_head: 61a6f3ac2e8c132b3dfb0f0ce3b5db1a3618faa3
+upstream_checked_at: 2026-10-22T10:01:50Z
+workflow_path: .github/workflows/build-app-bundle.yml
+workflow_commit: 24cc510a129f56c18e64328d173dadace2124597
+workflow_sha256: 71fa4970ac06eae2e53da9ff18368f71b969e3c00378de6e853a52565be79728
+app_size_mb: win-x64=123, mac-arm64=116
+closure_packages: ""
+decisions:
+  - APP_MODE=flat - app layout from the generated workflow
+  - EXTRA_PKGS=1 packages - extra dependencies declared in the workflow
+  - SOURCE_REBUILD=gdtools - rebuilt from source for macOS
+  - APP_SUBDIR=inst/vosondash - app lives in a subdirectory
