@@ -1,0 +1,26 @@
+id: xomicsshiny
+name: xOmicsShiny
+status: pending
+upstream: interactivereport/xOmicsShiny
+fork: fentouxungui/xOmicsShiny
+license: MIT
+app_mode: flat
+platforms: win-x64, mac-arm64
+version: 3.0.2
+tag: v3.0.2
+release_url: https://github.com/fentouxungui/xOmicsShiny/releases/tag/v3.0.2
+build_run: ""
+template: pre-hardening (personal skill v3)
+patch_file: ""
+recorded_at: 2026-10-22
+app_size_mb: win-x64=946, mac-arm64=916
+closure_packages: ""
+decisions:
+  - APP_MODE=flat - root app.R + global.R; sources copied verbatim, no synthesized entry
+  - EXTRA_PKGS=76 packages - union of library()/pkg:: over all 24 modules, not just global.R
+  - SOFT_PKGS=metabaser Mfuzz - metabaser is not on CRAN (trigger GMT absent); Mfuzz needs tcltk/XQuartz on macOS
+  - ARCHIVE_URLS=PCSF master tarball - PCSF left Bioc 3.23; topGO added for it
+  - SOURCE_REBUILD=gdtools - CRAN macOS binary links XQuartz
+  - PATCH config.csv - server_dir pointed at D:/customProjects_NEW/...; rewritten to .
+  - Drop ggrastr/Cairo - macOS Cairo cannot be made portable; Rasterize draws vector output
+  - SMOKE_TIMEOUT_SEC=900 - 76 packages, slow first load

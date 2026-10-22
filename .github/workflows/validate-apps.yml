@@ -1,0 +1,31 @@
+name: validate app records
+
+on:
+  push:
+    paths:
+      - 'apps/**'
+      - 'scripts/**'
+      - '.github/workflows/validate-apps.yml'
+  pull_request:
+    paths:
+      - 'apps/**'
+      - 'scripts/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate app records
+        shell: pwsh
+        run: ./scripts/validate-apps.ps1
+
+      - name: Index is up to date
+        shell: pwsh
+        run: |
+          ./scripts/build-app-index.ps1
+          git diff --exit-code -- apps/INDEX.md

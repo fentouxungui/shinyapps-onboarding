@@ -56,8 +56,13 @@ cannot ship (give a feasibility caveat).
 5. **Onboard**: append the entry from `assets/catalog-entry.yml` to
    `ShinyApps/catalog/apps.yml`, add `ShinyApps/icons/<id>.png` (from the upstream repo's own logo), push.
 6. **Open the upstream PR** (CI-only; see `references/pr-template.md`).
+7. **Record it** in `apps/<id>/`: copy the workflow **from the tag** (not `main`), fill
+   `meta.yml` (`status`, tag, sizes, `decisions`) and `NOTES.md` (debug log), then run
+   `scripts/validate-apps.ps1` and `scripts/build-app-index.ps1`. Record failed and
+   rejected attempts too (`status: abandoned|rejected`); they are the most useful evidence.
 
-Fast path: run `scripts/onboard-shiny-app.ps1` (steps 2-6).
+Fast path: run `scripts/onboard-shiny-app.ps1` (steps 2-6), then step 7 by hand or with
+`scripts/new-app-record.ps1`.
 
 ## Hard rules
 
@@ -81,7 +86,12 @@ Fast path: run `scripts/onboard-shiny-app.ps1` (steps 2-6).
   exact diff scope (one YAML file, no app code), the impact (Actions minutes only on tags,
   credit), what the maintainer must do, and an explicit opt-out. One-line "adds a workflow"
   PRs are not acceptable and damage the store's reputation.
-- **Verify** `catalog.json` shows the app with both artifacts + `sha256`.
+- **Verify** `catalog.json` shows the app with the expected artifacts + `sha256`
+  (Windows-only apps have no mac asset; document the deviation).
+- **Every attempt gets a record.** `apps/<id>/` holds the exact generated workflow and the
+  debug log. `ShinyApps/catalog/apps.yml` remains the only source of truth for what is
+  listed; `status` in `meta.yml` only describes build/authorization state. A rejected app
+  stays in `apps/` with `status: rejected` and a "do not redistribute" banner.
 
 ## Reliability
 
@@ -160,6 +170,9 @@ policy, one immutable release per tag, clean-library smoke (only `rlib` + base R
 - `assets/build-app-bundle.yml` - hardened multi-mode workflow template.
 - `assets/catalog-entry.yml` - catalog entry template.
 - `scripts/onboard-shiny-app.ps1` - parameterized driver for steps 2-6.
+- `scripts/validate-apps.ps1`, `scripts/build-app-index.ps1`, `scripts/new-app-record.ps1`
+  - record checks, index generation and scaffolding (`apps/README.md`).
+- `apps/<id>/` - per-app archive: exact workflow, `meta.yml`, `NOTES.md`.
 - `references/app-shapes.md`, `references/failure-modes.md`, `references/store-contract.md`,
   `references/startup-data.md`, `references/release-hardening.md`,
   `references/heavy-apps.md`, `references/macos-portability.md`,

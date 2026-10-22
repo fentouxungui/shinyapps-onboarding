@@ -1,0 +1,21 @@
+# Machine-readable record for one app. Human-readable debug notes: NOTES.md
+# Copy this file to apps/<id>/meta.yml and fill every field.
+id: example-id
+name: Example App
+status: pending            # active | pending | rejected | withdrawn | abandoned
+upstream: owner/repo       # the app's original repository
+fork: owner/repo           # the fork that runs the workflow
+license: MIT               # SPDX id, or "none upstream (no LICENSE file)"
+app_mode: flat             # flat | package-fn | package-deploy
+platforms: win-x64, mac-arm64
+version: 0.1.0
+tag: v0.1.0
+release_url: https://github.com/owner/repo/releases/tag/v0.1.0
+build_run: ""              # Actions run that produced the release (optional)
+template: pre-hardening    # template version used, or the commit of shinyapps-onboarding
+patch_file: ""             # file in this folder used as PATCH_SCRIPT, if any
+recorded_at: 2026-01-01
+app_size_mb: win-x64=0, mac-arm64=0
+closure_packages: 0
+decisions:
+  - KEY=value - why it is set this way
