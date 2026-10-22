@@ -51,8 +51,8 @@ cannot ship (give a feasibility caveat).
 3. **Generate + push** `.github/workflows/<id>-build-app-bundle.yml` from
    `assets/build-app-bundle.yml`, filling the `env:` block -- every `__PLACEHOLDER__`,
    including `APP_MODE`, `STRICT_VERSION`, `STRICT_DEPS`, `CRAN_SNAPSHOT`,
-   `PANDOC_VERSION` and `MACOS_BREW_DEPS`. Unsubstituted `__X__` values fall back to safe
-   defaults.
+   `PANDOC_VERSION`, `MACOS_BREW_DEPS`, `PKG_VERSION_PACKAGES` and
+   `PKG_VERSION_SUFFIX`. Unsubstituted `__X__` values fall back to safe defaults.
 4. **Tag** `vX.Y.Z` and push -> builds both platform bundles and creates the Release.
 5. **Onboard**: append the entry from `assets/catalog-entry.yml` to
    `ShinyApps/catalog/apps.yml`, add `ShinyApps/icons/<id>.png` (from the upstream repo's own logo), push.
@@ -89,6 +89,11 @@ Fast path: run `scripts/onboard-shiny-app.ps1` (steps 2-6), then `record-app.ps1
   PRs are not acceptable and damage the store's reputation.
 - **Verify** `catalog.json` shows the app with the expected artifacts + `sha256`
   (Windows-only apps have no mac asset; document the deviation).
+- **Patched packages need unique versions.** If you vendor dylibs into a package (Cairo,
+  gdtools, ...) or otherwise modify it per app, set `PKG_VERSION_PACKAGES` +
+  `PKG_VERSION_SUFFIX` so each app's copy has a distinct version; allocate it with
+  `scripts/next-pkg-version.ps1`. Never reuse a suffix, and never patch only the newest
+  app -- every app that ships the package must differ (`references/special-packages.md`).
 - **Every attempt gets a record.** `apps/<id>/` holds the exact generated workflow and the
   debug log. `ShinyApps/catalog/apps.yml` remains the only source of truth for what is
   listed; `status` in `meta.yml` only describes build/authorization state. A rejected app
@@ -182,5 +187,6 @@ policy, one immutable release per tag, clean-library smoke (only `rlib` + base R
 - `references/app-shapes.md`, `references/failure-modes.md`, `references/store-contract.md`,
   `references/startup-data.md`, `references/release-hardening.md`,
   `references/heavy-apps.md`, `references/macos-portability.md`,
-  `references/runtime-downloads.md`, `references/pr-template.md`.
+  `references/runtime-downloads.md`, `references/special-packages.md`,
+  `references/pr-template.md`.
 - `examples/` - real workflows for flat, package-fn and package-deploy apps.

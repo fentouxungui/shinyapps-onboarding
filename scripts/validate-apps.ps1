@@ -44,6 +44,22 @@ function Get-LfSha256([string]$Path) {
 }
 
 if (-not (Test-Path -LiteralPath $AppsDir)) { throw "apps directory not found: $AppsDir" }
+
+$pkgRegistry = @{}
+$pkgSeen = @{}
+$regPath = Join-Path $AppsDir 'pkg-versions.tsv'
+if (Test-Path -LiteralPath $regPath) {
+  foreach ($row in Import-Csv -LiteralPath $regPath -Delimiter "`t") {
+    if (-not $row.package -or -not $row.app -or -not $row.suffix) { continue }
+    $k = "$($row.package)|$($row.app)"
+    if ($pkgRegistry.ContainsKey($k)) { $errors.Add("pkg-versions.tsv: duplicate row for $($row.package)/$($row.app)") }
+    $pkgRegistry[$k] = $row.suffix
+    $sk = "$($row.package)|$($row.suffix)"
+    if ($pkgSeen.ContainsKey($sk)) { $errors.Add("pkg-versions.tsv: suffix $($row.suffix) reused for $($row.package) by $($row.app) and $($pkgSeen[$sk])") }
+    $pkgSeen[$sk] = $row.app
+  }
+}
+
 $dirs = @(Get-ChildItem -LiteralPath $AppsDir -Directory | Where-Object { $_.Name -ne '_template' })
 if ($dirs.Count -eq 0) { $warnings.Add('no app records found'); }
 
@@ -91,6 +107,19 @@ foreach ($d in $dirs) {
   if (Test-Path -LiteralPath $wfPath) {
     $wf = Get-Content -LiteralPath $wfPath -Raw
     if ($wf -match '__[A-Z0-9_]+__') { $errors.Add("${where}: workflow still contains __PLACEHOLDER__ tokens") }
+    $pvPackages = [regex]::Match($wf, 'PKG_VERSION_PACKAGES:\s*"?([^"\r\n]*)"?').Groups[1].Value
+    $pvSuffix = [regex]::Match($wf, 'PKG_VERSION_SUFFIX:\s*"?([^"\r\n]*)"?').Groups[1].Value
+    if ($pvPackages) {
+      if ($pvSuffix -notmatch '^[0-9]+$') { $errors.Add("${where}: PKG_VERSION_SUFFIX must be numeric") }
+      foreach ($pp in @($pvPackages -split '[ ,]+' | Where-Object { $_ })) {
+        $rk = "$pp|$id"
+        if (-not $pkgRegistry.ContainsKey($rk)) {
+          $errors.Add("${where}: $pp version suffix is not registered in apps/pkg-versions.tsv")
+        } elseif ($pkgRegistry[$rk] -ne $pvSuffix) {
+          $errors.Add("${where}: registry suffix for $pp is $($pkgRegistry[$rk]) but the workflow uses $pvSuffix")
+        }
+      }
+    }
     if ($wf -notmatch '(?m)^name:\s*\S') { $errors.Add("${where}: workflow has no name:") }
     if ($wf -notmatch '(?m)^\s+APP_ID:\s*"?' + [regex]::Escape($id) + '"?' ) {
       $errors.Add("${where}: workflow APP_ID does not match '$id'")

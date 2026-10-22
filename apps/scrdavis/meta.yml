@@ -35,3 +35,4 @@ decisions:
   - PATCH global.R and tfrn1.R - remove startup BSgenome install; lazy ensure_bsgenome per species
   - Vendored scType - scripts and ScTypeDB copied into www/sctype for offline use
   - MAX_REQUEST_MB=4096 and SMOKE_TIMEOUT_SEC=1800 - single-cell uploads and long first load
+  - Cairo suffix 9001 reserved - v1.1.2 shipped Cairo unpatched; first rebuild must set PKG_VERSION_PACKAGES=Cairo and PKG_VERSION_SUFFIX=9001

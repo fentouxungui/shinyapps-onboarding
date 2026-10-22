@@ -27,6 +27,7 @@ splitKbCompare and ShinyStan.
 | `scripts/new-app-record.ps1`   | Scaffold a new app record from `apps/_template` |
 | `scripts/record-app.ps1`       | Snapshot a released app (workflow at the tag, sizes, SHAs) into `apps/<id>/` |
 | `scripts/backfill-from-catalog.ps1` | Batch-create records for apps already in `ShinyApps/catalog/apps.yml` |
+| `scripts/next-pkg-version.ps1` | Allocate a unique version suffix for Cairo-like patched packages |
 | `scripts/check-upstream.ps1`   | Drift report: upstream commits/releases, fork behind, workflow changes |
 | `scripts/build-dashboard.ps1`  | Render the maintenance board from `site/status.json` |
 | `apps/<id>/`                   | Exact workflow + `meta.yml` + debug log for each onboarded or attempted app |
@@ -38,6 +39,7 @@ splitKbCompare and ShinyStan.
 | `references/heavy-apps.md`     | Many modules / many dependencies / large data: census, size budget, build-time patches |
 | `references/macos-portability.md` | XQuartz/Homebrew dylib failures and the remediation ladder |
 | `references/runtime-downloads.md` | When a user-triggered module download is acceptable (and how) |
+| `references/special-packages.md` | Unique version suffixes for patched packages (Cairo) in the shared library |
 | `references/pr-template.md`    | Structure for the upstream pull request |
 | `examples/`                    | Real working workflows (flat, package-fn, package-deploy) |
 
@@ -96,6 +98,8 @@ Omit `-Tag` to use the package `Version` when a `DESCRIPTION` exists. Omit
 `-CranSnapshot` for live CRAN, and `-PandocVersion` for apps that do not render R Markdown.
 `-MacosBrewDeps "openssl@3 hdf5"` installs build-time Homebrew dependencies on the macOS
 runner and wires them into `~/.R/Makevars`; their dylibs are vendored by the audit.
+`-PkgVersionPackages Cairo -PkgVersionSuffix 9003` gives a vendored package an app-unique
+version (see [references/special-packages.md](references/special-packages.md)).
 
 ## Version and release policy
 

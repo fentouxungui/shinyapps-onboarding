@@ -62,6 +62,11 @@ env:
   # Space-separated Homebrew formulae needed to compile source packages on macOS
   # (e.g. "openssl@3 hdf5"). Build-time only; their dylibs are vendored by the audit.
   MACOS_BREW_DEPS: "__MACOS_BREW_DEPS__"
+  # Packages whose installed version gets an app-unique numeric suffix, so the
+  # shell's shared library cannot merge app-specific builds (e.g. Cairo with
+  # vendored XQuartz dylibs). Set both or neither; see references/special-packages.md.
+  PKG_VERSION_PACKAGES: "__PKG_VERSION_PACKAGES__"
+  PKG_VERSION_SUFFIX: "__PKG_VERSION_SUFFIX__"
   # Optional R script run inside app/ after assembly, for build-time patches
   # (absolute paths in config files, disabling a module that cannot ship).
   PATCH_SCRIPT: "__PATCH_SCRIPT__"
@@ -343,6 +348,20 @@ jobs:
           cat("source-declared packages ok:", length(used), "\n")
           soft_missing <- setdiff(intersect(soft, seed), c(have(), base_pkgs))
           cat("rlib packages:", length(have()), "| soft missing:", paste(soft_missing, collapse = ","), "\n")
+
+          pvpkgs <- split_pkgs(Sys.getenv("PKG_VERSION_PACKAGES"))
+          pvsuf <- trimws(Sys.getenv("PKG_VERSION_SUFFIX"))
+          if (length(pvpkgs)) {
+            if (!nzchar(pvsuf) || !grepl("^[0-9]+$", pvsuf)) stop("PKG_VERSION_PACKAGES is set but PKG_VERSION_SUFFIX is not a numeric suffix")
+            for (p in pvpkgs) {
+              dfile <- file.path(lib, p, "DESCRIPTION")
+              if (!file.exists(dfile)) stop("PKG_VERSION_PACKAGES: ", p, " is not in rlib")
+              d <- read.dcf(dfile)
+              d[1, "Version"] <- paste0(d[1, "Version"], ".", pvsuf)
+              write.dcf(d, file = dfile)
+              cat("app-specific version:", p, "->", d[1, "Version"], "\n")
+            }
+          }
 
           entry <- if (file.exists(file.path(appdir, "app.R"))) "app/app.R" else "app/ui.R"
           pkgs <- as.data.frame(installed.packages(lib.loc = lib), stringsAsFactors = FALSE)

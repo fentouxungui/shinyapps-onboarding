@@ -55,6 +55,14 @@ that would erase the evidence. Instead:
 If a workflow change should be shipped, bump the tag and record the new release. The old
 snapshot stays in git history.
 
+## Special package versions
+
+`pkg-versions.tsv` reserves app-unique numeric suffixes for packages that are patched per
+app (Cairo with vendored XQuartz dylibs, etc.). The shared library deduplicates by package
+name+version, so identical versions can overwrite each other. Allocate with
+`scripts/next-pkg-version.ps1` and read `references/special-packages.md` before adding an
+app that vendors such a package.
+
 ## Provenance fields
 
 `meta.yml` records `built_at` (release `published_at`), `source_repo` / `source_commit`

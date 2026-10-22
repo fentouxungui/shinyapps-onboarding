@@ -45,7 +45,11 @@
 - TF motif module needs a one-time download (~700 MB per species) and network on first use.
 - Upstream has no license: **do not list until the author explicitly agrees**.
 - Shared-library dedup is by package name+version; another app bundling the same `Cairo`
-  version without the vendored dylibs could collide. Rare; re-test if it happens.
+  version without the vendored dylibs could collide. **v1.1.2 predates the unique-suffix
+  rule and shipped Cairo unpatched.** Suffix `9001` is reserved in
+  `apps/pkg-versions.tsv`; the next rebuild must set `PKG_VERSION_PACKAGES: "Cairo"` and
+  `PKG_VERSION_SUFFIX: "9001"` so this bundle cannot be merged with another app's Cairo.
+  Until then, do not give another Cairo-vendoring app suffix 9001 (use the allocator).
 - `scType` is offline (vendored), but other modules may need network depending on the data source.
 
 ## Reuse notes

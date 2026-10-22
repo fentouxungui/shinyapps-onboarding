@@ -103,8 +103,14 @@ Two pitfalls seen in practice:
 The ShinyApps shell moves package directories into a global library after install. Bundled
 dylibs move with them, so `@loader_path` still resolves. But dedup is keyed by package
 name+version: two apps that bundle the same package version with different vendored
-libraries can overwrite each other. Check `references/runtime-downloads.md` before relying
-on vendored libraries across multiple apps.
+libraries can overwrite each other.
+
+Therefore **every app that vendors libraries into a package must give that package a unique
+version suffix** (`PKG_VERSION_PACKAGES` / `PKG_VERSION_SUFFIX`). Do not patch only the new
+app: every app that ships the package must use a different suffix. Allocate it with
+`scripts/next-pkg-version.ps1 -Package Cairo` and follow
+`references/special-packages.md`. A released bundle (e.g. ScRDAVis v1.1.2) cannot be
+retro-patched; it must be rebuilt to comply.
 
 ## Fonts and Cairo
 
