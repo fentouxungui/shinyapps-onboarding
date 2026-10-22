@@ -141,8 +141,12 @@ foreach ($d in Get-ChildItem -LiteralPath $AppsDir -Directory | Where-Object { $
   if ($rel -and @($rel).Count -gt 0) {
     $latest = @($rel)[0]
     $base.upstream.latest_release = $latest.tag_name
-    if ($latest.tag_name -and (Test-Newer $latest.tag_name $m['tag'])) {
-      $base.reasons += "upstream release $($latest.tag_name) is newer than recorded $($m['tag'])"
+    if ($latest.published_at -and $m['built_at']) {
+      try {
+        if ([datetimeoffset]::Parse($latest.published_at) -gt [datetimeoffset]::Parse($m['built_at'])) {
+          $base.reasons += "upstream release $($latest.tag_name) was published after this bundle"
+        }
+      } catch { }
     }
   }
 
@@ -164,7 +168,7 @@ foreach ($d in Get-ChildItem -LiteralPath $AppsDir -Directory | Where-Object { $
     }
   }
 
-  $rebuild = $base.reasons | Where-Object { $_ -match 'app file|newer than recorded' }
+  $rebuild = $base.reasons | Where-Object { $_ -match 'app file|published after this bundle' }
   if ($base.fork.behind_by -gt 0) { $base.action = 'sync-first' }
   elseif ($rebuild) { $base.action = 'rebuild' }
   elseif ($base.workflow.changed -eq $true) { $base.action = 'workflow-drift' }
