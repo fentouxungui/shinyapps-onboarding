@@ -15,6 +15,16 @@ build_run: ""              # Actions run that produced the release (optional)
 template: pre-hardening    # template version used, or the commit of shinyapps-onboarding
 patch_file: ""             # file in this folder used as PATCH_SCRIPT, if any
 recorded_at: 2026-01-01
+# Provenance of this snapshot (filled by scripts/record-app.ps1).
+built_at: ""
+source_repo: owner/repo
+source_commit: ""
+upstream_repo: owner/repo
+upstream_head: ""
+upstream_checked_at: ""
+workflow_path: .github/workflows/example-id-build-app-bundle.yml
+workflow_commit: ""
+workflow_sha256: ""
 app_size_mb: win-x64=0, mac-arm64=0
 closure_packages: 0
 decisions:

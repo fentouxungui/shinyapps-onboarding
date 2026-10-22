@@ -4,7 +4,7 @@ A "heavy" app is one where a naive workflow produces a zip that builds, passes t
 smoke test and still fails for the user. The two field cases behind this file are
 xOmicsShiny (76 bundled packages, 297 MB demo data, ~950 MB per platform) and ScRDAVis
 (87 declared packages, 11 GitHub-only plus BPCells inside a monorepo, two BSgenome
-references of 731 MB + 650 MB, 484-package closure, 1.62 GB Windows zip).
+references of 731 MB + 650 MB, 484-package closure, 1.70 GB Windows zip).
 
 Signals to check at feasibility time:
 

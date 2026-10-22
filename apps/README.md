@@ -34,12 +34,33 @@ not edit the catalog from here.
 
 ## What is stored, and what is not
 
-Stored: the generated workflow (placeholders already substituted, so it is exactly what
-ran), the values that differ from the template, and the reasoning. Optional: the
-`PATCH_SCRIPT` file.
+Stored: the generated workflow **at the release tag** (placeholders already substituted,
+so it is exactly what ran), the values that differ from the template, and the reasoning.
+Optional: the `PATCH_SCRIPT` file.
 
 Not stored: bundles, `rlib/`, `deps-*.json`, tokens, or local absolute paths. Link the
 Release and the Actions run in `meta.yml` instead.
+
+## Snapshot, not mirror
+
+`build-app-bundle.yml` is **immutable**. It is the file that produced the release, pinned by
+`workflow_sha256`, `workflow_commit` and `tag`. Do not overwrite it when the fork changes:
+that would erase the evidence. Instead:
+
+- `scripts/record-app.ps1` snapshots a new release (workflow at the tag, assets, SHAs);
+- `scripts/check-upstream.ps1` compares the fork's current workflow and upstream code with the
+  snapshot and reports `workflow-drift` / `rebuild` / `sync-first` in `site/status.json`;
+- a weekly workflow publishes that report to the maintenance board (GitHub Pages).
+
+If a workflow change should be shipped, bump the tag and record the new release. The old
+snapshot stays in git history.
+
+## Provenance fields
+
+`meta.yml` records `built_at` (release `published_at`), `source_repo` / `source_commit`
+(tag commit), `upstream_repo` / `upstream_head` (observed at record time),
+`workflow_path` / `workflow_commit` / `workflow_sha256`. The validator recomputes the hash,
+so an edited snapshot is caught.
 
 ## Adding a record
 
@@ -50,8 +71,18 @@ Release and the Actions run in `meta.yml` instead.
   -WorkflowPath <path-to-generated-workflow.yml>
 ```
 
-Then fill `meta.yml` `decisions:` and `NOTES.md`, run the validator, and regenerate the
-index:
+For a released bundle use the recorder instead of copying by hand (it pulls the workflow at
+the tag, the asset sizes and the SHAs):
+
+```powershell
+.\scripts\record-app.ps1 -AppId <id> -Fork <owner>/<repo> -Upstream <owner>/<repo> -Tag v0.1.0
+```
+
+Add `-Status active` when the app is already in the catalog, and `-Force` when replacing an
+older snapshot of the same app with a newer release.
+
+Then fill `meta.yml` `decisions:` and `NOTES.md` (why each non-default value is set, plus
+the debug log), run the validator, and regenerate the index:
 
 ```powershell
 .\scripts\validate-apps.ps1

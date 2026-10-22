@@ -13,6 +13,15 @@ build_run: ""
 template: pre-hardening (personal skill v3)
 patch_file: ""
 recorded_at: 2026-10-22
+built_at: 2026-10-21T02:33:14Z
+source_repo: fentouxungui/xOmicsShiny
+source_commit: 31e972667a924d064e1f8a04e8bf79d7db97eae4
+upstream_repo: interactivereport/xOmicsShiny
+upstream_head: 178380ad6210e569a371e9e3cf46f059585280c2
+upstream_checked_at: 2026-10-22T08:00:00Z
+workflow_path: .github/workflows/xomicsshiny-build-app-bundle.yml
+workflow_commit: 31e972667a924d064e1f8a04e8bf79d7db97eae4
+workflow_sha256: 181d3dcdf72f300e5164ad642c366691a11dc8bdc6570a4fbb4b0bd9c754671d
 app_size_mb: win-x64=946, mac-arm64=916
 closure_packages: ""
 decisions:

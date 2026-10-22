@@ -56,13 +56,13 @@ cannot ship (give a feasibility caveat).
 5. **Onboard**: append the entry from `assets/catalog-entry.yml` to
    `ShinyApps/catalog/apps.yml`, add `ShinyApps/icons/<id>.png` (from the upstream repo's own logo), push.
 6. **Open the upstream PR** (CI-only; see `references/pr-template.md`).
-7. **Record it** in `apps/<id>/`: copy the workflow **from the tag** (not `main`), fill
-   `meta.yml` (`status`, tag, sizes, `decisions`) and `NOTES.md` (debug log), then run
-   `scripts/validate-apps.ps1` and `scripts/build-app-index.ps1`. Record failed and
-   rejected attempts too (`status: abandoned|rejected`); they are the most useful evidence.
+7. **Record it** with `scripts/record-app.ps1 -AppId <id> -Fork <owner>/<repo> -Upstream
+   <owner>/<repo> -Tag <tag>`: it snapshots the workflow **at the tag**, the asset sizes and
+   the commit SHAs, then scaffolds `meta.yml` + `NOTES.md`. Fill `decisions` and the debug
+   log, then run `scripts/validate-apps.ps1` and `scripts/build-app-index.ps1`. Record failed
+   and rejected attempts too (`status: abandoned|rejected`); they are the most useful evidence.
 
-Fast path: run `scripts/onboard-shiny-app.ps1` (steps 2-6), then step 7 by hand or with
-`scripts/new-app-record.ps1`.
+Fast path: run `scripts/onboard-shiny-app.ps1` (steps 2-6), then `record-app.ps1` for step 7.
 
 ## Hard rules
 

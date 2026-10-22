@@ -13,7 +13,16 @@ build_run: https://github.com/fentouxungui/ScRDAVis/actions/runs/39717890320
 template: pre-hardening (personal skill v3)
 patch_file: ""
 recorded_at: 2026-10-22
-app_size_mb: win-x64=1620
+built_at: 2026-10-22T04:12:37Z
+source_repo: fentouxungui/ScRDAVis
+source_commit: e73b0d59341ba16da7a4362a3275aef500f4f517
+upstream_repo: GudaLab/ScRDAVis
+upstream_head: fbb7455af2913c1d7c92d8a27c373d77e71d5496
+upstream_checked_at: 2026-10-22T08:00:00Z
+workflow_path: .github/workflows/scrdavis-build-app-bundle.yml
+workflow_commit: e73b0d59341ba16da7a4362a3275aef500f4f517
+workflow_sha256: de74d1e96e0dae3f275c7fc6f002df485365766beeb45de08e8efc6237b28938
+app_size_mb: win-x64=1617
 closure_packages: 484
 decisions:
   - PLATFORMS=win-x64 - monocle3 -> ggrastr -> Cairo/XQuartz cannot be made portable; Windows-only

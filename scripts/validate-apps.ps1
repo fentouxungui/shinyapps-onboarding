@@ -17,7 +17,9 @@ $ErrorActionPreference = 'Stop'
 $errors   = New-Object System.Collections.Generic.List[string]
 $warnings = New-Object System.Collections.Generic.List[string]
 $statuses = @('active', 'pending', 'rejected', 'withdrawn', 'abandoned')
-$required = @('id', 'name', 'status', 'upstream', 'license', 'app_mode', 'platforms', 'version', 'tag', 'template', 'recorded_at')
+$required = @('id', 'name', 'status', 'upstream', 'license', 'app_mode', 'platforms', 'version', 'tag', 'template', 'recorded_at',
+  'built_at', 'source_repo', 'source_commit', 'upstream_repo', 'upstream_head', 'upstream_checked_at',
+  'workflow_path', 'workflow_commit', 'workflow_sha256')
 
 function Read-Meta([string]$Path) {
   $h = @{}
@@ -32,6 +34,13 @@ function Read-Meta([string]$Path) {
     }
   }
   return $h
+}
+
+function Get-LfSha256([string]$Path) {
+  $text = [IO.File]::ReadAllText((Resolve-Path -LiteralPath $Path))
+  $bytes = [Text.Encoding]::UTF8.GetBytes(($text -replace "`r`n", "`n"))
+  $h = [Security.Cryptography.SHA256]::Create().ComputeHash($bytes)
+  (([BitConverter]::ToString($h)) -replace '-', '').ToLower()
 }
 
 if (-not (Test-Path -LiteralPath $AppsDir)) { throw "apps directory not found: $AppsDir" }
@@ -70,6 +79,10 @@ foreach ($d in $dirs) {
       if ($p -and @('win-x64', 'mac-arm64') -notcontains $p) { $errors.Add("${where}: unknown platform '$p'") }
     }
   }
+  if ($m['built_at'] -and $m['built_at'] -notmatch '^\d{4}-\d{2}-\d{2}T') { $errors.Add("${where}: built_at is not an ISO timestamp") }
+  if ($m['source_commit'] -and $m['source_commit'] -notmatch '^[0-9a-f]{40}$') { $errors.Add("${where}: source_commit is not a 40-char sha") }
+  if ($m['upstream_head'] -and $m['upstream_head'] -notmatch '^[0-9a-f]{40}$') { $errors.Add("${where}: upstream_head is not a 40-char sha") }
+  if ($m['workflow_sha256'] -and $m['workflow_sha256'] -notmatch '^[0-9a-f]{64}$') { $errors.Add("${where}: workflow_sha256 is not a 64-char sha256") }
   if ($m['patch_file']) {
     $pf = Join-Path $d.FullName $m['patch_file']
     if (-not (Test-Path -LiteralPath $pf)) { $errors.Add("${where}: patch_file '$($m['patch_file'])' not found") }
@@ -81,6 +94,12 @@ foreach ($d in $dirs) {
     if ($wf -notmatch '(?m)^name:\s*\S') { $errors.Add("${where}: workflow has no name:") }
     if ($wf -notmatch '(?m)^\s+APP_ID:\s*"?' + [regex]::Escape($id) + '"?' ) {
       $errors.Add("${where}: workflow APP_ID does not match '$id'")
+    }
+    if ($m['workflow_sha256']) {
+      $actual = Get-LfSha256 $wfPath
+      if ($actual -ne $m['workflow_sha256']) {
+        $errors.Add("${where}: workflow_sha256 mismatch (snapshot changed after it was recorded)")
+      }
     }
     if ($wf -notmatch 'upload-artifact') { $warnings.Add("${where}: workflow does not upload artifacts") }
     if ($wf -notmatch 'Smoke test') { $warnings.Add("${where}: workflow has no smoke test step") }

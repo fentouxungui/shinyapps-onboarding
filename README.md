@@ -25,6 +25,9 @@ splitKbCompare and ShinyStan.
 | `scripts/validate-apps.ps1`    | Structural checks for `apps/<id>/` records (CI: `.github/workflows/validate-apps.yml`) |
 | `scripts/build-app-index.ps1`  | Regenerate `apps/INDEX.md` |
 | `scripts/new-app-record.ps1`   | Scaffold a new app record from `apps/_template` |
+| `scripts/record-app.ps1`       | Snapshot a released app (workflow at the tag, sizes, SHAs) into `apps/<id>/` |
+| `scripts/check-upstream.ps1`   | Drift report: upstream commits/releases, fork behind, workflow changes |
+| `scripts/build-dashboard.ps1`  | Render the maintenance board from `site/status.json` |
 | `apps/<id>/`                   | Exact workflow + `meta.yml` + debug log for each onboarded or attempted app |
 | `references/app-shapes.md`     | The 5 app shapes and how each is handled |
 | `references/failure-modes.md`  | Real failures and their fixes -- read this first |
@@ -153,9 +156,14 @@ publishes `*.sha256`, `meta-*.json` and `deps-*.json`. Full list:
 Every app that was onboarded -- listed, pending, rejected or abandoned -- gets a folder
 under `apps/<id>/` with the generated workflow **as it ran**, a `meta.yml` (status, tag,
 sizes, non-default decisions) and a `NOTES.md` (symptom -> cause -> fix -> verification).
-`apps/INDEX.md` is generated. The record is a snapshot: `ShinyApps/catalog/apps.yml`
+`apps/INDEX.md` is generated. The record is a **snapshot**: `ShinyApps/catalog/apps.yml`
 remains the only source of truth for what is actually listed, and rejected apps carry a
 "do not redistribute" banner. Rules and workflow: [apps/README.md](apps/README.md).
+
+A weekly GitHub Actions job (`weekly-upstream-check.yml`) compares each snapshot with its
+fork and upstream and publishes a maintenance board to GitHub Pages: last build, upstream
+commits/releases since then, fork sync status and workflow drift. It never edits `apps/`.
+Enable Pages once (Settings -> Pages -> GitHub Actions) to publish it.
 
 ## Store side
 

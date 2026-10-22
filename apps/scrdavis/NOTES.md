@@ -5,7 +5,7 @@
 - **Upstream:** https://github.com/GudaLab/ScRDAVis (no `LICENSE` file)
 - **Fork:** https://github.com/fentouxungui/ScRDAVis
 - **Release:** https://github.com/fentouxungui/ScRDAVis/releases/tag/v1.0.2 (`v1.0.2`)
-- **Artifacts:** `scrdavis-1.0.2-win-x64.zip` (1.62 GB). No macOS artifact.
+- **Artifacts:** `scrdavis-1.0.2-win-x64.zip` (1.70 GB / 1.58 GiB). No macOS artifact.
 - **Template:** pre-hardening personal skill (v3 era), with app-specific patch steps.
 
 ## Why it is packaged this way
