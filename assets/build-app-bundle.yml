@@ -252,11 +252,30 @@ jobs:
             }
           }
           if (mode == "package-fn") { install.packages(pkgroot, lib = lib, repos = NULL, type = "source", dependencies = FALSE); if (!pkg_name %in% have()) stop("app package failed to install: ", pkg_name) }
-          for (u in split_pkgs(Sys.getenv("ARCHIVE_URLS"))) {
+          install_archive <- function(u) {
             f <- file.path(tempdir(), basename(u)); download.file(u, f, mode = "wb", quiet = TRUE)
             if (!file.exists(f) || file.size(f) < 1000) stop("ARCHIVE_URLS download failed: ", u)
-            cat("installing archived package:", basename(u), "\n")
-            install.packages(f, lib = lib, repos = NULL, type = "source", dependencies = FALSE)
+            pkgdir <- f
+            if (!file.exists(file.path(f, "DESCRIPTION"))) {
+              # A monorepo tarball may hold the package in a subdirectory (e.g. BPCells in r/).
+              ex <- file.path(tempdir(), paste0("x-", basename(u))); unlink(ex, recursive = TRUE); dir.create(ex)
+              if (grepl("[.]zip$", u, ignore.case = TRUE)) utils::unzip(f, exdir = ex) else utils::untar(f, exdir = ex)
+              d <- list.files(ex, pattern = "^DESCRIPTION$", recursive = TRUE, full.names = TRUE)
+              d <- d[!grepl("([.]Rcheck|/tests?/|/vignettes?/|/data/)", gsub("\\\\", "/", d))]
+              if (length(d) != 1) stop("ARCHIVE_URLS: expected one package DESCRIPTION inside ", basename(u), ", found ", length(d), ". Use a package tarball or install it in a manual step.")
+              pkgdir <- dirname(d)
+              cat("archive subdirectory:", basename(pkgdir), "\n")
+            }
+            dcf <- tryCatch(read.dcf(file.path(pkgdir, "DESCRIPTION")), error = function(e) NULL)
+            if (!is.null(dcf)) {
+              need <- setdiff(dcf_deps(dcf), c(have(), base_pkgs))
+              need <- intersect(need, rownames(db))
+              if (length(need)) { cat("archive deps:", paste(need, collapse = ", "), "\n"); ins(need, deps = FALSE) }
+            }
+            install.packages(pkgdir, lib = lib, repos = NULL, type = "source", dependencies = FALSE)
+          }
+          for (u in split_pkgs(Sys.getenv("ARCHIVE_URLS"))) {
+            cat("installing archived package:", basename(u), "\n"); install_archive(u)
           }
           forced <- split_pkgs(Sys.getenv("FORCED_PKGS"))
           forced_missing <- setdiff(forced, have())

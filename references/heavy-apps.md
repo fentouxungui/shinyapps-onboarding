@@ -3,7 +3,8 @@
 A "heavy" app is one where a naive workflow produces a zip that builds, passes the
 smoke test and still fails for the user. The two field cases behind this file are
 xOmicsShiny (76 bundled packages, 297 MB demo data, ~950 MB per platform) and ScRDAVis
-(87 packages, 10 of them GitHub-only, two BSgenome references of 731 MB + 650 MB).
+(87 declared packages, 11 GitHub-only plus BPCells inside a monorepo, two BSgenome
+references of 731 MB + 650 MB, 484-package closure, 1.62 GB Windows zip).
 
 Signals to check at feasibility time:
 
@@ -62,6 +63,19 @@ Options, in order of preference:
 3. Split into a "lite" and a "full" app id only as a last resort — two catalog entries to
    maintain, two bundles to rebuild.
 
+If a feature's data is too large to ship but is only needed when the user opens that
+module, a **user-triggered** download into a user library is a documented exception.
+Conditions and a reference implementation: `references/runtime-downloads.md`. Startup
+downloads remain forbidden.
+
+### Windows-only is a valid outcome
+
+When a macOS dependency cannot be made portable (ScRDAVis: `monocle3` -> `ggrastr` ->
+`Cairo`/XQuartz), publish a Windows-only release rather than a mac asset that does not
+work. Delete the `macos-14` entry from `matrix.include`, keep the app id and asset prefix
+unchanged, and record "Windows-only, <module> unavailable on macOS" in `APP_NOTES` and the
+PR. The catalog publishes whatever artifacts exist; mac users simply get no download.
+
 Never ship a bundle that silently lacks a package the code calls: that is the failure
 mode in section 5.
 
@@ -109,6 +123,20 @@ Add the package's own Bioconductor dependencies (PCSF needs `topGO`) either to
 `EXTRA_PKGS` or to the tarball list. Check the resolved package list in `deps-<platform>.json`
 after the build.
 
+### Packages inside a monorepo
+
+Some GitHub packages are not at the tarball root. `BPCells` lives in `r/` of
+`bnprks/BPCells`; a root-only installer failed three times and blocked `monocle3`.
+The workflow now looks for the single `DESCRIPTION` inside the unpacked tarball and
+installs that directory. If a tarball contains several packages (or a `tests/` fixture),
+the build stops and asks for a package tarball instead of guessing.
+
+After locating the package, the workflow reads its `DESCRIPTION` and installs missing
+`Depends`/`Imports`/`LinkingTo` packages from the configured repos **before** building it.
+BPCells needs `readr` and `hexbin`; without that step the install aborts. GitHub-only
+dependencies of an archived package (e.g. `leidenbase`) still have to be listed in
+`ARCHIVE_URLS` themselves, in dependency order.
+
 ## 5. The smoke test loads the UI, not every module
 
 `shinyAppDir()` builds the UI object; it does not evaluate click handlers. `library(PCSF)`
@@ -139,13 +167,15 @@ offline limitation in `APP_NOTES`.
 | App | Shape | What mattered |
 |---|---|---|
 | xOmicsShiny | flat, 24 modules | 76 packages scanned from all modules; `config.csv` absolute path; `metabaser` not on CRAN -> `SOFT_PKGS`; Cairo/gdtools/ggrastr and Mfuzz/tcltk blocked macOS -> rebuild/drop; PCSF archived + `topGO`; final zips 942/913 MB |
-| ScRDAVis | flat, Seurat/monocle3/CellChat | 10 GitHub-only packages; two BSgenome references -> over 2 GiB with the full stack; dropped BSgenome and the TF-motif module, documented in `APP_NOTES`; no upstream LICENSE -> ask the author before listing |
+| ScRDAVis | flat, Seurat/monocle3/CellChat | 87 declared packages -> 484-package closure; 11 GitHub-only packages + BPCells from a `r/` subdirectory; two BSgenome references over budget -> dropped, TF module downloads one genome on first use; monocle3 pulls Cairo -> Windows-only; 1.62 GB zip; no upstream LICENSE -> ask before listing |
 
 ## Checklist
 
 - [ ] dependency union includes every module file
 - [ ] recommended packages not listed as extras
-- [ ] `ARCHIVE_URLS` + `FORCED_PKGS` cover every GitHub-only package
+- [ ] `ARCHIVE_URLS` + `FORCED_PKGS` cover every GitHub-only package (including subdirectory monorepos)
+- [ ] Windows-only decided explicitly, with the reason in `APP_NOTES`
+- [ ] any on-demand module download follows `references/runtime-downloads.md`
 - [ ] no absolute author paths left in config/data files
 - [ ] zip size and demo data checked against the 2 GiB limit
 - [ ] every disabled feature is in `APP_NOTES` and the PR/issue

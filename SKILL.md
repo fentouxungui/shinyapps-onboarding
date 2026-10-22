@@ -89,6 +89,11 @@ The workflow ships a **`Smoke test`** step that loads the built bundle the way t
 prints the real error, blocks the release on failure). See `references/failure-modes.md`. Turn it off
 with `SMOKE: "off"` for apps that need network at startup.
 
+A **module that the user explicitly opens** may fetch its own large data on first use
+(one artifact at a time, into a user-writable library, with progress and a readable
+failure) -- this is the only allowed exception to the no-startup-download rule. Conditions
+and a reference implementation: `references/runtime-downloads.md`.
+
 **Apps that fetch a database at first launch** (a reference DB, taxonomy, annotation bundle)
 must not do it from the bundle: the user may be offline and R's default `download.file` timeout
 (60 s) aborts a large download mid-stream, so the app errors on start. Generate that data at
@@ -130,6 +135,12 @@ portability: `references/macos-portability.md`.
   `references/macos-portability.md`.
 - Poll CI by workflow name **and** the tag on `head_branch`; otherwise a stale failed run matches first.
 - `cran/*` repos are read-only mirrors: onboard the fork but do not open an upstream PR.
+- `ARCHIVE_URLS` accepts a monorepo tarball whose package sits in a subdirectory (BPCells in
+  `r/`): the template locates the single `DESCRIPTION` and installs that package's Imports
+  first. A tarball with several packages fails on purpose -- pass a package tarball.
+- Publish **Windows-only** when a macOS dependency cannot be made portable (see
+  `references/macos-portability.md`): remove the `macos-14` matrix entry and record it in
+  `APP_NOTES`; do not ship a mac zip that cannot start.
 
 ## Security
 
@@ -151,5 +162,6 @@ policy, one immutable release per tag, clean-library smoke (only `rlib` + base R
 - `scripts/onboard-shiny-app.ps1` - parameterized driver for steps 2-6.
 - `references/app-shapes.md`, `references/failure-modes.md`, `references/store-contract.md`,
   `references/startup-data.md`, `references/release-hardening.md`,
-  `references/heavy-apps.md`, `references/macos-portability.md`, `references/pr-template.md`.
+  `references/heavy-apps.md`, `references/macos-portability.md`,
+  `references/runtime-downloads.md`, `references/pr-template.md`.
 - `examples/` - real workflows for flat, package-fn and package-deploy apps.

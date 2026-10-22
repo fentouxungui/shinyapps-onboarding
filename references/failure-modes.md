@@ -164,6 +164,17 @@ These come from multi-module apps (xOmicsShiny, ScRDAVis). Full playbook:
   `release.tag_name` + `ref_name` + `inputs.tag`. Use one source (`inputs.tag || github.ref_name`).
 - **No upstream license.** A repo with no `LICENSE` needs explicit permission from the
   author before listing, independent of whether the CI now works.
+- **A GitHub package is not at its repo root.** BPCells is `r/` inside `bnprks/BPCells`;
+  a root-only tarball install failed three times and blocked `monocle3`. The template now
+  finds the single `DESCRIPTION` in the unpacked tarball and installs its Imports first;
+  a tarball with several packages fails with an explicit message instead of guessing.
+- **1.4 GB of reference data on startup.** ScRDAVis cannot ship two `BSgenome` packages
+  inside a 2 GiB release next to a 484-package closure. Startup downloads are still
+  banned; a user-triggered module download into a user library is the documented
+  exception (`references/runtime-downloads.md`).
+- **macOS may be impossible, not just hard.** `monocle3` -> `ggrastr` -> `Cairo`/XQuartz
+  cannot be made portable. Publish Windows-only, remove the `macos-14` matrix entry, and
+  record the limitation instead of shipping a mac asset you cannot start.
 
 ## Ops
 

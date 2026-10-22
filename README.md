@@ -29,6 +29,7 @@ splitKbCompare and ShinyStan.
 | `references/release-hardening.md` | Tag/version policy, release-safety checklist, reviewer boundary |
 | `references/heavy-apps.md`     | Many modules / many dependencies / large data: census, size budget, build-time patches |
 | `references/macos-portability.md` | XQuartz/Homebrew dylib failures and the remediation ladder |
+| `references/runtime-downloads.md` | When a user-triggered module download is acceptable (and how) |
 | `references/pr-template.md`    | Structure for the upstream pull request |
 | `examples/`                    | Real working workflows (flat, package-fn, package-deploy) |
 
