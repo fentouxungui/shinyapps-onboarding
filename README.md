@@ -15,6 +15,9 @@ shell**. The same route powers iSEE, UCSCXenaShiny, spatialLIBD, beeRapp, CSBB-S
 SeuratExplorer, scConvertShiny, shinyCircos-V2.0, UpSetR-shiny, bestDEG, GraphBio,
 splitKbCompare and ShinyStan.
 
+**Maintenance board:** <https://fentouxungui.github.io/shinyapps-onboarding/> -- last build,
+upstream/fork drift and rebuild signals for every recorded app.
+
 ## Contents
 
 | Path | Purpose |
@@ -168,9 +171,9 @@ remains the only source of truth for what is actually listed, and rejected apps 
 "do not redistribute" banner. Rules and workflow: [apps/README.md](apps/README.md).
 
 A weekly GitHub Actions job (`weekly-upstream-check.yml`) compares each snapshot with its
-fork and upstream and publishes a maintenance board to GitHub Pages: last build, upstream
-commits/releases since then, fork sync status and workflow drift. It never edits `apps/`.
-Enable Pages once (Settings -> Pages -> GitHub Actions) to publish it.
+fork and upstream and republishes the maintenance board at
+<https://fentouxungui.github.io/shinyapps-onboarding/>: last build, upstream commits/releases
+since then, fork sync status and workflow drift. It never edits `apps/`.
 
 ## Store side
 
