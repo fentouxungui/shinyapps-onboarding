@@ -40,9 +40,9 @@
 | `exmort` | exmort | active | win-x64, mac-arm64 | v0.1.1 | shanlong-who/exmort | [NOTES](exmort/NOTES.md) |
 | `expandar` | ExPanDaR | active | win-x64, mac-arm64 | v0.1.0 | cran/ExPanDaR | [NOTES](expandar/NOTES.md) |
 | `explor` | explor | active | win-x64, mac-arm64 | v0.1.2 | juba/explor | [NOTES](explor/NOTES.md) |
-| `familia` | Familia | active | win-x64, mac-arm64 | v0.1.0 | Breeding-Insight/familia | [NOTES](familia/NOTES.md) |
+| `familia` | Familia | active | win-x64, mac-arm64 | v2.2.0 | Breeding-Insight/familia | [NOTES](familia/NOTES.md) |
 | `fdapaceshiny` | fdapaceShiny | active | win-x64, mac-arm64 | v0.1.0 | cran/fdapaceShiny | [NOTES](fdapaceshiny/NOTES.md) |
-| `fieldhub` | FielDHub | active | win-x64, mac-arm64 | v0.1.0 | DidierMurilloF/FielDHub | [NOTES](fieldhub/NOTES.md) |
+| `fieldhub` | FielDHub | active | win-x64, mac-arm64 | v0.1.6 | DidierMurilloF/FielDHub | [NOTES](fieldhub/NOTES.md) |
 | `fitodbodrshiny` | fitODBODRshiny | active | win-x64, mac-arm64 | v0.2.0 | cran/fitODBODRshiny | [NOTES](fitodbodrshiny/NOTES.md) |
 | `fluxtools` | fluxtools | active | win-x64, mac-arm64 | v0.1.3 | kesondrakey/fluxtools | [NOTES](fluxtools/NOTES.md) |
 | `fossilsimshiny` | FossilSimShiny | active | win-x64, mac-arm64 | v0.1.0 | fossilsim/FossilSimShiny | [NOTES](fossilsimshiny/NOTES.md) |
@@ -98,7 +98,7 @@
 | `r3dmol` | r3dmol | active | win-x64, mac-arm64 | v0.1.0 | cran/r3dmol | [NOTES](r3dmol/NOTES.md) |
 | `reliashiny` | ReliaShiny | active | win-x64, mac-arm64 | v0.1.1 | paulgovan/ReliaShiny | [NOTES](reliashiny/NOTES.md) |
 | `repplabshiny` | REPPlabShiny | active | win-x64, mac-arm64 | v0.1.0 | cran/REPPlabShiny | [NOTES](repplabshiny/NOTES.md) |
-| `scconvert` | scConvertShiny | active | win-x64, mac-arm64 | v0.1.2 | fentouxungui/scConvertShiny | [NOTES](scconvert/NOTES.md) |
+| `scconvert` | scConvertShiny | active | win-x64, mac-arm64 | v0.1.3 | fentouxungui/scConvertShiny | [NOTES](scconvert/NOTES.md) |
 | `sdstudio` | sdstudio | active | win-x64, mac-arm64 | v0.1.0 | cran/sdstudio | [NOTES](sdstudio/NOTES.md) |
 | `seasonalview` | seasonalview | active | win-x64, mac-arm64 | v0.1.0 | cran/seasonalview | [NOTES](seasonalview/NOTES.md) |
 | `seurat-explorer` | SeuratExplorer | active | win-x64, mac-arm64 | v0.1.9 | fentouxungui/SeuratExplorer | [NOTES](seurat-explorer/NOTES.md) |

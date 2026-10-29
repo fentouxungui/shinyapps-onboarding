@@ -2,27 +2,29 @@ id: familia
 name: Familia
 status: active
 upstream: Breeding-Insight/familia
-fork: fentouxungui/Familia
+fork: fentouxungui/familia
 license: Apache-2.0
 app_mode: auto
 platforms: win-x64, mac-arm64
-version: 0.1.0
-tag: v0.1.0
-release_url: https://github.com/fentouxungui/Familia/releases/tag/v0.1.0
-build_run: ""
-template: unknown (backfill)
+version: 2.2.0
+tag: v2.2.0
+release_url: https://github.com/fentouxungui/familia/releases/tag/v2.2.0
+build_run: https://github.com/fentouxungui/familia/actions/runs/40800465738
+template: per-app workflow, v3 hardening backported (real startup smoke, verified local install)
 patch_file: ""
-recorded_at: 2026-10-22
-built_at: 2026-10-17T11:42:55Z
-source_repo: fentouxungui/Familia
-source_commit: 1a8db4481d166b368d738556331f4e04dbaa58e2
+recorded_at: 2026-10-29
+built_at: 2026-10-29T01:26:42Z
+source_repo: fentouxungui/familia
+source_commit: 0f7f0e1d01a1558e240ba61d1b70d63f0530a67d
 upstream_repo: Breeding-Insight/familia
-upstream_head: 03a5beded1e2f96f118cac87bc5ad94737d5ef88
-upstream_checked_at: 2026-10-22T09:51:25Z
+upstream_head: 4d6c29e85463fbbacd108fa0a8b7ac4cf21303e9
+upstream_checked_at: 2026-10-29T02:38:13Z
 workflow_path: .github/workflows/familia-build-app-bundle.yml
-workflow_commit: 1a8db4481d166b368d738556331f4e04dbaa58e2
-workflow_sha256: 8d4e33f249bff257bd58c17fdacfcea2f1090972330f7abf72f563196b775637
-app_size_mb: win-x64=125, mac-arm64=119
+workflow_commit: 0f7f0e1d01a1558e240ba61d1b70d63f0530a67d
+workflow_sha256: 28d267b1c9159cd477c8142f9a0bccb8d4152cfea521ee1448dda9300bc3f2cd
+app_size_mb: win-x64=126, mac-arm64=108
 closure_packages: ""
 decisions:
-  - no non-default settings - generated from the stock template
+  - EXTRA_PKGS=LEA: Suggests-only dependency of the SNMF/ancestry feature; bundled and load-validated
+  - fork synced to upstream 2.2.0 before tagging
+  - PR-review hardening: single-source version, tag checkout, real startup smoke, verified package-fn install

@@ -6,23 +6,24 @@ fork: fentouxungui/scConvertShiny
 license: MIT
 app_mode: auto
 platforms: win-x64, mac-arm64
-version: 0.1.2
-tag: v0.1.2
-release_url: https://github.com/fentouxungui/scConvertShiny/releases/tag/v0.1.2
-build_run: ""
-template: unknown (backfill)
+version: 0.1.3
+tag: v0.1.3
+release_url: https://github.com/fentouxungui/scConvertShiny/releases/tag/v0.1.3
+build_run: https://github.com/fentouxungui/scConvertShiny/actions/runs/40638959971
+template: per-app workflow, version-mismatch guard
 patch_file: ""
-recorded_at: 2026-10-22
-built_at: 2026-10-15T09:00:42Z
+recorded_at: 2026-10-29
+built_at: 2026-10-28T05:36:15Z
 source_repo: fentouxungui/scConvertShiny
-source_commit: d1f5efe65253ffc8516c031e009191f26ac11f0b
+source_commit: 243031dda887ebfe83ba81a052387034ef451c57
 upstream_repo: fentouxungui/scConvertShiny
-upstream_head: d1f5efe65253ffc8516c031e009191f26ac11f0b
-upstream_checked_at: 2026-10-22T09:58:23Z
+upstream_head: 243031dda887ebfe83ba81a052387034ef451c57
+upstream_checked_at: 2026-10-29T02:38:13Z
 workflow_path: .github/workflows/scconvert-build-app-bundle.yml
-workflow_commit: d1f5efe65253ffc8516c031e009191f26ac11f0b
-workflow_sha256: 771da16398123d8b6ecbe26d6c267482a1eab860efc2f4c5315dcfbf31d25323
-app_size_mb: win-x64=225, mac-arm64=210
+workflow_commit: 243031dda887ebfe83ba81a052387034ef451c57
+workflow_sha256: 802c49f5c18085e9a5d7003d946003670515ed0281d535e0aabaeac29a66405b
+app_size_mb: win-x64=211, mac-arm64=196
 closure_packages: ""
 decisions:
-  - no non-default settings - generated from the stock template
+  - fail-loud app tarball guard: the tarball must match the tag; v0.1.2 shipped without scConvertShiny because DESCRIPTION was 0.1.1 while the tag was v0.1.2
+  - no non-default app settings

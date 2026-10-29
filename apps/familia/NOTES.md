@@ -1,13 +1,13 @@
 # Familia (`familia`)
 
-- **Status:** `active` -- backfilled from the published release; see `meta.yml` for provenance.
+- **Status:** `active` -- latest build recorded from the published release; see `meta.yml` for provenance.
 - **Upstream:** https://github.com/Breeding-Insight/familia
-- **Fork:** https://github.com/fentouxungui/Familia
-- **Release:** https://github.com/fentouxungui/Familia/releases/tag/v0.1.0 (`v0.1.0`)
+- **Fork:** https://github.com/fentouxungui/familia
+- **Release:** https://github.com/fentouxungui/familia/releases/tag/v2.2.0 (`v2.2.0`)
 - **Artifacts:**
-  - `familia-0.1.0-win-x64.zip` (125 MB)
-  - `familia-0.1.0-mac-arm64.zip` (119 MB)
-- **Template:** unknown (backfill from catalog); the workflow is a snapshot, not a template.
+  - `familia-2.2.0-win-x64.zip` (126 MB)
+  - `familia-2.2.0-mac-arm64.zip` (108 MB)
+- **Template:** per-app workflow, v3 hardening backported (real startup smoke, verified package-fn install, LEA bundled).
 
 > If `status` is `rejected` or `withdrawn`: **do not redistribute this bundle.**
 
@@ -16,19 +16,22 @@
 | Setting | Value |
 |---|---|
 | `APP_MODE` | `auto` |
-| `EXTRA_PKGS` | (none) |
+| `EXTRA_PKGS` | `LEA` (Suggests-only; SNMF/ancestry feature) |
 | `SOFT_PKGS` | (none) |
 | `ARCHIVE_URLS` | 0 source tarball(s) |
 | `SOURCE_REBUILD` | (none) |
 
 ## Known limitations
 
-(none recorded; the workflow did not declare APP_NOTES)
+None recorded. LEA is bundled, so the SNMF/ancestry feature works offline; LEA is compiled and increases bundle size and build time moderately.
 
 ## Debug log
 
-Backfilled on 2026-10-22 from the release assets; no run-by-run history
-is available for this app. Add rows here when it is rebuilt.
+- 2026-10-22: backfilled from the v0.1.0 release assets.
+- 2026-10-29: fork synced to upstream 2.2.0; workflow hardened after the
+  Copilot review (tag checkout, real startup check, verified package-fn install,
+  LEA bundled). v2.2.0 built (run 40800465738) on both platforms; the Windows
+  bundle installs and runs through the ShinyApps client.
 
 ## Reuse notes
 

@@ -6,23 +6,24 @@ fork: fentouxungui/FielDHub
 license: MIT
 app_mode: auto
 platforms: win-x64, mac-arm64
-version: 0.1.0
-tag: v0.1.0
-release_url: https://github.com/fentouxungui/FielDHub/releases/tag/v0.1.0
-build_run: ""
-template: unknown (backfill)
+version: 0.1.6
+tag: v0.1.6
+release_url: https://github.com/fentouxungui/FielDHub/releases/tag/v0.1.6
+build_run: https://github.com/fentouxungui/FielDHub/actions/runs/40645447608
+template: per-app workflow, PR-review hardening backported (real startup smoke)
 patch_file: ""
-recorded_at: 2026-10-22
-built_at: 2026-10-17T11:48:17Z
+recorded_at: 2026-10-29
+built_at: 2026-10-28T06:42:03Z
 source_repo: fentouxungui/FielDHub
-source_commit: be94d3c1c09b88f50b8573c59a84adacdc3a3fc5
+source_commit: 7380ec266cdc54dda1743519876a104674a42ed7
 upstream_repo: DidierMurilloF/FielDHub
 upstream_head: 720449effcebfb525ef9cfaab128134f99c5ebda
-upstream_checked_at: 2026-10-22T09:51:33Z
+upstream_checked_at: 2026-10-29T02:38:13Z
 workflow_path: .github/workflows/fieldhub-build-app-bundle.yml
-workflow_commit: be94d3c1c09b88f50b8573c59a84adacdc3a3fc5
-workflow_sha256: db850938b194e3c14126c4e923a9b0736380cc0f649193ab0d9ad51bad97e36d
+workflow_commit: 7380ec266cdc54dda1743519876a104674a42ed7
+workflow_sha256: b182d591a049d45ec41a32561cd4b21857025eead65ed04536c2094c1d32a8f8
 app_size_mb: win-x64=102, mac-arm64=97
 closure_packages: ""
 decisions:
-  - no non-default settings - generated from the stock template
+  - PR-review hardening backported: single-source version, tag checkout, real startup smoke (v0.1.6)
+  - no non-default app settings
