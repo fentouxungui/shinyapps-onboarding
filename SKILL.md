@@ -101,9 +101,12 @@ Fast path: run `scripts/onboard-shiny-app.ps1` (steps 2-6), then `record-app.ps1
 
 ## Reliability
 
-The workflow ships a **`Smoke test`** step that loads the built bundle the way the shell does (bounded,
-prints the real error, blocks the release on failure). See `references/failure-modes.md`. Turn it off
-with `SMOKE: "off"` for apps that need network at startup.
+The workflow ships a **`Smoke test`** step that starts the built bundle with `shiny::runApp()` in a child
+process (clean library: `rlib` + base R), waits for the server and requests `/`; it fails unless an HTML
+page comes back, and prints the child's output on failure. Constructing the app object (`shinyAppDir()`)
+is not enough -- a `ui` function, an `onStart` hook or a resource-loading error can fail only once the
+server runs. See `references/failure-modes.md`. Turn it off with `SMOKE: "off"` for apps that need network
+at startup.
 
 A **module that the user explicitly opens** may fetch its own large data on first use
 (one artifact at a time, into a user-writable library, with progress and a readable
@@ -125,8 +128,9 @@ The template builds the dependency graph from the **source** index, uses `pkgTyp
 (binary then source), runs a fix-up loop, load-validates seed packages from `rlib/`,
 excludes base and recommended packages, and audits macOS binaries for XQuartz/Homebrew
 links. It also fails when any `library()`/`require()`/`pkg::` name in the app sources is
-missing from `rlib/`, because the smoke test builds the UI only -- a package loaded inside
-a click handler otherwise stays invisible until a user presses the button.
+missing from `rlib/`, because the smoke test renders the UI once but never clicks a module --
+a package loaded inside a click handler otherwise stays invisible until a user presses the
+button.
 
 Archived and GitHub-only packages go through `ARCHIVE_URLS` and must be named in
 `FORCED_PKGS`; a failed archive install aborts the build. Build-time config patches
@@ -162,6 +166,41 @@ portability: `references/macos-portability.md`.
 - Publish **Windows-only** when a macOS dependency cannot be made portable (see
   `references/macos-portability.md`): remove the `macos-14` matrix entry and record it in
   `APP_NOTES`; do not ship a mac zip that cannot start.
+
+## Field lessons (upstream PR review: FielDHub, Familia)
+
+- **Sync the fork before tagging.** Familia's fork was 13 commits behind upstream: its
+  `DESCRIPTION` said 2.0.0 while upstream and CRAN were 2.2.0. The PR diff still showed one file
+  (GitHub compares the merge base), so the gap was invisible in review. Merge upstream into the
+  fork before building, and verify `DESCRIPTION` at the checked-out ref, not in the browser.
+- **One version source, and check out the tag.** Concatenating `release.tag_name + ref_name +
+  inputs.tag` produced `2.2.0v2.2.0`; a manual run from `main` produced `mainv2.2.0`. Select
+  `inputs.tag || github.ref_name`, strip `v`, and set `actions/checkout` `ref: ${{ inputs.tag ||
+  github.ref }}`. A manual run with a tag must build that tag; a bad tag should fail at checkout,
+  never ship default-branch code.
+- **Construction is not startup.** `shinyAppDir()` returns the app object without running the
+  server; a `ui` function, `onStart` hook or resource-loading error passes silently. Both a human
+  maintainer and Copilot rejected this. The template now runs `shiny::runApp()` and GETs `/`.
+- **package-fn: a CRAN copy can mask a failed local install.** When the app is on CRAN, the
+  dependency closure installs it; if the checked-out source then fails, `install.packages()` only
+  warns and the directory check passes, so the CRAN build ships under the new tag. Exclude the
+  package from the closure, `unlink()` any existing copy, install the source, and compare the
+  installed `DESCRIPTION` version with the source.
+- **Suggests-only packages can hide a user-facing feature.** Familia's SNMF/ancestry tab needs
+  LEA, which is only in `Suggests`: the bundle built, but the app told users to install LEA. Check
+  `Suggests` during the feature inventory; add such packages to `EXTRA_PKGS` (LEA is
+  Bioconductor-only, has no system requirements and compiles on both runners), or document the
+  feature as unavailable in `APP_NOTES` and the PR.
+- **The icon must be the app's own identity.** Familia's store icon was the Breedverse logo
+  (`breedverse_logo.png`) although the repo ships `inst/app/www/familia_logo.png`. Pick the file
+  named for the app, then render the 512 px result and look at it; a parent-program or dependency
+  logo is a wrong icon, not a style choice.
+- **Reply with evidence after review.** State point by point what changed and how it was verified:
+  the test tag, both platforms built, the real startup check passed, and the Windows bundle
+  installed through the ShinyApps client launches and runs. Then explain releases: pushing a `v*`
+  tag builds automatically; a manual run with an existing tag does the same; an empty tag builds
+  the branch without a Release where the generated workflow allows it. Keep the PR to one workflow
+  file and answer bot reviews in one summary comment (resolve the inline threads).
 
 ## Security
 

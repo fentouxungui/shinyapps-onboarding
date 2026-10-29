@@ -15,8 +15,8 @@ between "CI produced a zip" and "a release channel a maintainer can accept".
    configured repositories is a hard error, not a `WARN` followed by silently dropping the
    package. Pin CRAN inputs to a snapshot date and publish the resolved package list.
 4. **Clean-library smoke.** The smoke test must use only the bundle's `rlib` plus base R.
-   `R_LIBS_USER` / `R_LIBS_SITE` must be empty, otherwise a runner library can mask a
-   missing bundle dependency.
+   Set `.libPaths(c(rlib, .Library))` in the child and fail when any other path is present;
+   otherwise a runner library can mask a missing bundle dependency.
 5. **Report toolchain.** If the app renders R Markdown, install and check Pandoc in CI.
    Pandoc and LaTeX are not part of the bundle; document the runtime requirement (PDF
    additionally needs LaTeX).
@@ -24,8 +24,8 @@ between "CI produced a zip" and "a release channel a maintainer can accept".
    `contents: write`. Publish SHA-256 files, build/source metadata and a dependency lock.
    Do not rewrite existing release notes.
 7. **Shell testing boundary.** A CI bundle is not a tested desktop install. Test the real
-   ShinyApps shell on Windows/macOS separately; do not claim shell E2E from a successful
-   `shinyAppDir()` smoke.
+   ShinyApps shell on Windows/macOS separately; do not claim shell E2E from a green CI
+   smoke, which starts the server and requests `/` but is not an installed store run.
 
 ## The version-policy decision
 

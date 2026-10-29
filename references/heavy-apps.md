@@ -142,10 +142,10 @@ BPCells needs `readr` and `hexbin`; without that step the install aborts. GitHub
 dependencies of an archived package (e.g. `leidenbase`) still have to be listed in
 `ARCHIVE_URLS` themselves, in dependency order.
 
-## 5. The smoke test loads the UI, not every module
+## 5. The smoke test renders the UI, not every module
 
-`shinyAppDir()` builds the UI object; it does not evaluate click handlers. `library(PCSF)`
-inside `observeEvent()` was therefore invisible to a green smoke test. Two defenses:
+`shiny::runApp()` plus a request to `/` evaluates the UI, but not click handlers.
+`library(PCSF)` inside `observeEvent()` is therefore invisible to a green smoke test. Two defenses:
 
 1. The workflow now checks that every `library()`/`require()`/`pkg::` name found in the
    app sources exists in `rlib/` (or is base/recommended, or listed in `SOFT_PKGS`), and

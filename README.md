@@ -125,12 +125,13 @@ PDF output still needs LaTeX locally).
 
 ## Built-in smoke test
 
-The workflow includes a **`Smoke test`** step: after building, it unzips the bundle, puts
-`rlib/` on `.libPaths()`, and loads the app the way the ShinyApps shell does -- in a bounded child
-process (`callr::r` with a timeout) that cannot hang and prints the exact R error on failure. A failed
-start blocks the release. Toggle with `SMOKE: "on"|"off"` and `SMOKE_TIMEOUT_SEC` (default 300).
+The workflow includes a **`Smoke test`** step: after building, it unzips the bundle, puts only
+`rlib/` + base R on `.libPaths()`, starts the app with `shiny::runApp()` in a supervised child
+process, and requests `/`. It passes only on an HTTP 200 HTML page, prints the child's output
+on failure, and blocks the release. Toggle with `SMOKE: "on"|"off"` and `SMOKE_TIMEOUT_SEC`
+(default 300).
 
-The smoke test builds the UI only. A separate check fails the build when any
+The smoke test renders the UI once but never clicks a module. A separate check fails the build when any
 `library()`/`require()`/`pkg::` name in the app sources is missing from `rlib/`, which
 catches packages loaded inside click handlers. It is still not a substitute for clicking
 through each module in the real ShinyApps shell.
@@ -145,8 +146,8 @@ XQuartz/Homebrew links. Archived/GitHub-only packages are installed from `ARCHIV
 verified against `FORCED_PKGS`; `PATCH_SCRIPT` applies build-time config patches inside
 `bundle/app/`. Heavy-app playbook:
 [references/heavy-apps.md](references/heavy-apps.md); macOS dylibs:
-[references/macos-portability.md](references/macos-portability.md). The smoke test runs with `R_LIBS_USER`/`R_LIBS_SITE` cleared and
-only `rlib` + base R on `.libPaths()`, so a runner library cannot mask a missing bundle
+[references/macos-portability.md](references/macos-portability.md). The smoke test puts only `rlib` + base R
+on `.libPaths()` and rejects any other path, so a runner library cannot mask a missing bundle
 dependency. The build job is `contents: read`; only the release job may write, and it
 publishes `*.sha256`, `meta-*.json` and `deps-*.json`. Full list:
 [references/failure-modes.md](references/failure-modes.md).

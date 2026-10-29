@@ -88,8 +88,8 @@ Two pitfalls seen in practice:
 - **Copying the first fix over the whole install block.** Rewriting the portability block
   once deleted the `ARCHIVE_URLS` and fix-up loops; the build stayed green while a package
   was never installed. Re-read the whole `Assemble bundle` step after any edit.
-- **Trusting a green macOS smoke as "works on Mac".** `shinyAppDir()` does not touch every
-  module; test the real ShinyApps shell.
+- **Trusting a green macOS smoke as "works on Mac".** A server + `/` smoke does not touch
+  every module; test the real ShinyApps shell.
 
 ## Verify before publishing
 

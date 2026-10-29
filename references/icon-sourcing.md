@@ -37,3 +37,12 @@ logo, never a screenshot or a platform logo. Search in this order:
   generic image, keep the current one. Restore mistakes with
   `git checkout <good-commit> -- icons/<id>.png`.
 - Apply all replacements in one commit: `icons: use real upstream logos ...`.
+
+## Verify identity, not just presence
+
+A logo file that exists is not necessarily the app's logo. Familia's repository ships both
+`inst/app/www/familia_logo.png` (the app) and `inst/app/www/breedverse_logo.png` (the parent
+program); the store icon was the Breedverse one. Prefer the file whose name matches the app,
+then open the 512x512 render and confirm it carries the app's name/mark. Never ship a
+parent-program, dependency, institution or platform logo. When a repository has several
+candidate logos, compare the rendered results and record which file you chose in `NOTES.md`.

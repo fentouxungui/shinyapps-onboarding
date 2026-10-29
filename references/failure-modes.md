@@ -161,7 +161,8 @@ These come from multi-module apps (xOmicsShiny, ScRDAVis). Full playbook:
   the dependency stack; the full ScRDAVis bundle cannot fit under the 2 GiB release limit.
   Drop or guard the heavy feature, and say which module is disabled in `APP_NOTES`.
 - **Version assembled from several refs.** `mainv3.0.1` came from concatenating
-  `release.tag_name` + `ref_name` + `inputs.tag`. Use one source (`inputs.tag || github.ref_name`).
+  `release.tag_name` + `ref_name` + `inputs.tag`. Use one source (`inputs.tag || github.ref_name`)
+  and check out that same tag (`ref: ${{ inputs.tag || github.ref }}`).
 - **No upstream license.** A repo with no `LICENSE` needs explicit permission from the
   author before listing, independent of whether the CI now works.
 - **A GitHub package is not at its repo root.** BPCells is `r/` inside `bnprks/BPCells`;
@@ -175,6 +176,35 @@ These come from multi-module apps (xOmicsShiny, ScRDAVis). Full playbook:
 - **macOS may be impossible, not just hard.** `monocle3` -> `ggrastr` -> `Cairo`/XQuartz
   cannot be made portable. Publish Windows-only, remove the `macos-14` matrix entry, and
   record the limitation instead of shipping a mac asset you cannot start.
+
+## Review findings (upstream PR: FielDHub, Familia)
+
+- **The fork is behind upstream.** Familia's fork `main` was 13 commits behind:
+  `DESCRIPTION` 2.0.0 vs upstream/CRAN 2.2.0. The PR diff still showed one file because
+  GitHub compares the merge base. Merge upstream into the fork, then verify `DESCRIPTION`
+  at the tag being built; building the stale default branch ships old source under a new tag.
+- **A manual run builds the default branch, not the tag.** `inputs.tag` decides the Release
+  that receives the assets, but `actions/checkout` follows the event ref. Run from `main`
+  with `v2.2.0` and the bundle contains `main`. Set
+  `ref: ${{ inputs.tag || github.ref }}`.
+- **The smoke test constructs the app but never starts it.** `shiny::shinyAppDir(".")`
+  returns a `shiny.appobj` without running the server, so a `ui` function, an `onStart`
+  hook or a missing resource passes while the real app would fail. Start the bundle with
+  `shiny::runApp()` in a child process, GET `/`, and require HTTP 200 + HTML. The template
+  now does this; re-onboard any app still built with an older per-app workflow.
+- **A CRAN copy masks a failed `package-fn` install.** `seed` contains the app package, so
+  `install.packages(closure)` installs its CRAN version first. If installing the checked-out
+  source fails, `install.packages()` warns and the existing CRAN directory satisfies
+  `pkg %in% have()`, publishing CRAN code under the tag. Exclude the package from the
+  closure, `unlink()` the old copy, and verify the installed `DESCRIPTION` version equals
+  the source version.
+- **A Suggests-only package backs a feature.** Familia's SNMF/ancestry modules need LEA,
+  listed only in `Suggests`; the build passed and the app displayed "Install the LEA package
+  to use SNMF". Scan `Suggests` during the feature inventory, add such packages to
+  `EXTRA_PKGS` and let the load validation cover them, or record the disabled feature.
+- **The store icon is another product's logo.** Familia's icon was `breedverse_logo.png`
+  (the parent program), not `familia_logo.png`. See `references/icon-sourcing.md`: verify
+  the app identity in the rendered 512 px icon.
 
 ## Ops
 

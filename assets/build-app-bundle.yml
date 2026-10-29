@@ -1,13 +1,16 @@
 # =====================================================================
-#  ShinyApps app-layer bundle builder (Route A) -- HARDENED v2.
+#  ShinyApps app-layer bundle builder (Route A) -- HARDENED v3.
 #  Builds prebuilt desktop bundles (win-x64, mac-arm64) for an R/Shiny app
 #  and attaches them to a GitHub Release. No shell rebuild. R 4.6.1.
 #
-#  This is the exmort-review revision of assets/build-app-bundle.yml.
-#  It adds: optional tag/DESCRIPTION version enforcement, one trigger,
-#  immutable release assets, fail-fast dependency resolution, an optional
-#  CRAN snapshot, a clean-library smoke test, optional pinned Pandoc,
-#  least-privilege permissions, and published checksums/metadata.
+#  This is the exmort-review revision, updated after the FielDHub/Familia
+#  upstream PR reviews. v3 adds: the smoke test starts shiny::runApp() and
+#  requests /; package-fn removes any CRAN copy and verifies the installed
+#  DESCRIPTION; httpuv joins the build helpers. v2 added: optional
+#  tag/DESCRIPTION version enforcement, one trigger, immutable release assets,
+#  fail-fast dependency resolution, an optional CRAN snapshot, a clean-library
+#  smoke test, optional pinned Pandoc, least-privilege permissions, and
+#  published checksums/metadata.
 #
 #  Modes (auto-detected when APP_MODE=auto):
 #   * flat           - the repo IS the app (app.R, or ui.R+server.R, or legacy
@@ -124,7 +127,7 @@ jobs:
 
       - name: Install build helpers
         shell: bash
-        run: Rscript -e 'install.packages(c("jsonlite","zip","digest","BiocManager","callr","curl"), repos="https://cloud.r-project.org")'
+        run: Rscript -e 'install.packages(c("jsonlite","zip","digest","BiocManager","callr","curl","httpuv"), repos="https://cloud.r-project.org")'
 
       - name: Install macOS build dependencies (optional)
         if: ${{ env.MACOS_BREW_DEPS != '' && runner.os == 'macOS' }}
@@ -262,6 +265,9 @@ jobs:
           if (strict_deps == "on" && length(closure_missing)) stop("unresolved transitive dependencies: ", paste(closure_missing, collapse = ", "))
           closure <- if (strict_deps == "on") setdiff(closure_all, base_pkgs) else setdiff(intersect(closure_all, rownames(db)), base_pkgs)
           if (strict_deps != "on" && length(closure_missing)) cat("WARN dropped transitive dependencies:", paste(closure_missing, collapse = ", "), "\n")
+          # package-fn installs the app package from the checked-out source
+          # below; a CRAN copy must not stand in for a failed local install.
+          if (mode == "package-fn" && nzchar(pkg_name)) closure <- setdiff(closure, pkg_name)
           cat("closure size:", length(closure), "\n")
 
           options(pkgType = "both")
@@ -282,7 +288,23 @@ jobs:
               Sys.setenv(PATH = oldpath, PKG_CONFIG_PATH = old_pc, PKG_CONFIG_LIBDIR = old_pcl)
             }
           }
-          if (mode == "package-fn") { install.packages(pkgroot, lib = lib, repos = NULL, type = "source", dependencies = FALSE); if (!pkg_name %in% have()) stop("app package failed to install: ", pkg_name) }
+          if (mode == "package-fn") {
+            # The app package is installed from the checked-out source, never
+            # from CRAN: remove any existing copy and verify the installed
+            # DESCRIPTION, so a failed source install cannot be masked by a
+            # stale CRAN build.
+            unlink(file.path(lib, pkg_name), recursive = TRUE)
+            err <- tryCatch({
+              install.packages(pkgroot, lib = lib, repos = NULL, type = "source", dependencies = FALSE)
+              NULL
+            }, error = function(e) e)
+            if (!is.null(err)) stop("app package install error: ", conditionMessage(err))
+            installed <- tryCatch(read.dcf(file.path(lib, pkg_name, "DESCRIPTION")), error = function(e) NULL)
+            if (is.null(installed)) stop("app package failed to install from source: ", pkg_name)
+            if (!identical(unname(installed[1, "Version"]), unname(dcf[1, "Version"])))
+              stop("installed app package version ", installed[1, "Version"],
+                   " does not match the source version ", dcf[1, "Version"])
+          }
           install_archive <- function(u) {
             f <- file.path(tempdir(), basename(u)); download.file(u, f, mode = "wb", quiet = TRUE)
             if (!file.exists(f) || file.size(f) < 1000) stop("ARCHIVE_URLS download failed: ", u)
@@ -458,8 +480,10 @@ jobs:
           appdir <- file.path(tmp, "app"); lib <- file.path(tmp, "rlib")
           if (!dir.exists(appdir) || !dir.exists(lib)) stop("smoke: unexpected bundle layout")
           timeout <- suppressWarnings(as.integer(Sys.getenv("SMOKE_TIMEOUT_SEC", "300"))); if (is.na(timeout) || timeout < 30) timeout <- 300
-          cat(sprintf("smoke: loading app '%s' (rlib on .libPaths)\n", app_id))
-          load_app <- function(appdir, lib) {
+          # Start the app in a child process with a clean library and request
+          # its root page. Constructing the app object is not enough: a ui
+          # function or a startup hook can fail only once the server runs.
+          serve <- function(appdir, lib, port) {
             .libPaths(c(lib, .Library))
             if (!identical(normalizePath(.libPaths()[1], winslash = "/", mustWork = TRUE),
                            normalizePath(lib, winslash = "/", mustWork = TRUE))) {
@@ -470,19 +494,36 @@ jobs:
             extra <- setdiff(actual, allowed)
             if (length(extra)) stop("smoke: unexpected library paths: ", paste(extra, collapse = ", "))
             old <- setwd(appdir); on.exit(setwd(old), add = TRUE)
-            obj <- tryCatch(shiny::shinyAppDir("."), error = function(e) e)
-            if (inherits(obj, "error")) stop("shinyAppDir failed: ", conditionMessage(obj))
-            if (!inherits(obj, "shiny.appobj")) stop("app did not produce a shiny app object")
-            invisible(TRUE)
+            shiny::runApp(".", port = port, host = "127.0.0.1",
+                          launch.browser = FALSE, quiet = TRUE)
           }
-          res <- tryCatch(callr::r(load_app, args = list(appdir = appdir, lib = lib), timeout = timeout, show = TRUE,
-                                   env = c(R_LIBS_USER = "", R_LIBS_SITE = "")),
-                          error = function(e) e)
-          if (inherits(res, "error")) {
-            cat("\n---- smoke error ----\n"); cat(conditionMessage(res), "\n")
-            stop("smoke test FAILED: the app did not start: ", conditionMessage(res))
+          port <- httpuv::randomPort()
+          proc <- callr::r_bg(serve, args = list(appdir = appdir, lib = lib, port = port),
+                              supervise = TRUE)
+          on.exit(try(proc$kill(), silent = TRUE), add = TRUE)
+          url <- sprintf("http://127.0.0.1:%d/", port)
+          deadline <- Sys.time() + timeout
+          out <- character()
+          repeat {
+            out <- c(out, proc$read_output_lines(), proc$read_error_lines())
+            if (!proc$is_alive()) {
+              cat(paste(out, collapse = "\n"), "\n")
+              stop("smoke test FAILED: the app exited before serving a page")
+            }
+            served <- tryCatch({
+              h <- curl::new_handle(connecttimeout = 5L, timeout = 10L)
+              r <- curl::curl_fetch_memory(url, handle = h)
+              r$status_code == 200L && length(r$content) > 0 &&
+                grepl("<!doctype|<html", rawToChar(r$content), ignore.case = TRUE)
+            }, error = function(e) FALSE)
+            if (isTRUE(served)) break
+            if (Sys.time() >= deadline) {
+              cat(paste(out, collapse = "\n"), "\n")
+              stop("smoke test FAILED: ", url, " did not serve a page within ", timeout, "s")
+            }
+            Sys.sleep(1)
           }
-          cat("SMOKE OK\n")
+          cat("SMOKE OK:", url, "served an HTML page\n")
 
       - uses: actions/upload-artifact@v4
         with:
