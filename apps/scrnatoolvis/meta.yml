@@ -1,0 +1,32 @@
+id: scrnatoolvis
+name: scRNAtoolVis
+status: candidate
+upstream: fentouxungui/scRNAtoolVis
+fork: fentouxungui/scRNAtoolVis
+license: MIT
+app_mode: flat
+platforms: win-x64
+version: 0.1.1
+tag: v0.1.1
+release_url: https://github.com/fentouxungui/scRNAtoolVis/releases/tag/v0.1.1
+build_run: https://github.com/fentouxungui/scRNAtoolVis/actions/runs/41012187469
+template: hardened v3 (flat + archive deps)
+patch_file: ""
+recorded_at: 2026-10-30
+built_at: ""
+source_repo: fentouxungui/scRNAtoolVis
+source_commit: 6ecef05df618e1991be2e7828b2eca9ae04665ae
+upstream_repo: fentouxungui/scRNAtoolVis
+upstream_head: 80788189da6372413a3ac53b26a2976e23285981
+upstream_checked_at: 2026-10-30T00:00:00Z
+workflow_path: .github/workflows/scrnatoolvis-build-app-bundle.yml
+workflow_commit: 1959b01e09d03f410d88c0dfcfc0477f07cfe337
+workflow_sha256: 71d7580a33ccaaf6d93b4cac9116600dd8d306c02e104a24eec5486fa2229dfb
+app_size_mb: "win-x64=323 (CI artifact; release asset pending)"
+closure_packages: ""
+decisions:
+  - flat bundle of inst/shinyapp; scRNAtoolVis is installed from the pinned v0.1.1 archive and the app reads package functions and data from that installed package
+  - qs2 replaces the archived qs package; .rds and .qs2 uploads are supported, legacy .qs is not compatible with qs2
+  - GitHub-only dependencies jjAnno, jjPlot and ggunchull are installed from pinned archive tarballs; SOFT_PKGS bypasses the CRAN/Bioc index and FORCED_PKGS verifies installation
+  - macOS is deferred because the ggunchull dependency chain fails on macos-14; the current workflow publishes win-x64 only
+  - catalog publish is pending a GitHub Release with a bundle asset; a successful CI artifact alone is not a catalog asset
