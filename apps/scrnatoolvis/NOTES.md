@@ -1,6 +1,6 @@
 # scRNAtoolVis (`scrnatoolvis`)
 
-- **Status:** `candidate` -- the Windows bundle builds in CI, but the catalog still needs a GitHub Release asset.
+- **Status:** `pending` -- the Windows bundle builds in CI, but the catalog still needs a GitHub Release asset.
 - **Upstream:** https://github.com/fentouxungui/scRNAtoolVis
 - **Fork:** https://github.com/fentouxungui/scRNAtoolVis
 - **Release:** https://github.com/fentouxungui/scRNAtoolVis/releases/tag/v0.1.1 (`v0.1.1`)

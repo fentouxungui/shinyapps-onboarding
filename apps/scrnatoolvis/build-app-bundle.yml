@@ -1,0 +1,22 @@
+# Pointer snapshot for the scrnatoolvis candidate record.
+# The executable workflow is maintained at:
+# https://github.com/fentouxungui/scRNAtoolVis/blob/master/.github/workflows/scrnatoolvis-build-app-bundle.yml
+# Materialize the full snapshot with scripts/sync-workflow.ps1 before promotion.
+name: Build app bundle
+
+on:
+  workflow_dispatch:
+
+env:
+  APP_ID: "scrnatoolvis"
+
+jobs:
+  pointer:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Smoke test
+        run: echo "Full workflow snapshot is pending; see WORKFLOW.md."
+      - uses: actions/upload-artifact@v4
+        with:
+          name: scrnatoolvis-workflow-pointer
+          path: WORKFLOW.md
