@@ -1,6 +1,6 @@
 ---
 name: shinyapps-onboarding
-description: Onboard a Shiny-app GitHub repository into the ShinyApps desktop app store (fentouxungui/ShinyApps) end to end - feasibility assessment, fork, a per-repo prebuilt bundle workflow, tag-driven GitHub Actions release, catalog entry and icon, and an upstream pull request. Use when the user wants to publish or "上架" a Shiny app repo to the ShinyApps store, add a desktop bundle for a Shiny app, or reuse the hardened "Route A" prebuilt-bundle onboarding.
+description: Onboard a Shiny-app GitHub repository into the ShinyApps desktop app store (fentouxungui/ShinyApps) end to end - feasibility assessment, fork, a per-repo prebuilt bundle workflow, GitHub Release-driven Actions build, catalog entry and icon, and an upstream pull request. Use when the user wants to publish or "上架" a Shiny app repo to the ShinyApps store, add a desktop bundle for a Shiny app, or reuse the hardened "Route A" prebuilt-bundle onboarding.
 ---
 
 # ShinyApps onboarding
@@ -20,7 +20,7 @@ workflow.
 - add a prebuilt desktop bundle so users need no local R install;
 - reproduce the onboarding done for iSEE, UCSCXenaShiny, spatialLIBD, beeRapp,
   CSBB-Shiny, SeuratExplorer, scConvertShiny, shinyCircos-V2.0, UpSetR-shiny, bestDEG,
-  GraphBio, splitKbCompare and ShinyStan.
+  GraphBio, splitKbCompare, ShinyStan and shiny-genome-stats.
 
 Do **not** use for non-Shiny apps, or apps that need a server-side engine the bundle
 cannot ship (give a feasibility caveat).
@@ -48,14 +48,20 @@ cannot ship (give a feasibility caveat).
    `BSgenome.*`), also size the bundle and plan build-time patches before the first
    build -- see `references/heavy-apps.md`. Proceed only when high.
 2. **Fork** the upstream repo.
-3. **Generate + push** `.github/workflows/<id>-build-app-bundle.yml` from
+3. **Generate + push** `.github/workflows/build-app-bundle.yml` from
    `assets/build-app-bundle.yml`, filling the `env:` block -- every `__PLACEHOLDER__`,
    including `APP_MODE`, `STRICT_VERSION`, `STRICT_DEPS`, `CRAN_SNAPSHOT`,
    `PANDOC_VERSION`, `MACOS_BREW_DEPS`, `PKG_VERSION_PACKAGES` and
    `PKG_VERSION_SUFFIX`. Unsubstituted `__X__` values fall back to safe defaults.
-4. **Tag** `vX.Y.Z` and push -> builds both platform bundles and creates the Release.
+   Use the standard filename; do **not** prefix it with the app id.
+4. **Tag** `vX.Y.Z`, push the tag, then **publish a GitHub Release** for it. The
+   standard workflow is release-only (`release: published`); pushing a tag alone no
+   longer starts a build. A manual dispatch with an existing tag is the fallback.
 5. **Onboard**: append the entry from `assets/catalog-entry.yml` to
    `ShinyApps/catalog/apps.yml`, add `ShinyApps/icons/<id>.png` (from the upstream repo's own logo), push.
+   The generated entry points at the fork while testing; after the upstream PR is
+   merged and upstream publishes its own release, change `repo:` to the upstream
+   repository so the store follows upstream, not the fork.
 6. **Open the upstream PR** (CI-only; see `references/pr-template.md`).
 7. **Record it** with `scripts/record-app.ps1 -AppId <id> -Fork <owner>/<repo> -Upstream
    <owner>/<repo> -Tag <tag>`: it snapshots the workflow **at the tag**, the asset sizes and
@@ -76,17 +82,27 @@ Fast path: run `scripts/onboard-shiny-app.ps1` (steps 2-6), then `record-app.ps1
   `DESCRIPTION` `Version`; a repo without a `DESCRIPTION` uses the tag as the store
   version. Use `on` to require a `DESCRIPTION`, and `off` only for a deliberate
   mismatch documented in `APP_NOTES` and the PR. Never ship a silent mismatch.
-- **Immutable releases.** One tag trigger; refuse to overwrite a published release
-  asset. A second trigger (`release: published`) double-builds the same tag.
+- **One workflow filename.** Always `.github/workflows/build-app-bundle.yml`; do not
+  prefix it with the app id. The archive, recorder, validator, and PR template all
+  expect this name.
+- **Release-only trigger.** Use `on: release: published` plus `workflow_dispatch`.
+  Do not add `push: tags` alongside it: that double-builds the same tag. A tag push
+  alone does not build; create/publish the GitHub Release after tagging.
+- **Immutable releases.** Refuse to overwrite a published release asset.
+- **Least privilege.** The build job is `contents: read`; only the release job is
+  `contents: write`. Remove unused `GITHUB_PAT`/`GITHUB_TOKEN` env entries.
+- **One version source.** Resolve the version from the dispatch input, then the
+  release tag; never concatenate refs. Check out that ref and require the tag to
+  equal `DESCRIPTION` when a package is present.
 - **Fail loud.** Required and transitive dependencies missing from the configured
   repositories fail the build (`STRICT_DEPS: "on"`); list genuinely optional packages
   in `SOFT_PKGS` instead of letting them disappear.
 - **Use the app's own icon.** Follow `references/icon-sourcing.md`: repository logo files -> README/HTML -> pkgdown -> the project site linked from the repo About/README -> generate only as a last resort. Reject platform logos, screenshots and badges; never overwrite an already-correct icon.
 - **PR quality is part of onboarding.** Every upstream PR must use
   `references/pr-template.md`: explain what ShinyApps is, why the workflow exists, the
-  exact diff scope (one YAML file, no app code), the impact (Actions minutes only on tags,
-  credit), what the maintainer must do, and an explicit opt-out. One-line "adds a workflow"
-  PRs are not acceptable and damage the store's reputation.
+  exact diff scope (one YAML file, no app code), the impact (Actions minutes only when a
+  Release is published, credit), what the maintainer must do, and an explicit opt-out.
+  One-line "adds a workflow" PRs are not acceptable and damage the store's reputation.
 - **Verify** `catalog.json` shows the app with the expected artifacts + `sha256`
   (Windows-only apps have no mac asset; document the deviation).
 - **Patched packages need unique versions.** If you vendor dylibs into a package (Cairo,
@@ -158,7 +174,9 @@ portability: `references/macos-portability.md`.
   still hard -- guard or drop that module. Source packages needing openssl/hdf5 use
   `MACOS_BREW_DEPS`. Never put `dylibbundler` in a loop -- it hangs; see
   `references/macos-portability.md`.
-- Poll CI by workflow name **and** the tag on `head_branch`; otherwise a stale failed run matches first.
+- With the release-only trigger, poll `actions/runs?event=release` and match
+  `.github/workflows/build-app-bundle.yml` (and the tag when available); a stale
+  tag-push run must not be mistaken for the release build.
 - `cran/*` repos are read-only mirrors: onboard the fork but do not open an upstream PR.
 - `ARCHIVE_URLS` accepts a monorepo tarball whose package sits in a subdirectory (BPCells in
   `r/`): the template locates the single `DESCRIPTION` and installs that package's Imports
@@ -175,9 +193,9 @@ portability: `references/macos-portability.md`.
   fork before building, and verify `DESCRIPTION` at the checked-out ref, not in the browser.
 - **One version source, and check out the tag.** Concatenating `release.tag_name + ref_name +
   inputs.tag` produced `2.2.0v2.2.0`; a manual run from `main` produced `mainv2.2.0`. Select
-  `inputs.tag || github.ref_name`, strip `v`, and set `actions/checkout` `ref: ${{ inputs.tag ||
-  github.ref }}`. A manual run with a tag must build that tag; a bad tag should fail at checkout,
-  never ship default-branch code.
+  `github.event.inputs.tag || github.event.release.tag_name`, strip `v`, and set
+  `actions/checkout` `ref: ${{ github.event.inputs.tag || github.ref }}`. A manual run with a
+  tag must build that tag; a bad tag should fail at checkout, never ship default-branch code.
 - **Construction is not startup.** `shinyAppDir()` returns the app object without running the
   server; a `ui` function, `onStart` hook or resource-loading error passes silently. Both a human
   maintainer and Copilot rejected this. The template now runs `shiny::runApp()` and GETs `/`.
@@ -197,15 +215,40 @@ portability: `references/macos-portability.md`.
   logo is a wrong icon, not a style choice.
 - **Reply with evidence after review.** State point by point what changed and how it was verified:
   the test tag, both platforms built, the real startup check passed, and the Windows bundle
-  installed through the ShinyApps client launches and runs. Then explain releases: pushing a `v*`
-  tag builds automatically; a manual run with an existing tag does the same; an empty tag builds
-  the branch without a Release where the generated workflow allows it. Keep the PR to one workflow
-  file and answer bot reviews in one summary comment (resolve the inline threads).
+  installed through the ShinyApps client launches and runs. Then explain releases: publishing a
+  GitHub Release for the `v*` tag starts the build automatically; a manual run with an existing
+  tag does the same; a tag push alone does not. Keep the PR to one workflow file
+  (`.github/workflows/build-app-bundle.yml`) and answer bot reviews in one summary comment
+  (resolve the inline threads).
+
+## Field lessons (shiny-genome-stats)
+
+- **Use the standard workflow filename.** `.github/workflows/build-app-bundle.yml`
+  is the convention; the old `<id>-build-app-bundle.yml` name is legacy and should
+  not be used for new onboarding. GitHub shows the workflow name, not the filename,
+  so a shared filename causes no confusion across apps.
+- **Release-only, not tag-only.** The upstream maintainer preferred one trigger.
+  Publish a GitHub Release after tagging; `release: published` builds once, while a
+  `push: tags` trigger duplicates the build. Manual dispatch with an existing tag
+  remains available.
+- **Copilot/reviewer findings worth fixing proactively.** Remove unused
+  `GITHUB_PAT`/`GITHUB_TOKEN` env entries; keep the top-level permissions at
+  `contents: read` with `contents: write` only on the release job; resolve the
+  version without concatenating `release.tag_name`, `ref_name`, and `inputs.tag`;
+  and check out the tag being built.
+- **README is part of the PR.** Add a short "Desktop version" section: users can
+  install/run in the ShinyApps store without installing R or configuring an
+  environment. Link the ShinyApps download page, recommend **Manage Apps → All**
+  → search → **Install**, and keep **Install from Bundle** as the manual fallback.
+- **After the upstream merge, switch the catalog to upstream.** Test against the
+  fork release while onboarding; once the upstream release exists, set
+  `catalog/apps.yml` `repo:` to the upstream repository and verify the vX.Y.Z
+  Windows/macOS assets resolve from upstream.
 
 ## Security
 
 `scripts/onboard-shiny-app.ps1` reads the GitHub token via `git credential fill` into the
-process environment only and performs fork/push/tag/release/PR on the user's behalf; it
+process environment only and performs fork/push/tag/published-release/PR on the user's behalf; it
 requires a `repo`+`workflow` token. Review before running. The CI build job is
 `contents: read`; only the release job may write.
 

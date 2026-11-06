@@ -28,7 +28,7 @@ param(
 )
 $ErrorActionPreference = 'Stop'
 if ($AppId -notmatch '^[a-z0-9][a-z0-9-]*$') { throw "AppId must match ^[a-z0-9][a-z0-9-]*$" }
-if (-not $WorkflowPath) { $WorkflowPath = ".github/workflows/$AppId-build-app-bundle.yml" }
+if (-not $WorkflowPath) { $WorkflowPath = ".github/workflows/build-app-bundle.yml" }
 
 $tok = $env:GITHUB_TOKEN
 if (-not $tok) {

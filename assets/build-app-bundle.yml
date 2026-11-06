@@ -1,16 +1,19 @@
 # =====================================================================
-#  ShinyApps app-layer bundle builder (Route A) -- HARDENED v3.
+#  ShinyApps app-layer bundle builder (Route A) -- HARDENED v4.
 #  Builds prebuilt desktop bundles (win-x64, mac-arm64) for an R/Shiny app
 #  and attaches them to a GitHub Release. No shell rebuild. R 4.6.1.
 #
-#  This is the exmort-review revision, updated after the FielDHub/Familia
-#  upstream PR reviews. v3 adds: the smoke test starts shiny::runApp() and
-#  requests /; package-fn removes any CRAN copy and verifies the installed
-#  DESCRIPTION; httpuv joins the build helpers. v2 added: optional
-#  tag/DESCRIPTION version enforcement, one trigger, immutable release assets,
-#  fail-fast dependency resolution, an optional CRAN snapshot, a clean-library
-#  smoke test, optional pinned Pandoc, least-privilege permissions, and
-#  published checksums/metadata.
+#  This is the genome-stats-review revision, based on the merged
+#  MPUSP/shiny-genome-stats PR. v4 uses a release-only trigger (publishing a
+#  GitHub Release; a tag push alone does not build), checks out the dispatch
+#  tag or release ref, resolves the version without concatenating refs, and
+#  removes unused token env entries. v3 added: the smoke test starts
+#  shiny::runApp() and requests /; package-fn removes any CRAN copy and
+#  verifies the installed DESCRIPTION; httpuv joins the build helpers. v2
+#  added: optional tag/DESCRIPTION version enforcement, immutable release
+#  assets, fail-fast dependency resolution, an optional CRAN snapshot, a
+#  clean-library smoke test, optional pinned Pandoc, least-privilege
+#  permissions, and published checksums/metadata.
 #
 #  Modes (auto-detected when APP_MODE=auto):
 #   * flat           - the repo IS the app (app.R, or ui.R+server.R, or legacy
@@ -23,14 +26,16 @@
 # =====================================================================
 name: Build app bundle
 
+# Publish a GitHub Release to build; a tag push alone does not trigger this
+# workflow. A manual run with an existing tag is also supported.
 on:
-  push:
-    tags: ['v*']
+  release:
+    types: [published]
   workflow_dispatch:
     inputs:
       tag:
-        description: "Existing tag to build and publish (e.g. v0.2.0)"
-        required: true
+        description: "Existing tag to build and publish (e.g. v0.2.0); empty uses DESCRIPTION"
+        required: false
         type: string
 
 permissions:
@@ -102,7 +107,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.tag || github.ref }}
+          ref: ${{ github.event.inputs.tag || github.ref }}
           fetch-depth: 0
 
       - uses: r-lib/actions/setup-r@v2
@@ -152,11 +157,21 @@ jobs:
 
       - name: Resolve and validate version
         shell: bash
+        env:
+          INPUT_TAG: ${{ github.event.inputs.tag }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
         run: |
-          V="${{ inputs.tag || github.ref_name }}"
+          # Prefer an explicit dispatch tag, then the tag of the current
+          # release. Never concatenate refs: on a release event ref_name is the
+          # tag too, so concatenating would produce e.g. "v0.1.0v0.1.0".
+          V="${INPUT_TAG:-${RELEASE_TAG:-}}"
+          if [ -z "$V" ] && [[ "${GITHUB_REF:-}" == refs/tags/* ]]; then V="${GITHUB_REF_NAME}"; fi
           V="${V#v}"
           if [ -z "$V" ]; then
-            echo "::error::cannot resolve version from tag"
+            V="$(sed -n 's/^Version:[[:space:]]*//p' "${PKG_SUBDIR:-.}/DESCRIPTION" 2>/dev/null | head -n1)"
+          fi
+          if [ -z "$V" ]; then
+            echo "::error::cannot resolve version: pass a tag or provide a DESCRIPTION"
             exit 1
           fi
           echo "VERSION=$V" >> "$GITHUB_ENV"
@@ -164,9 +179,6 @@ jobs:
 
       - name: Assemble bundle (app/ + rlib/ + manifest.json)
         shell: Rscript {0}
-        env:
-          GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           app_id  <- Sys.getenv("APP_ID")
           mode    <- Sys.getenv("APP_MODE"); if (!nzchar(mode) || grepl("^__", mode)) mode <- "auto"
@@ -536,7 +548,7 @@ jobs:
 
   release:
     needs: bundle
-    if: startsWith(github.ref, 'refs/tags/v') || inputs.tag != ''
+    if: github.event_name == 'release' || github.event.inputs.tag != ''
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -550,7 +562,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         shell: bash
         run: |
-          TAG="${{ inputs.tag || github.ref_name }}"
+          TAG="${{ github.event.inputs.tag || github.ref_name }}"
           if gh release view "$TAG" >/dev/null 2>&1; then
             existing="$(gh release view "$TAG" --json assets --jq '.assets[].name')"
             for f in artifacts/*; do
@@ -563,7 +575,7 @@ jobs:
           fi
       - uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ inputs.tag || github.ref_name }}
+          tag_name: ${{ github.event.inputs.tag || github.ref_name }}
           files: |
             artifacts/*.zip
             artifacts/*.sha256

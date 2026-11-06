@@ -4,7 +4,7 @@ Reusable, **battle-tested** tooling to publish any Shiny-app GitHub repository t
 [ShinyApps](https://github.com/fentouxungui/ShinyApps) desktop app store, end to end:
 
 ```
-feasibility -> fork -> bundle workflow -> tag / GitHub Actions release
+feasibility -> fork -> bundle workflow -> tag + published GitHub Release
             -> catalog entry + icon -> (optional) upstream pull request
 ```
 
@@ -13,7 +13,7 @@ Route A: a per-repo GitHub Actions workflow builds **prebuilt desktop bundles**
 Release; a catalog entry + icon make the app installable **without rebuilding the store
 shell**. The same route powers iSEE, UCSCXenaShiny, spatialLIBD, beeRapp, CSBB-Shiny,
 SeuratExplorer, scConvertShiny, shinyCircos-V2.0, UpSetR-shiny, bestDEG, GraphBio,
-splitKbCompare and ShinyStan.
+splitKbCompare, ShinyStan and shiny-genome-stats.
 
 **Maintenance board:** <https://fentouxungui.github.io/shinyapps-onboarding/> -- last build,
 upstream/fork drift and rebuild signals for every recorded app.
@@ -22,7 +22,7 @@ upstream/fork drift and rebuild signals for every recorded app.
 
 | Path | Purpose |
 |---|---|
-| `assets/build-app-bundle.yml` | Hardened **multi-mode** bundle workflow (drop into `.github/workflows/`, fill `env:`) |
+| `assets/build-app-bundle.yml` | Hardened **multi-mode** bundle workflow (drop into `.github/workflows/build-app-bundle.yml`, fill `env:`) |
 | `assets/catalog-entry.yml`     | Catalog entry for `ShinyApps/catalog/apps.yml` |
 | `scripts/onboard-shiny-app.ps1`| Parameterized driver for steps 2-6 (`-StrictVersion`, `-CranSnapshot`, `-PandocVersion`) |
 | `scripts/validate-apps.ps1`    | Structural checks for `apps/<id>/` records (CI: `.github/workflows/validate-apps.yml`) |
@@ -97,6 +97,10 @@ Proceed only if all hold:
   -IconPath .\icon.png -Tag v0.1.0 -WatchRelease -OpenPR
 ```
 
+The driver writes `.github/workflows/build-app-bundle.yml` (no app-id prefix), tags
+the checkout, and **publishes a GitHub Release** to start the build. The standard
+workflow is release-only: a tag push by itself does not trigger it.
+
 Omit `-Tag` to use the package `Version` when a `DESCRIPTION` exists. Omit
 `-CranSnapshot` for live CRAN, and `-PandocVersion` for apps that do not render R Markdown.
 `-MacosBrewDeps "openssl@3 hdf5"` installs build-time Homebrew dependencies on the macOS
@@ -108,8 +112,10 @@ version (see [references/special-packages.md](references/special-packages.md)).
 
 The default template follows the maintainer-review checklist in
 [references/release-hardening.md](references/release-hardening.md): the build starts from
-the exact tag, a package tag must equal `DESCRIPTION` `Version`, there is a single tag
-trigger, and an existing release asset is never overwritten.
+the exact tag/release, a package tag must equal `DESCRIPTION` `Version`, publishing a
+GitHub Release is the only automatic trigger, and an existing release asset is never
+overwritten. A tag push alone does not build; use a published Release or a manual run
+with an existing tag.
 
 | `STRICT_VERSION` | Behaviour | When |
 |---|---|---|
@@ -182,10 +188,14 @@ since then, fork sync status and workflow drift. It never edits `apps/`.
 `catalog.json`. `publish-catalog` discovers each app's **latest Release assets** by the
 `<id>-` filename prefix and publishes `catalog.json` + `icons/` to `gh-pages`.
 
+The generated catalog entry points at the fork while testing. After the upstream PR is
+merged and upstream publishes its own release, change `repo:` to the upstream repository
+and verify both platform artifacts resolve from there.
+
 ## Security
 
 The driver reads your GitHub token with `git credential fill` into the process environment
-only (never written to disk) and performs fork/push/tag/release/PR **on your behalf**.
+only (never written to disk) and performs fork/push/tag/published-release/PR **on your behalf**.
 Review the script before running it, and keep the token scoped to `repo` + `workflow`.
 
 ## License

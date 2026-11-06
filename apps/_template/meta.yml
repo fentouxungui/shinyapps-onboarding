@@ -22,7 +22,7 @@ source_commit: ""
 upstream_repo: owner/repo
 upstream_head: ""
 upstream_checked_at: ""
-workflow_path: .github/workflows/example-id-build-app-bundle.yml
+workflow_path: .github/workflows/build-app-bundle.yml
 workflow_commit: ""
 workflow_sha256: ""
 app_size_mb: win-x64=0, mac-arm64=0

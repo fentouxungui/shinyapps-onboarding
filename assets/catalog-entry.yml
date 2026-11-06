@@ -2,6 +2,9 @@
 # (two-space indent before the dash), add the icon at ShinyApps/icons/<id>.png,
 # then let publish-catalog run. The id MUST equal the release asset prefix
 # (<id>-<version>-<platform>.zip).
+# Initially `repo` points at the fork used for testing. After the upstream PR
+# is merged and upstream publishes its own release, change it to the upstream
+# repository so the store follows upstream.
   - id: __APP_ID__
     repo: __SHINYAPPS_OWNER__/__REPO_NAME__
     name: __APP_NAME__

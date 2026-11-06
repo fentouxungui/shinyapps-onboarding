@@ -5,7 +5,7 @@
     .\scripts\new-app-record.ps1 -AppId myapp -Name "My App" `
       -Upstream owner/repo -Fork <you>/repo -License MIT `
       -Platforms "win-x64, mac-arm64" -Tag v0.1.0 `
-      -WorkflowPath .\myapp-build-app-bundle.yml
+      -WorkflowPath .\build-app-bundle.yml
 #>
 param(
   [Parameter(Mandatory = $true)][string]$AppId,

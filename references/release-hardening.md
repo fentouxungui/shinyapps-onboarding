@@ -1,16 +1,21 @@
 # Release hardening and version policy (the exmort review)
 
-This checklist comes from a maintainer review of an upstream PR. It is the difference
-between "CI produced a zip" and "a release channel a maintainer can accept".
+This checklist comes from maintainer reviews of upstream PRs. It is the difference
+between "CI produced a zip" and "a release channel a maintainer can accept". The
+trigger and filename rules were tightened after the merged shiny-genome-stats PR:
+the standard file is `.github/workflows/build-app-bundle.yml`, and a published
+GitHub Release, not a tag push, is the automatic trigger.
 
 ## The seven review points
 
 1. **Tag = source = version.** Build from the exact tag; fail if `DESCRIPTION` `Version`
    does not equal the tag (minus `v`). A store tag is not free-form when the repo is a
    package.
-2. **One trigger, immutable assets.** Only tag pushes (or a manual run with an explicit
-   tag) may publish. A second trigger such as `release: published` can double-build.
-   Refuse to overwrite an existing release asset.
+2. **One trigger, immutable assets.** Use `release: published` plus `workflow_dispatch`;
+   a tag push alone must not build. Do not add a `push: tags` trigger alongside the
+   release trigger, because it double-builds the same tag. Refuse to overwrite an
+   existing release asset. Use the standard `.github/workflows/build-app-bundle.yml`
+   filename, without an app-id prefix.
 3. **Dependencies must fail loudly.** A required or transitive dependency missing from the
    configured repositories is a hard error, not a `WARN` followed by silently dropping the
    package. Pin CRAN inputs to a snapshot date and publish the resolved package list.

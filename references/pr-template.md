@@ -7,15 +7,17 @@ low-context ones. Every PR must answer, in this order:
    (Windows x64 / macOS arm64, pinned R) so users need no R install. Link the store repo
    and `catalog.json`.
 2. **Why this PR?** The app is listed in the store and needs a reproducible prebuilt
-   artifact. State explicitly that only one YAML file is added and no application code,
-   `DESCRIPTION`, tests, or data change.
+   artifact. State explicitly that only `.github/workflows/build-app-bundle.yml` is
+   added and no application code, `DESCRIPTION`, tests, or data change.
 3. **What the workflow does.** Numbered: install deps into a private library; build both
-   platforms; smoke-test that the app starts; attach zips to a Release on tag.
+   platforms; smoke-test that the app starts; attach zips to a Release when the Release
+   is published.
 4. **Impact on the maintainer.** No source changes; no maintenance burden; Actions minutes
-   only on tag pushes (free standard runners for public repos, ~10-20 min/platform);
-   discoverability and credit with a link back to the repo.
-5. **What the maintainer needs to do.** Review the single file, merge (or request a
-   different filename/branch), optionally push a tag; offer to do it for them.
+   only when a Release is published (free standard runners for public repos, ~10-20
+   min/platform); discoverability and credit with a link back to the repo.
+5. **What the maintainer needs to do.** Review the single file
+   `.github/workflows/build-app-bundle.yml`, merge (or request a different filename/branch),
+   then tag and publish a GitHub Release; offer to do it for them.
 6. **Opt-out.** "If you would rather not have this, close the PR and I will remove the
    store entry. No hard feelings."
 7. **Thanks**, naming the app.
@@ -28,10 +30,11 @@ Use the app name consistently. Reuse this template verbatim, substituting the ap
 A review (human or GitHub Copilot) needs evidence, not "done". Reply in one comment that
 answers each finding and then states how it was verified:
 
-- **Version** -- one source (`inputs.tag || github.ref_name`), leading `v` stripped, tag must
-  equal `DESCRIPTION`; no `1.6.0v1.6.0` or `mainv2.2.0`.
-- **Manual runs** -- `actions/checkout` uses `ref: ${{ inputs.tag || github.ref }}`; a supplied
-  tag builds that tag's source and an unknown tag fails at checkout.
+- **Version** -- one source (`github.event.inputs.tag` then `github.event.release.tag_name`),
+  leading `v` stripped, tag must equal `DESCRIPTION`; no `1.6.0v1.6.0` or `mainv2.2.0`.
+- **Manual runs** -- `actions/checkout` uses
+  `ref: ${{ github.event.inputs.tag || github.ref }}`; a supplied tag builds that tag's
+  source and an unknown tag fails at checkout.
 - **Startup** -- the smoke test starts `shiny::runApp()` in a child process and requests `/`
   (HTTP 200 + HTML); `shinyAppDir()` only constructed the object.
 - **package-fn install** -- the app package is excluded from the CRAN closure, any existing
@@ -41,10 +44,10 @@ answers each finding and then states how it was verified:
   the feature you left out.
 - **Verification** -- the tag you built, both platforms green, and: "I installed the Windows
   bundle through the ShinyApps desktop client; it launches and runs normally."
-- **Release instructions** -- pushing a `v*` tag starts the workflow automatically and attaches
-  `app-<version>-win-x64.zip` / `-mac-arm64.zip` to that Release; a manual run with an existing
-  tag does the same; an empty tag builds the branch without a Release where the generated
-  workflow allows it.
+- **Release instructions** -- publish a GitHub Release for the `v*` tag; the workflow
+  attaches `<id>-<version>-win-x64.zip` / `-mac-arm64.zip` to that Release. A tag push
+  alone does not build. A manual run with an existing tag does the same; an empty tag
+  builds the branch without a Release where the generated workflow allows it.
 - **Scope** -- one workflow file, no application code, and an offer to adjust the filename or
   branch.
 

@@ -76,7 +76,7 @@ so an edited snapshot is caught.
 .\scripts\new-app-record.ps1 -AppId <id> -Name "<Name>" `
   -Upstream <owner>/<repo> -Fork <owner>/<repo> -License <SPDX> `
   -Platforms "win-x64, mac-arm64" -Tag v0.1.0 `
-  -WorkflowPath <path-to-generated-workflow.yml>
+  -WorkflowPath <path-to-build-app-bundle.yml>
 ```
 
 For a released bundle use the recorder instead of copying by hand (it pulls the workflow at

@@ -1,7 +1,7 @@
 <#
   onboard-shiny-app-hardened.ps1
   ------------------------------
-  Fork -> bundle workflow -> tag/release -> catalog entry + icon -> optional PR.
+  Fork -> bundle workflow -> tag + published release -> catalog entry + icon -> optional PR.
 
   Adds, on top of the basic route:
     * -StrictVersion auto|on|off  (tag vs DESCRIPTION Version)
@@ -103,20 +103,40 @@ foreach ($k in $map.Keys) { $tpl = $tpl.Replace($k, [string]$map[$k]) }
 $wfdir = Join-Path $dir ".github\workflows"
 New-Item -ItemType Directory -Force -Path $wfdir | Out-Null
 $enc = New-Object Text.UTF8Encoding($false)
-[IO.File]::WriteAllText((Join-Path $wfdir "$AppId-build-app-bundle.yml"), $tpl, $enc)
-git -C $dir add ".github/workflows/$AppId-build-app-bundle.yml"
+[IO.File]::WriteAllText((Join-Path $wfdir 'build-app-bundle.yml'), $tpl, $enc)
+git -C $dir add ".github/workflows/build-app-bundle.yml"
 git -C $dir commit -q -m "Add GitHub Actions workflow publishing prebuilt desktop app bundles (ShinyApps store)"
 git -C $dir push -q -u origin $branch
 Info "workflow pushed to $me/$RepoName@$branch"
 
-# --- tag -> release CI ------------------------------------------------------
+# --- tag + published release -> release CI ---------------------------------
+# The standard workflow is release-only: publishing a Release starts the
+# build; pushing a tag alone does not. Create the Release explicitly after
+# the tag is visible to GitHub.
 git -C $dir tag -a $Tag -m "$AppName ShinyApps bundle $Tag"
 git -C $dir push -q origin $Tag
-Info "tag $Tag pushed (CI building bundles)"
+$rel = $null
+try { $rel = Api GET "https://api.github.com/repos/$me/$RepoName/releases/tags/$Tag" } catch { $rel = $null }
+if (-not $rel) {
+  $rel = Api POST "https://api.github.com/repos/$me/$RepoName/releases" @{
+    tag_name = $Tag; name = $Tag; draft = $false; prerelease = $false
+    generate_release_notes = $false
+  }
+  Info "release $Tag published (CI building bundles)"
+} else {
+  Info "release $Tag already exists (CI building bundles)"
+}
 
 if ($WatchRelease) {
-  do { Start-Sleep 20; $run = (Api GET "https://api.github.com/repos/$me/$RepoName/actions/runs?per_page=1").workflow_runs[0] }
-  while ($run.status -ne 'completed')
+  $run = $null
+  for ($i = 0; $i -lt 90; $i++) {
+    Start-Sleep 20
+    $runs = (Api GET "https://api.github.com/repos/$me/$RepoName/actions/runs?event=release&per_page=20").workflow_runs
+    $run = $runs | Where-Object { $_.path -eq '.github/workflows/build-app-bundle.yml' } | Select-Object -First 1
+    if ($run -and $run.status -eq 'completed') { break }
+  }
+  if (-not $run) { throw "release workflow for $Tag did not appear within 30 minutes" }
+  if ($run.status -ne 'completed') { throw "release workflow did not complete: $($run.html_url)" }
   if ($run.conclusion -ne 'success') { throw "bundle CI $($run.conclusion): $($run.html_url)" }
   $rel = Api GET "https://api.github.com/repos/$me/$RepoName/releases/tags/$Tag"
   Info ("release assets: " + (($rel.assets | ForEach-Object { "$($_.name) ($([math]::Round($_.size/1MB,1)) MB)" }) -join ', '))
@@ -149,7 +169,7 @@ if ($OpenPR) {
     $pr = Api POST "https://api.github.com/repos/$Upstream/pulls" @{
       title = "Add a GitHub Actions workflow publishing prebuilt desktop app bundles (ShinyApps store)"
       head  = "${me}:${branch}"; base = $branch
-      body  = "Adds `.github/workflows/$AppId-build-app-bundle.yml`, a CI-only workflow that builds prebuilt desktop bundles for the ShinyApps store. No application source is changed."
+      body  = "Adds `.github/workflows/build-app-bundle.yml`, a CI-only workflow that builds prebuilt desktop bundles for the ShinyApps store. No application source is changed."
       maintainer_can_modify = $true
     }
     Info "PR opened: $($pr.html_url)"
