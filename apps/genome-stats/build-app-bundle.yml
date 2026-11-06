@@ -28,9 +28,9 @@
 # =====================================================================
 name: Build app bundle
 
+# Trigger by publishing a GitHub Release (release: published), or run manually
+# with an existing tag. A tag push alone does not build (avoids duplicate runs).
 on:
-  push:
-    tags: ['v*']
   release:
     types: [published]
   workflow_dispatch:
@@ -41,8 +41,7 @@ on:
         type: string
 
 permissions:
-  contents: write
-
+  contents: read
 env:
   APP_ID: "genome-stats"
   APP_NAME: "shiny-genome-stats"
@@ -80,6 +79,8 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.tag || github.ref }}
       - uses: r-lib/actions/setup-r@v2
         with:
           r-version: ${{ env.R_VERSION }}
@@ -125,6 +126,8 @@ jobs:
           - { os: macos-14,       platform: "mac-arm64" }
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.tag || github.ref }}
 
       - uses: r-lib/actions/setup-r@v2
         with:
@@ -137,17 +140,22 @@ jobs:
 
       - name: Resolve store version
         shell: bash
+        env:
+          INPUT_TAG: ${{ github.event.inputs.tag }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
         run: |
-          V="${{ github.event.release.tag_name }}${{ github.ref_name }}${{ inputs.tag }}"
+          # Prefer an explicit dispatch tag, then the tag of the current release.
+          # Never concatenate refs: on a release event ref_name is the tag too, so
+          # concatenating would produce e.g. "v0.1.0v0.1.0".
+          V="${INPUT_TAG:-${RELEASE_TAG:-}}"
+          if [ -z "$V" ] && [[ "${GITHUB_REF:-}" == refs/tags/* ]]; then V="${GITHUB_REF_NAME}"; fi
           V="${V#v}"
+          if [ -z "$V" ]; then V="$(sed -n 's/^Version:[[:space:]]*//p' DESCRIPTION 2>/dev/null | head -n1)"; fi
           if [ -z "$V" ]; then V="0.1.0"; fi
           echo "VERSION=$V" >> "$GITHUB_ENV"
 
       - name: Assemble bundle (app/ + rlib/ + manifest.json)
         shell: Rscript {0}
-        env:
-          GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           app_id  <- Sys.getenv("APP_ID")
           mode    <- Sys.getenv("APP_MODE"); if (!nzchar(mode)) mode <- "auto"
@@ -346,7 +354,7 @@ jobs:
 
   release:
     needs: bundle
-    if: github.event_name == 'release' || startsWith(github.ref, 'refs/tags/v') || inputs.tag != ''
+    if: github.event_name == 'release' || github.event.inputs.tag != ''
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -357,6 +365,6 @@ jobs:
           merge-multiple: true
       - uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ inputs.tag || github.ref_name }}
-          name: ${{ inputs.tag || github.ref_name }}
+          tag_name: ${{ github.event.inputs.tag || github.ref_name }}
+          name: ${{ github.event.inputs.tag || github.ref_name }}
           files: artifacts/*.zip

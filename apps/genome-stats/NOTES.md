@@ -3,11 +3,11 @@
 - **Status:** `active` -- backfilled from the published release; see `meta.yml` for provenance.
 - **Upstream:** https://github.com/MPUSP/shiny-genome-stats
 - **Fork:** https://github.com/fentouxungui/shiny-genome-stats
-- **Release:** https://github.com/fentouxungui/shiny-genome-stats/releases/tag/v0.1.7 (`v0.1.7`)
+- **Release:** https://github.com/MPUSP/shiny-genome-stats/releases/tag/v1.1.1 (`v1.1.1`)
 - **Artifacts:**
-  - `genome-stats-0.1.7-win-x64.zip` (216 MB)
-  - `genome-stats-0.1.7-mac-arm64.zip` (193 MB)
-- **Template:** unknown (backfill from catalog); the workflow is a snapshot, not a template.
+  - `genome-stats-1.1.1-win-x64.zip` (216 MB)
+  - `genome-stats-1.1.1-mac-arm64.zip` (193 MB)
+- **Template:** upstream `.github/workflows/build-app-bundle.yml` at `v1.1.1`; the workflow is a snapshot, not a template.
 
 > If `status` is `rejected` or `withdrawn`: **do not redistribute this bundle.**
 
@@ -27,8 +27,12 @@ Genome summary tables are generated at build time from NCBI (datasets CLI) in a 
 
 ## Debug log
 
-Backfilled on 2026-10-22 from the release assets; no run-by-run history
-is available for this app. Add rows here when it is rebuilt.
+- 2026-11-04: upstream `v1.1.1` released (PR #13 merged). Synchronized this
+  record and the workflow snapshot from `MPUSP/shiny-genome-stats`; the release
+  provides `genome-stats-1.1.1-win-x64.zip` and
+  `genome-stats-1.1.1-mac-arm64.zip`.
+- 2026-10-22: backfilled from the release assets; no run-by-run history is
+  available for this app. Add rows here when it is rebuilt.
 
 ## Reuse notes
 

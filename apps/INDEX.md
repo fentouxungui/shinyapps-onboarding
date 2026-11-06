@@ -49,7 +49,7 @@
 | `gatelabr` | GateLabR | active | win-x64, mac-arm64 | v0.2.1 | david-priest/GateLabR | [NOTES](gatelabr/NOTES.md) |
 | `gde` | gde | active | win-x64, mac-arm64 | v0.1.0 | cran/gde | [NOTES](gde/NOTES.md) |
 | `genest` | GenEst | active | win-x64, mac-arm64 | v0.1.0 | ddalthorp/GenEst | [NOTES](genest/NOTES.md) |
-| `genome-stats` | shiny-genome-stats | active | win-x64, mac-arm64 | v0.1.7 | MPUSP/shiny-genome-stats | [NOTES](genome-stats/NOTES.md) |
+| `genome-stats` | shiny-genome-stats | active | win-x64, mac-arm64 | v1.1.1 | MPUSP/shiny-genome-stats | [NOTES](genome-stats/NOTES.md) |
 | `ggplotgui` | ggplotgui | active | win-x64, mac-arm64 | v0.1.0 | cran/ggplotgui | [NOTES](ggplotgui/NOTES.md) |
 | `ggraptr` | ggraptR | active | win-x64, mac-arm64 | v0.1.0 | cran/ggraptR | [NOTES](ggraptr/NOTES.md) |
 | `glossa` | glossa | active | win-x64, mac-arm64 | v0.1.0 | cran/glossa | [NOTES](glossa/NOTES.md) |
