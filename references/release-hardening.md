@@ -6,7 +6,7 @@ trigger and filename rules were tightened after the merged shiny-genome-stats PR
 the standard file is `.github/workflows/build-app-bundle.yml`, and a published
 GitHub Release, not a tag push, is the automatic trigger.
 
-## The seven review points
+## The review points
 
 1. **Tag = source = version.** Build from the exact tag; fail if `DESCRIPTION` `Version`
    does not equal the tag (minus `v`). A store tag is not free-form when the repo is a
@@ -14,8 +14,10 @@ GitHub Release, not a tag push, is the automatic trigger.
 2. **One trigger, immutable assets.** Use `release: published` plus `workflow_dispatch`;
    a tag push alone must not build. Do not add a `push: tags` trigger alongside the
    release trigger, because it double-builds the same tag. Refuse to overwrite an
-   existing release asset. Use the standard `.github/workflows/build-app-bundle.yml`
-   filename, without an app-id prefix.
+   existing release asset with `overwrite_files: false`; the preflight must use
+   `gh release view --repo` and only treat `release not found` / HTTP 404 as missing.
+   Use the standard `.github/workflows/build-app-bundle.yml` filename, without an
+   app-id prefix.
 3. **Dependencies must fail loudly.** A required or transitive dependency missing from the
    configured repositories is a hard error, not a `WARN` followed by silently dropping the
    package. Pin CRAN inputs to a snapshot date and publish the resolved package list.
@@ -26,11 +28,16 @@ GitHub Release, not a tag push, is the automatic trigger.
    Pandoc and LaTeX are not part of the bundle; document the runtime requirement (PDF
    additionally needs LaTeX).
 6. **Least privilege + metadata.** Build jobs are read-only; only the publish job has
-   `contents: write`. Publish SHA-256 files, build/source metadata and a dependency lock.
-   Do not rewrite existing release notes.
+   `contents: write`. Record the checked-out commit with `git rev-parse HEAD` as
+   `SOURCE_COMMIT`; `GITHUB_SHA` is the workflow ref, not necessarily the built tag.
+   Publish SHA-256 files, build/source metadata and a dependency lock. Do not rewrite
+   existing release notes.
 7. **Shell testing boundary.** A CI bundle is not a tested desktop install. Test the real
    ShinyApps shell on Windows/macOS separately; do not claim shell E2E from a green CI
    smoke, which starts the server and requests `/` but is not an installed store run.
+8. **Runner labels are not app compatibility floors.** GitHub retired `macos-14` on
+   2026-11-02; use `macos-15` for arm64 jobs. Keep the user-facing macOS minimum in
+   the docs; do not put an obsolete runner label in a new workflow.
 
 ## The version-policy decision
 

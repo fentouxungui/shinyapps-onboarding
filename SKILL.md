@@ -88,12 +88,27 @@ Fast path: run `scripts/onboard-shiny-app.ps1` (steps 2-6), then `record-app.ps1
 - **Release-only trigger.** Use `on: release: published` plus `workflow_dispatch`.
   Do not add `push: tags` alongside it: that double-builds the same tag. A tag push
   alone does not build; create/publish the GitHub Release after tagging.
-- **Immutable releases.** Refuse to overwrite a published release asset.
+- **Immutable releases.** Refuse to overwrite a published release asset. The preflight
+  must use `gh release view --repo`, and only an explicit `release not found` / HTTP 404
+  may be treated as a missing release; other lookup failures abort. Use
+  `overwrite_files: false`.
 - **Least privilege.** The build job is `contents: read`; only the release job is
   `contents: write`. Remove unused `GITHUB_PAT`/`GITHUB_TOKEN` env entries.
 - **One version source.** Resolve the version from the dispatch input, then the
   release tag; never concatenate refs. Check out that ref and require the tag to
   equal `DESCRIPTION` when a package is present.
+- **Record the built commit.** After checkout, compare `git rev-parse HEAD` with the
+  tag commit and write `SOURCE_COMMIT` into the build metadata; do not use
+  `GITHUB_SHA`, which may refer to the workflow ref.
+- **Supported macOS runners.** `macos-14` was retired on 2026-11-02; use
+  `macos-15` for the arm64 bundle. Keep the app's own macOS minimum in the
+  documentation, not in `runs-on:`.
+- **Keep release assets small.** Publish the platform ZIPs plus one checksum file
+  and one consolidated build-info file; keep per-platform metadata and dependency
+  locks as Actions artifacts unless the reviewer asks for them in the Release.
+- **Pin and validate dependencies.** Use a CRAN snapshot, write the resolved lock
+  before installation, and verify the installed closure in a clean child process.
+  Present the lock as an enforced artifact, not a post-install inventory.
 - **Fail loud.** Required and transitive dependencies missing from the configured
   repositories fail the build (`STRICT_DEPS: "on"`); list genuinely optional packages
   in `SOFT_PKGS` instead of letting them disappear.
@@ -182,8 +197,13 @@ portability: `references/macos-portability.md`.
   `r/`): the template locates the single `DESCRIPTION` and installs that package's Imports
   first. A tarball with several packages fails on purpose -- pass a package tarball.
 - Publish **Windows-only** when a macOS dependency cannot be made portable (see
-  `references/macos-portability.md`): remove the `macos-14` matrix entry and record it in
+  `references/macos-portability.md`): remove the macOS matrix entry and record it in
   `APP_NOTES`; do not ship a mac zip that cannot start.
+- **Use supported GitHub macOS runners.** `macos-14` was retired on 2026-11-02;
+  jobs using it fail before checkout with
+  `The configuration 'macos-14-arm64-us-default' is not supported`. Use
+  `macos-15` for the arm64 bundle (`macos-15-intel` only for Intel), and never
+  copy `macos-14` from an old workflow or example.
 
 ## Field lessons (upstream PR review: FielDHub, Familia)
 

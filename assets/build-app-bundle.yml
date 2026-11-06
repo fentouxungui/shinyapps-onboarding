@@ -103,7 +103,7 @@ jobs:
       matrix:
         include:
           - { os: windows-latest, platform: "win-x64" }
-          - { os: macos-14,       platform: "mac-arm64" }
+          - { os: macos-15,       platform: "mac-arm64" }
     steps:
       - uses: actions/checkout@v4
         with:
@@ -557,14 +557,61 @@ jobs:
         with:
           path: artifacts
           merge-multiple: true
+      - name: Consolidate release metadata
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import datetime, glob, hashlib, json, os
+
+          metas, deps = {}, {}
+          for path in sorted(glob.glob("artifacts/meta-*.json")):
+              platform = os.path.basename(path)[5:-5]
+              metas[platform] = json.load(open(path))
+          for path in sorted(glob.glob("artifacts/deps-*.json")):
+              platform = os.path.basename(path)[5:-5]
+              deps[platform] = json.load(open(path))
+
+          first = next(iter(metas.values()), {})
+          info = {
+              "app_id": first.get("app_id", ""),
+              "version": first.get("version", ""),
+              "source_repository": first.get("source_repository", ""),
+              "source_commit": first.get("source_commit", ""),
+              "generated_at": datetime.datetime.now(datetime.timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z"),
+              "platforms": {
+                  platform: {"metadata": meta, "dependencies": deps.get(platform)}
+                  for platform, meta in metas.items()
+              },
+          }
+          with open("artifacts/build-info.json", "w") as fh:
+              json.dump(info, fh, indent=2)
+              fh.write("\n")
+
+          lines = []
+          for path in sorted(glob.glob("artifacts/*.zip")):
+              digest = hashlib.sha256(open(path, "rb").read()).hexdigest()
+              lines.append(f"{digest}  {os.path.basename(path)}")
+          with open("artifacts/SHA256SUMS", "w") as fh:
+              fh.write("\n".join(lines) + "\n")
+          PY
+          # Keep per-platform files as Actions artifacts, but publish only the
+          # bundles plus the consolidated checksum/metadata files.
+          rm -f artifacts/*.sha256 artifacts/meta-*.json artifacts/deps-*.json
       - name: Refuse to overwrite published assets
         env:
           GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
         shell: bash
         run: |
+          set -euo pipefail
           TAG="${{ github.event.inputs.tag || github.ref_name }}"
-          if gh release view "$TAG" >/dev/null 2>&1; then
-            existing="$(gh release view "$TAG" --json assets --jq '.assets[].name')"
+          ERR="$(mktemp)"
+          set +e
+          release_json="$(gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json assets,name 2>"$ERR")"
+          rc=$?
+          set -e
+          if [ "$rc" -eq 0 ]; then
+            existing="$(printf '%s' "$release_json" | jq -r '.assets[]?.name')"
             for f in artifacts/*; do
               n="$(basename "$f")"
               if printf '%s\n' "$existing" | grep -qxF "$n"; then
@@ -572,15 +619,21 @@ jobs:
                 exit 1
               fi
             done
+          elif grep -qiE 'release not found|HTTP 404' "$ERR"; then
+            echo "release $TAG does not exist yet; the upload step will create it"
+          else
+            echo "::error::could not read release $TAG; refusing to guess"
+            cat "$ERR"
+            exit 1
           fi
       - uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.event.inputs.tag || github.ref_name }}
+          name: ${{ github.event.release.name || github.event.inputs.tag || github.ref_name }}
           files: |
             artifacts/*.zip
-            artifacts/*.sha256
-            artifacts/meta-*.json
-            artifacts/deps-*.json
-          overwrite_assets: false
+            artifacts/SHA256SUMS
+            artifacts/build-info.json
+          overwrite_files: false
           fail_on_unmatched_files: true
           generate_release_notes: false

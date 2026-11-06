@@ -78,7 +78,7 @@ jobs:
       matrix:
         include:
           - { os: windows-latest, platform: "win-x64" }
-          - { os: macos-14,       platform: "mac-arm64" }
+          - { os: macos-15,       platform: "mac-arm64" }
     steps:
       - uses: actions/checkout@v4
 

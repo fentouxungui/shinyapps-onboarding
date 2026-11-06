@@ -40,8 +40,12 @@ real shell test.
    XQuartz on the user's machine. See the recipe below.
 3. **Drop or guard the feature.** `Mfuzz` needs `tcltk` (the Tcl/Tk framework, not just the
    X11 client libraries) -- guard its `library()` so the module is disabled on macOS only.
-4. **Declare it unshippable on macOS.** Publish Windows-only, delete the `macos-14` matrix
+4. **Declare it unshippable on macOS.** Publish Windows-only, delete the macOS matrix
    entry, and record the reason in `APP_NOTES` and the PR.
+
+The runner label is separate from the app's macOS compatibility floor. `macos-14`
+was retired on 2026-11-02; use `macos-15` (arm64) for the bundle build. Keep the
+minimum supported macOS in documentation, not in `runs-on:`.
 
 ## Vendoring XQuartz dylibs (ScRDAVis recipe)
 

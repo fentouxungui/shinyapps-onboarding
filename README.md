@@ -129,6 +129,10 @@ of a silent drop; use `SOFT_PKGS` for genuinely optional packages. `PANDOC_VERSI
 installs and checks Pandoc for report-rendering apps (Pandoc and LaTeX are not bundled;
 PDF output still needs LaTeX locally).
 
+**Runner note:** GitHub retired the `macos-14` hosted image on 2026-11-02. New
+workflows use `macos-15` for the arm64 bundle; `macos-14` jobs fail before checkout.
+Do not copy an old `macos-14` matrix entry from an example.
+
 ## Built-in smoke test
 
 The workflow includes a **`Smoke test`** step: after building, it unzips the bundle, puts only
