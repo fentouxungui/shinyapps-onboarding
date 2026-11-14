@@ -23,7 +23,11 @@
 
 ## Known limitations
 
-(none recorded; the workflow did not declare APP_NOTES)
+- v0.1.11 and older macOS bundles included the recommended `KernSmooth` package in
+  `rlib/`. When it reached the shell's shared `lib/KernSmooth`, startup failed with
+  `Library not loaded: /Library/Frameworks/R.framework/.../libRblas.dylib`.
+  Rebuild with the current `assets/build-app-bundle.yml` (base + recommended excluded)
+  and bump the app version.
 
 ## Debug log
 

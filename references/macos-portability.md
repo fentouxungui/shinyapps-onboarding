@@ -13,19 +13,67 @@ Error: non-portable dylib references: Cairo.so, gdtools.so
 
 `otool -L` on those files shows `/opt/homebrew/opt/cairo/...` or `/opt/X11/lib/libXrender...`.
 
+## R.framework absolute paths (base/recommended packages)
+
+A different, more severe error:
+
+```
+Library not loaded: /Library/Frameworks/R.framework/Versions/4.6/Resources/lib/libRblas.dylib
+Referenced from: .../lib/KernSmooth/libs/KernSmooth.so
+```
+
+This is **not** Homebrew/XQuartz. A base or recommended package (here `KernSmooth`)
+was shipped in `rlib` (and then copied to the shell's shared library). It was linked
+against the runner's R.framework, but the ShinyApps shell uses a portable R at a
+different path, so the absolute install name cannot resolve.
+
+Rules:
+
+- `rlib/` must contain only app-level packages; **base + recommended** come from the
+  bundled R.
+- The template asserts this after installation and fails the build if any
+  base/recommended package is present.
+- The macOS audit now also flags `/Library/Frameworks/R.framework`; an app-level
+  compiled package with that reference must be rebuilt/repatched or dropped.
+
 ## What the template already does
 
+0. Downloads the **shell's portable R** (the matching `portable-r` release for the
+   matrix platform/arch) and installs the app closure with its `Rscript`, so
+   compiled packages link against the same runtime ShinyApps ships. `setup-r` is
+   used only for build tooling. Installing with the CI framework R produces
+   `/Library/Frameworks/R.framework` references and fails on users' Macs.
 1. Installs dependencies (binary first, source fallback).
-2. On Darwin, applies `SOURCE_REBUILD: "<pkg> <pkg>"` **before** the audit: the packages are
+2. Excludes **base + recommended** packages from `rlib` and asserts that none slipped in.
+3. On Darwin, applies `SOURCE_REBUILD: "<pkg> <pkg>"` **before** the audit: the packages are
    rebuilt from source with Homebrew removed from `PATH`/`PKG_CONFIG_PATH`, so they link
    against the runner's static libraries.
-3. Audits every `.so`/`.dylib` in `rlib/` for `/opt/X11`, `/opt/homebrew`, `/usr/local/opt`
-   and fails the build if any remain.
-4. Runs the smoke test on the mac runner.
+4. Audits every `.so`/`.dylib` in `rlib/` for `/opt/X11`, `/opt/homebrew`,
+   `/usr/local/opt`, and `/Library/Frameworks/R.framework`, and fails the build if any
+   remain.
+5. Runs the smoke test on the mac runner.
 
 The audit regex is deliberately unanchored: `otool -L` output is tab-indented, and an
 anchored `^/opt/...` pattern silently passes everything. If you edit that block, test it
 against a package you know is broken.
+
+## The portable R `.portable` environment and `R_PROFILE`
+
+`portable-r-macos` ships an `etc/Rprofile.site` that attaches a hidden `.portable`
+environment and wraps `install.packages()`; after each install it rewrites CRAN
+binary `.so` files from absolute `/Library/Frameworks/R.framework/...` paths to
+`@rpath/...`. If the audit reports many unrelated binary packages at once
+(`Biobase.so`, `DESeq2.so`, `RcppArmadillo.so`, ...), the patcher did not run.
+
+The usual cause is an **empty** `R_PROFILE`. R treats an empty value as set, so
+the default `$R_HOME/etc/Rprofile.site` is skipped and `.portable` never attaches.
+Set `R_PROFILE` explicitly to `$PORTABLE_R_HOME/etc/Rprofile.site`. The site
+profile also resets `.libPaths()` to the portable R library, so point
+`R_PROFILE_USER` at a small profile that adds the harness library back. The
+template's `Set up portable R` step does both and fails early if `.portable` is
+not on the search path.
+
+Do not use `Rscript --vanilla`: it skips the site profile for the same reason.
 
 ## Remediation ladder
 

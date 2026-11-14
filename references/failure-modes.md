@@ -43,9 +43,19 @@ of them; the rest need a decision you make during feasibility.
    that does `setdiff(closure, rownames(installed.packages()))` also removes packages that are
    merely present in the **CI toolchain** (`jsonlite`, `zip`, `digest`, `BiocManager`, `callr`,
    `curl`) even when the app needs them at runtime → `there is no package called 'X'` after install.
-   Exclude only **base/recommended** (`installed.packages(priority = "base")`), never all of
-   `installed.packages()`. The current `assets/build-app-bundle.yml` already does this; re-onboard
-   any app still built with an older per-app workflow (its bundle is missing those packages).
+   Exclude only **base/recommended** (`installed.packages(priority = c("base", "recommended"))`),
+   never all of `installed.packages()`. The current `assets/build-app-bundle.yml` already does
+   this; re-onboard any app still built with an older per-app workflow (its bundle is missing
+   those packages).
+12. **`Rscript: cannot open file '-f'` or a Windows segfault at a script step.** `-f` is an
+   R flag, not an `Rscript` flag. Invoke `Rscript script.R` (positional); the template does
+   this and runs a setup preflight with the same form.
+13. **macOS audit reports many binary packages at once** (`Biobase.so`, `DESeq2.so`,
+   `RcppArmadillo.so`, ...). Portable R's `.portable` environment did not run, so CRAN
+   binary `.so` files still point at `/Library/Frameworks/R.framework`. An empty
+   `R_PROFILE` disables the site profile; set it explicitly to
+   `$PORTABLE_R_HOME/etc/Rprofile.site` and use `R_PROFILE_USER` to put the harness
+   library back. See `references/macos-portability.md`.
 
 ## Runtime (after install)
 
@@ -63,6 +73,13 @@ of them; the rest need a decision you make during feasibility.
 14. **Runtime engine/service needed** (Enrichr/KEGG network, a remote service, LaTeX for a
     dynamic PDF, Windows HDF5 via `hdf5r`). Disclose it in `APP_NOTES` and the PR; it may
     work partially or only with network.
+
+**macOS: `Library not loaded: /Library/Frameworks/R.framework/.../libRblas.dylib` from `lib/KernSmooth`.**
+A base/recommended package was shipped in `rlib` and copied to the shared library. It links to
+the builder's R.framework, which the shell's portable R does not provide. Never ship
+base/recommended packages; rebuild the bundle with the current template, and update the shell
+so its startup cleanup removes legacy `lib/KernSmooth` copies. See
+`references/macos-portability.md`.
 
 **The app downloads a database at first launch and the download times out.** PhyloProfile's
 `server.R` calls `processNcbiTaxonomy()` on first run, which `download.file()`s the full NCBI

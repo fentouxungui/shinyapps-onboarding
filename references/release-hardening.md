@@ -38,6 +38,20 @@ GitHub Release, not a tag push, is the automatic trigger.
 8. **Runner labels are not app compatibility floors.** GitHub retired `macos-14` on
    2026-11-02; use `macos-15` for arm64 jobs. Keep the user-facing macOS minimum in
    the docs; do not put an obsolete runner label in a new workflow.
+9. **Base/recommended packages stay out of `rlib`.** The shell's bundled R provides
+   them. Shipping `KernSmooth`, `MASS`, `Matrix`, etc. shadows the runtime copy; on
+   macOS a copy built against the runner's `/Library/Frameworks/R.framework` fails
+   with `Library not loaded: .../libRblas.dylib`. The template asserts this and the
+   macOS audit flags R.framework paths.
+10. **Build with the shell's portable R.** The template downloads the matching
+    `portable-r` release and runs the app closure install with its `Rscript`.
+    `setup-r` is only for build tooling. Installing app packages with the CI
+    framework R makes every compiled package non-portable to ShinyApps. Invoke
+    `Rscript` with a positional script path (`Rscript script.R`): `-f` is an R
+    flag, not an `Rscript` flag, and produces `cannot open file '-f'` on macOS
+    (or a crash on Windows). On macOS, keep `R_PROFILE` pointed at portable R's
+    own `etc/Rprofile.site`; an empty value disables `.portable`, leaving CRAN
+    binary `.so` files unpatched and the audit reporting many packages.
 
 ## The version-policy decision
 

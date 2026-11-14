@@ -1,7 +1,17 @@
 # =====================================================================
-#  ShinyApps app-layer bundle builder (Route A) -- HARDENED v4.
+#  ShinyApps app-layer bundle builder (Route A) -- HARDENED v5.
 #  Builds prebuilt desktop bundles (win-x64, mac-arm64) for an R/Shiny app
 #  and attaches them to a GitHub Release. No shell rebuild. R 4.6.1.
+#
+#  v5 adds: builds the app closure with the shell's portable R
+#  (the matching portable-r release) instead of the CI framework R;
+#  base/recommended packages are excluded from rlib and asserted absent;
+#  the macOS audit also flags /Library/Frameworks/R.framework and absolute
+#  build-runner R paths (the KernSmooth/libRblas.dylib failure mode).
+#  v5.1 fixes the portable R invocation: Rscript takes the script path
+#  positionally; `-f` is an R flag, not an Rscript flag.
+#  v5.2 keeps R_PROFILE pointed at portable R's own Rprofile.site so the
+#  .portable binary patcher runs (an empty R_PROFILE disables it).
 #
 #  This is the genome-stats-review revision, based on the merged
 #  MPUSP/shiny-genome-stats PR. v4 uses a release-only trigger (publishing a
@@ -130,9 +140,146 @@ jobs:
           fi
           pandoc --version | head -n 1
 
-      - name: Install build helpers
+      - name: Set up portable R (matches the ShinyApps shell)
         shell: bash
-        run: Rscript -e 'install.packages(c("jsonlite","zip","digest","BiocManager","callr","curl","httpuv"), repos="https://cloud.r-project.org")'
+        env:
+          CRAN_SNAPSHOT: ${{ env.CRAN_SNAPSHOT }}
+        run: |
+          set -euo pipefail
+          if [ -n "${CRAN_SNAPSHOT:-}" ]; then
+            CRAN="https://packagemanager.posit.co/cran/${CRAN_SNAPSHOT}"
+          else
+            CRAN="https://cloud.r-project.org"
+          fi
+          SETUP_DIR="${RUNNER_TEMP:-/tmp}/shinyapps-portable-r"
+          mkdir -p "$SETUP_DIR"
+          cat > "$SETUP_DIR/setup-portable-r.R" <<'EOF'
+          ver <- Sys.getenv("R_VERSION")
+          plat <- if (.Platform$OS.type == "windows") "win" else "mac"
+          arch <- if (toupper(Sys.getenv("RUNNER_ARCH")) == "ARM64") "arm64" else "x64"
+          root <- file.path(Sys.getenv("RUNNER_TEMP"), "shinyapps-portable-r")
+          dir.create(root, recursive = TRUE, showWarnings = FALSE)
+          root <- normalizePath(root, winslash = "/", mustWork = TRUE)
+          if (plat == "win") {
+            win_arch <- if (arch == "arm64") "aarch64" else "x64"
+            url <- sprintf("https://github.com/portable-r/portable-r-windows/releases/download/v%s/portable-r-%s-win-%s.zip", ver, ver, win_arch)
+            archive <- file.path(root, basename(url))
+            download.file(url, archive, mode = "wb", quiet = FALSE)
+            utils::unzip(archive, exdir = root)
+          } else {
+            mac_arch <- if (arch == "arm64") "arm64" else "x86_64"
+            url <- sprintf("https://github.com/portable-r/portable-r-macos/releases/download/v%s/portable-r-%s-macos-%s.tar.gz", ver, ver, mac_arch)
+            archive <- file.path(root, basename(url))
+            download.file(url, archive, mode = "wb", quiet = FALSE)
+            utils::untar(archive, exdir = root)
+          }
+          # Resolve symlinks that point outside the extracted tree. Portable R
+          # may link Rscript/fonts to paths that do not exist on the runner.
+          all_files <- list.files(root, recursive = TRUE, full.names = TRUE, all.files = TRUE)
+          for (f in all_files) {
+            link <- Sys.readlink(f)
+            if (nzchar(link)) {
+              target <- normalizePath(f, mustWork = FALSE)
+              if (file.exists(target)) {
+                file.remove(f)
+                file.copy(target, f, copy.date = TRUE)
+              } else {
+                file.remove(f)
+              }
+            }
+          }
+          any_rs <- list.files(root, pattern = "(^|[/\\\\])Rscript(\\.exe)?$", recursive = TRUE, full.names = TRUE)
+          bin_rs <- any_rs[grepl("[/\\\\]bin[/\\\\]", any_rs)]
+          rscript <- if (length(bin_rs)) bin_rs[[1]] else if (length(any_rs)) any_rs[[1]] else NA_character_
+          if (!is.na(rscript)) rscript <- gsub("\\\\", "/", rscript)
+          if (!is.na(rscript)) cat("portable Rscript: ", rscript, "\n", sep = "")
+          if (!is.na(rscript)) cat(sprintf("PORTABLE_RSCRIPT=%s\n", rscript), file = Sys.getenv("GITHUB_ENV"), append = TRUE)
+          if (is.na(rscript)) {
+            cat("Extracted files under ", root, ":\n", sep = "")
+            print(list.files(root, recursive = TRUE, full.names = TRUE))
+            stop("portable Rscript not found under ", root)
+          }
+          cat(dirname(rscript), "\n", sep = "", file = Sys.getenv("GITHUB_PATH"), append = TRUE)
+          setup_dir <- file.path(root, "harness-root")
+          dir.create(setup_dir, recursive = TRUE, showWarnings = FALSE)
+          cat(rscript, "\n", sep = "", file = file.path(setup_dir, "rscript.txt"))
+          harness <- file.path(setup_dir, "harness")
+          dir.create(harness, recursive = TRUE, showWarnings = FALSE)
+          harness <- normalizePath(harness, winslash = "/", mustWork = TRUE)
+          cat(harness, "\n", sep = "", file = file.path(setup_dir, "lib.txt"))
+          cat(sprintf("R_LIBS_USER=%s\n", harness), file = Sys.getenv("GITHUB_ENV"), append = TRUE)
+          EOF
+          RSCRIPT_BIN="$(command -v Rscript || command -v Rscript.exe || true)"
+          if [ -z "$RSCRIPT_BIN" ] && [ -n "${R_HOME:-}" ]; then
+            for cand in "$R_HOME/bin/Rscript.exe" "$R_HOME/bin/Rscript"; do
+              if [ -x "$cand" ]; then RSCRIPT_BIN="$cand"; break; fi
+            done
+          fi
+          if [ -z "$RSCRIPT_BIN" ]; then echo "::error::Rscript not found"; exit 1; fi
+          "$RSCRIPT_BIN" "$SETUP_DIR/setup-portable-r.R"
+          # Build helpers go into a sibling harness library, not the portable R's
+          # own library (the shell's embed path avoids that on macOS hardened
+          # runtime grounds). App packages are installed separately into rlib.
+          HARNESS_LIB="$(cat "$SETUP_DIR/harness-root/lib.txt")"
+          export R_HOME= R_LIBS_USER="$HARNESS_LIB" R_LIBS_SITE="$HARNESS_LIB" R_LIBS=
+          export R_ENVIRON= R_ENVIRON_USER= R_PROFILE_USER=
+          unset R_PROFILE
+          RSCRIPT="$(cat "$SETUP_DIR/harness-root/rscript.txt")"
+          # macOS: portable R's own etc/Rprofile.site installs the .portable
+          # environment that rewrites CRAN binary .so files from absolute
+          # R.framework paths to @rpath. An EMPTY R_PROFILE disables the
+          # default site profile, so set it explicitly. The site profile
+          # resets .libPaths(); a user profile adds the harness library back.
+          # cat() inserts a space between arguments; use one argument and
+          # strip any trailing whitespace so the path is exact.
+          PORTABLE_R_HOME="$("$RSCRIPT" -e 'cat(R.home())')"
+          PORTABLE_R_HOME="$(printf '%s' "$PORTABLE_R_HOME" | sed 's/[[:space:]]*$//')"
+          export R_HOME="$PORTABLE_R_HOME"
+          if [ "$(uname -s)" = "Darwin" ]; then
+            PORTABLE_SITE_PROFILE="$PORTABLE_R_HOME/etc/Rprofile.site"
+            if [ ! -f "$PORTABLE_SITE_PROFILE" ]; then
+              echo "::error::portable Rprofile.site not found at $PORTABLE_SITE_PROFILE"
+              exit 1
+            fi
+            PORTABLE_USER_PROFILE="$SETUP_DIR/portable-user-profile.R"
+            cat > "$PORTABLE_USER_PROFILE" <<'EOF'
+          local({
+            harness <- strsplit(Sys.getenv("R_LIBS_SITE"), .Platform$path.sep, fixed = TRUE)[[1]]
+            harness <- harness[nzchar(harness)]
+            if (length(harness)) .libPaths(c(harness, .libPaths()))
+          })
+          EOF
+            export R_PROFILE="$PORTABLE_SITE_PROFILE" R_PROFILE_USER="$PORTABLE_USER_PROFILE"
+          else
+            export R_PROFILE= R_PROFILE_USER=
+          fi
+          "$RSCRIPT" -e "install.packages(c('jsonlite','zip','digest','BiocManager','callr','curl','httpuv'), lib='$HARNESS_LIB', repos='$CRAN')"
+          # Rscript takes the script path positionally (no -f). Verify that
+          # exact invocation here, so a wrapper regression fails early.
+          cat > "$SETUP_DIR/check-script.R" <<'EOF'
+          cat("portable Rscript OK:", as.character(getRversion()), "| R_HOME:", R.home(), "| .portable:", ".portable" %in% search(), "\n")
+          harness <- strsplit(Sys.getenv("R_LIBS_SITE"), .Platform$path.sep, fixed = TRUE)[[1]]
+          harness <- harness[nzchar(harness)]
+          norm_path <- function(x) normalizePath(x, winslash = "/", mustWork = FALSE)
+          if (length(setdiff(norm_path(harness), norm_path(.libPaths())))) {
+            stop("portable R harness library is not on .libPaths(): ",
+                 paste(setdiff(norm_path(harness), norm_path(.libPaths())), collapse = ", "))
+          }
+          for (p in c("jsonlite", "zip", "digest", "BiocManager", "callr", "curl", "httpuv")) {
+            if (!requireNamespace(p, quietly = TRUE)) stop("portable R harness package is not loadable: ", p)
+          }
+          if (identical(.Platform$OS.type, "unix") && !".portable" %in% search()) {
+            stop("portable R .portable environment did not attach; macOS binary patching is disabled")
+          }
+          EOF
+          "$RSCRIPT" "$SETUP_DIR/check-script.R"
+          echo "R_HOME=$PORTABLE_R_HOME" >> "$GITHUB_ENV"
+          echo "R_LIBS_SITE=$HARNESS_LIB" >> "$GITHUB_ENV"
+          echo "R_LIBS=" >> "$GITHUB_ENV"
+          echo "R_ENVIRON=" >> "$GITHUB_ENV"
+          echo "R_ENVIRON_USER=" >> "$GITHUB_ENV"
+          echo "R_PROFILE=$R_PROFILE" >> "$GITHUB_ENV"
+          echo "R_PROFILE_USER=$R_PROFILE_USER" >> "$GITHUB_ENV"
 
       - name: Install macOS build dependencies (optional)
         if: ${{ env.MACOS_BREW_DEPS != '' && runner.os == 'macOS' }}
@@ -178,8 +325,10 @@ jobs:
           echo "TAG=v$V" >> "$GITHUB_ENV"
 
       - name: Assemble bundle (app/ + rlib/ + manifest.json)
-        shell: Rscript {0}
+        shell: bash
         run: |
+          cat > assemble-bundle.R <<'EOF'
+          cat("R_HOME:", R.home(), " site:", file.exists(file.path(R.home("etc"), "Rprofile.site")), "\n")
           app_id  <- Sys.getenv("APP_ID")
           mode    <- Sys.getenv("APP_MODE"); if (!nzchar(mode) || grepl("^__", mode)) mode <- "auto"
           sub_    <- Sys.getenv("APP_SUBDIR"); if (!nzchar(sub_)) sub_ <- "."
@@ -189,6 +338,10 @@ jobs:
           appdir  <- file.path(bundle, "app"); dir.create(appdir, recursive = TRUE)
           lib     <- file.path(bundle, "rlib"); dir.create(lib, recursive = TRUE)
           .libPaths(c(lib, .libPaths()))
+          Sys.setenv(R_LIBS_SITE = paste(unique(c(Sys.getenv("R_LIBS_SITE"), lib)), collapse = .Platform$path.sep))
+          # base + recommended come from the shell's bundled R. Never ship them
+          # in rlib: on macOS they may link to the builder's R.framework and
+          # fail on users' Macs.
           base_pkgs <- rownames(installed.packages(priority = c("base", "recommended")))
           split_pkgs <- function(x) { p <- strsplit(trimws(x), "[ ,]+")[[1]]; p[nzchar(p)] }
           dcf_deps <- function(dcf, fields = c("Depends","Imports","LinkingTo")) {
@@ -355,10 +508,35 @@ jobs:
             cat("fix-up round", i, ":", paste(need, collapse = ", "), "\n"); ins(need)
           }
 
+          # base/recommended packages belong to the shell's bundled R. Shipping
+          # them in rlib shadows the runtime copy; on macOS the copied binary
+          # may reference the builder's R.framework and fail on the user's Mac.
+          runtime_pkgs <- rownames(installed.packages(priority = c("base", "recommended")))
+          bad_runtime <- intersect(have(), runtime_pkgs)
+          if (length(bad_runtime)) {
+            stop("rlib contains base/recommended packages: ", paste(bad_runtime, collapse = ", "),
+                 ". Remove them; the bundled R provides them.")
+          }
+
           if (identical(unname(Sys.info()[["sysname"]]), "Darwin")) {
-            bins <- list.files(lib, pattern = "[.](so|dylib)$", recursive = TRUE, full.names = TRUE); bad <- character()
-            for (b in bins) { o <- suppressWarnings(system2("otool", c("-L", shQuote(b)), stdout = TRUE, stderr = FALSE)); if (any(grepl("(/opt/X11|/opt/homebrew|/usr/local/opt)", o))) bad <- c(bad, b) }
-            if (length(bad)) stop("non-portable dylib references in ", length(bad), " file(s): ", paste(unique(basename(bad)), collapse = ", "), ". Rebuild with SOURCE_REBUILD=<pkg>, or drop the package/feature; see references/macos-portability.md")
+            bins <- list.files(lib, pattern = "[.](so|dylib)$", recursive = TRUE, full.names = TRUE)
+            rhome <- normalizePath(R.home(), winslash = "/", mustWork = FALSE)
+            bad <- character(); bad_refs <- character()
+            for (b in bins) {
+              o <- suppressWarnings(system2("otool", c("-L", shQuote(b)), stdout = TRUE, stderr = FALSE))
+              hit <- o[grepl("(/opt/X11|/opt/homebrew|/usr/local/opt|/Library/Frameworks/R.framework)", o)]
+              # An absolute path into the build runner's portable R cache is
+              # not relocatable to the user's shell either.
+              if (!length(hit) && nzchar(rhome)) hit <- o[grepl(rhome, o, fixed = TRUE)]
+              if (length(hit)) {
+                bad <- c(bad, b)
+                bad_refs <- c(bad_refs, paste0(b, " -> ", paste(trimws(hit), collapse = " | ")))
+              }
+            }
+            if (length(bad)) {
+              cat("non-portable dylib references:\n", paste(bad_refs, collapse = "\n"), "\n")
+              stop("non-portable dylib references in ", length(bad), " file(s): ", paste(unique(basename(bad)), collapse = ", "), ". Rebuild with SOURCE_REBUILD=<pkg>, or drop the package/feature; see references/macos-portability.md")
+            }
           }
 
           required <- setdiff(seed, c(soft, base_pkgs)); miss <- setdiff(required, have())
@@ -412,11 +590,15 @@ jobs:
             r_version = Sys.getenv("R_VERSION"), min_shell_version = "0.1.0", notes = notes,
             packages = lapply(seq_len(nrow(pkgs)), function(i) list(name = pkgs$Package[i], version = pkgs$Version[i], path = file.path("rlib", pkgs$Package[i]), source = "cran")))
           jsonlite::write_json(man, file.path(bundle, "manifest.json"), pretty = TRUE, auto_unbox = TRUE)
+          EOF
+          # Rscript takes the script path positionally; it does not support -f.
+          "$PORTABLE_RSCRIPT" assemble-bundle.R
 
       - name: Patch app for a desktop bundle (optional)
         if: ${{ env.PATCH_SCRIPT != '' }}
-        shell: Rscript {0}
+        shell: bash
         run: |
+          cat > patch-app.R <<'EOF'
           root   <- getwd()
           script <- file.path(root, Sys.getenv("PATCH_SCRIPT"))
           if (!file.exists(script)) stop("PATCH_SCRIPT not found: ", script)
@@ -425,12 +607,16 @@ jobs:
           old <- setwd(appdir); on.exit(setwd(old), add = TRUE)
           source(script)
           cat("patch done\n")
+          EOF
+          # Rscript takes the script path positionally; it does not support -f.
+          "$PORTABLE_RSCRIPT" patch-app.R
 
       - name: Prefetch first-launch data (optional)
         if: ${{ env.PREFETCH_SCRIPT != '' }}
         timeout-minutes: 45
-        shell: Rscript {0}
+        shell: bash
         run: |
+          cat > prefetch-app.R <<'EOF'
           root   <- getwd()
           script <- file.path(root, Sys.getenv("PREFETCH_SCRIPT"))
           if (!file.exists(script)) stop("PREFETCH_SCRIPT not found: ", script)
@@ -441,10 +627,14 @@ jobs:
           source(script)
           cat("prefetch done; files under the app dir:\n")
           print(list.files(".", recursive = TRUE, pattern = "[.](txt|tsv|rds|rda|sqlite)$"))
+          EOF
+          # Rscript takes the script path positionally; it does not support -f.
+          "$PORTABLE_RSCRIPT" prefetch-app.R
 
       - name: Zip + sha256 + metadata + size guard
-        shell: Rscript {0}
+        shell: bash
         run: |
+          cat > zip-bundle.R <<'EOF'
           platform <- "${{ matrix.platform }}"
           out <- sprintf("%s-%s-%s.zip", Sys.getenv("APP_ID"), Sys.getenv("VERSION"), platform)
           bundle <- file.path(getwd(), "bundle"); old <- setwd(bundle); on.exit(setwd(old))
@@ -478,12 +668,16 @@ jobs:
           )
           jsonlite::write_json(meta, sprintf("meta-%s.json", platform), pretty = TRUE, auto_unbox = TRUE)
           writeLines(sprintf("%s  %s", sha, out), sprintf("meta-%s.sha256", platform))
+          EOF
+          # Rscript takes the script path positionally; it does not support -f.
+          "$PORTABLE_RSCRIPT" zip-bundle.R
 
       - name: Smoke test (launch the bundle like the ShinyApps shell)
         if: ${{ env.SMOKE != 'off' }}
         timeout-minutes: 12
-        shell: Rscript {0}
+        shell: bash
         run: |
+          cat > smoke-bundle.R <<'EOF'
           app_id <- Sys.getenv("APP_ID"); ver <- Sys.getenv("VERSION"); plat <- "${{ matrix.platform }}"
           zip <- sprintf("%s-%s-%s.zip", app_id, ver, plat)
           if (!file.exists(zip)) stop("smoke: bundle not found: ", zip)
@@ -536,6 +730,9 @@ jobs:
             Sys.sleep(1)
           }
           cat("SMOKE OK:", url, "served an HTML page\n")
+          EOF
+          # Rscript takes the script path positionally; it does not support -f.
+          "$PORTABLE_RSCRIPT" smoke-bundle.R
 
       - uses: actions/upload-artifact@v4
         with:

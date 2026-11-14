@@ -30,6 +30,12 @@ Consequences:
 
 Platforms: `win-x64`, `mac-arm64` (schema also allows `win-arm64`, `mac-x64`, `linux-x64`).
 
+**`rlib/` must not contain base or recommended packages** (`KernSmooth`, `MASS`,
+`Matrix`, `survival`, `lattice`, `nlme`, `mgcv`, `boot`, `cluster`, `codetools`,
+`foreign`, `rpart`, `spatial`, `class`, `nnet`). The shell's bundled R provides
+them. Shipping them shadows the runtime copy and can fail on macOS with
+`Library not loaded: /Library/Frameworks/R.framework/.../libRblas.dylib`.
+
 ## manifest.json (required fields)
 
 `schema` (=1), `id`, `name`, `version`, `platform`, `entry`, `r_version`, `packages[]`.

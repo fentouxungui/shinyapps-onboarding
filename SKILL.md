@@ -77,6 +77,21 @@ Fast path: run `scripts/onboard-shiny-app.ps1` (steps 2-6), then `record-app.ps1
   `<id>-<version>-<platform>.zip`.
 - The app must run from a directory; never rely on `pkg:::` + `runApp()` from the bundle.
 - Pin to **R 4.6.1**.
+- **Build with the shell's portable R, not the CI framework R.** The template
+  downloads the same `portable-r` release the shell ships and runs the app closure
+  with its `Rscript`; `setup-r` is only for build tooling. Installing app packages
+  with the runner's framework R produces `.so` files that reference
+  `/Library/Frameworks/R.framework` and fail inside ShinyApps. Pass the script
+  path positionally (`Rscript script.R`); `Rscript` does not accept R's `-f` flag
+  (macOS treats `-f` as a filename; Windows can crash). On macOS, do not set
+  `R_PROFILE` to an empty string: that disables portable R's `.portable` site
+  profile, which is what rewrites CRAN binary `.so` files to `@rpath`.
+- **Never ship base/recommended packages in `rlib`.** The shell's bundled R provides
+  `KernSmooth`, `MASS`, `Matrix`, `survival`, `lattice`, `nlme`, `mgcv`, `boot`,
+  `cluster`, `codetools`, `foreign`, `rpart`, `spatial`, `class`, `nnet`, etc.
+  Shipping them shadows the runtime copy; on macOS the copied binary can reference
+  the builder's `/Library/Frameworks/R.framework` and fail on users' Macs. The
+  template asserts this and the macOS audit flags R.framework paths.
 - **Bump the version on every change** -- same version = no client `Update`.
 - **Tag policy.** With `STRICT_VERSION: "auto"` (default) a package tag must equal
   `DESCRIPTION` `Version`; a repo without a `DESCRIPTION` uses the tag as the store
