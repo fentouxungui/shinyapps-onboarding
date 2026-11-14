@@ -52,6 +52,11 @@ GitHub Release, not a tag push, is the automatic trigger.
     (or a crash on Windows). On macOS, keep `R_PROFILE` pointed at portable R's
     own `etc/Rprofile.site`; an empty value disables `.portable`, leaving CRAN
     binary `.so` files unpatched and the audit reporting many packages.
+11. **Re-sign macOS Mach-O files after `.portable` patching.** `.portable` rewrites
+    CRAN `.so` load commands without re-signing, so macOS can kill R with
+    `SIGKILL (Code Signature Invalid)` when the package is loaded. The template
+    signs every Mach-O file in `bundle/` and verifies the signatures before zipping.
+    Keep this step after any patch/prefetch script and before the zip.
 
 ## The version-policy decision
 

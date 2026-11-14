@@ -74,6 +74,16 @@ of them; the rest need a decision you make during feasibility.
     dynamic PDF, Windows HDF5 via `hdf5r`). Disclose it in `APP_NOTES` and the PR; it may
     work partially or only with network.
 
+**macOS: R crashes with `SIGKILL (Code Signature Invalid)` / `Namespace CODESIGNING, Code 2 Invalid Page` while loading a package.**
+Portable R's `.portable` wrapper rewrites CRAN binary `.so` load commands after
+`install.packages()` without re-signing them. macOS kills R when it loads the modified
+binary. `codesign --verify` on the `.app` can still pass because the failing file often
+lives in the shell's shared library (`~/Library/Application Support/<slug>/lib`), outside
+the app bundle; a real case was `data.table/libs/data_table.so`. The template's macOS
+re-signing step fixes this at build time. For an installed app, re-sign the `.so`/`.dylib`
+files in that library with `codesign --force --sign -` and verify them. See
+`references/macos-portability.md`.
+
 **macOS: `Library not loaded: /Library/Frameworks/R.framework/.../libRblas.dylib` from `lib/KernSmooth`.**
 A base/recommended package was shipped in `rlib` and copied to the shared library. It links to
 the builder's R.framework, which the shell's portable R does not provide. Never ship

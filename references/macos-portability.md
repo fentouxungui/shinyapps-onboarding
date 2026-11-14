@@ -51,7 +51,9 @@ Rules:
 4. Audits every `.so`/`.dylib` in `rlib/` for `/opt/X11`, `/opt/homebrew`,
    `/usr/local/opt`, and `/Library/Frameworks/R.framework`, and fails the build if any
    remain.
-5. Runs the smoke test on the mac runner.
+5. Re-signs every Mach-O file in `bundle/` with `codesign --force --sign -` and
+   verifies each signature before zipping (see "Re-sign after `.portable` patching" below).
+6. Runs the smoke test on the mac runner.
 
 The audit regex is deliberately unanchored: `otool -L` output is tab-indented, and an
 anchored `^/opt/...` pattern silently passes everything. If you edit that block, test it
@@ -74,6 +76,43 @@ template's `Set up portable R` step does both and fails early if `.portable` is
 not on the search path.
 
 Do not use `Rscript --vanilla`: it skips the site profile for the same reason.
+
+## Re-sign after `.portable` patching
+
+`portable-r-macos` signs its own Mach-O binaries, but the `.portable` wrapper's
+`fix_pkgs()` runs `install_name_tool` on CRAN binary `.so` files **after**
+`install.packages()` and does not re-sign them. Rewriting load commands invalidates the
+embedded code signature. On a user Mac, loading such a package can kill the R process:
+
+```
+Exception Type: EXC_BAD_ACCESS (SIGKILL (Code Signature Invalid))
+Termination Reason: Namespace CODESIGNING, Code 2 Invalid Page
+```
+
+The build can look green because the smoke test runs before the package is exercised, and
+`codesign --verify` on the `.app` can pass: the bad file may be in the shell's shared
+library (`~/Library/Application Support/<slug>/lib`), outside the app bundle. A real case
+was `data.table/libs/data_table.so`; `library(shiny)` loaded it and R was killed.
+
+The template's **Re-sign macOS binaries after portable-R patching** step walks every file
+in `bundle/`, ad-hoc signs each Mach-O file, and fails the build if `codesign --verify`
+rejects one. Keep it after any `PATCH_SCRIPT`/`PREFETCH_SCRIPT` that can modify the bundle,
+and before the zip step. For an already-installed app, the user-side equivalent is:
+
+```bash
+find "$HOME/Library/Application Support/<slug>/lib" -type f \
+  \( -name '*.so' -o -name '*.dylib' \) -print0 |
+while IFS= read -r -d '' f; do
+  file -b "$f" | grep -q 'Mach-O' || continue
+  xattr -cr "$f" 2>/dev/null || true
+  codesign --force --sign - "$f"
+  codesign --verify --verbose=1 "$f"
+done
+```
+
+Do not re-sign the portable R runtime itself with `-` in this step; it already has its
+Developer ID signature. Sign the package library (`rlib/` / `runtime/R/library`) after all
+installs.
 
 ## Remediation ladder
 
@@ -146,6 +185,7 @@ Two pitfalls seen in practice:
 ## Verify before publishing
 
 - The audit step prints no offenders (not just "no error").
+- Every Mach-O file in `bundle/` passes `codesign --verify` after the re-signing step.
 - `deps-mac-arm64.json` contains the packages you expect, including any `FORCED_PKGS`.
 - The mac smoke test passes with only `rlib` + base R.
 - If a feature was disabled, it is in `APP_NOTES` and in the upstream PR/issue.
@@ -156,6 +196,12 @@ The ShinyApps shell moves package directories into a global library after instal
 dylibs move with them, so `@loader_path` still resolves. But dedup is keyed by package
 name+version: two apps that bundle the same package version with different vendored
 libraries can overwrite each other.
+
+The same dedup keeps a bad macOS signature alive: if an already-installed shared package
+has an invalid signature, reinstalling an app that ships the same package version may reuse
+the existing directory instead of replacing it. Re-sign the installed shared library (or
+clear that package from the store's library) after fixing the build; a new bundle alone is
+not guaranteed to replace an existing same-version copy.
 
 Therefore **every app that vendors libraries into a package must give that package a unique
 version suffix** (`PKG_VERSION_PACKAGES` / `PKG_VERSION_SUFFIX`). Do not patch only the new

@@ -92,6 +92,12 @@ Fast path: run `scripts/onboard-shiny-app.ps1` (steps 2-6), then `record-app.ps1
   Shipping them shadows the runtime copy; on macOS the copied binary can reference
   the builder's `/Library/Frameworks/R.framework` and fail on users' Macs. The
   template asserts this and the macOS audit flags R.framework paths.
+- **Re-sign macOS Mach-O files after portable-R patching.** Portable R's `.portable`
+  wrapper rewrites CRAN `.so` load commands after `install.packages()` but does not
+  re-sign them. The template runs a `codesign --force --sign -` + `codesign --verify`
+  pass over every Mach-O file in `bundle/` before zipping. Without it, macOS kills R
+  with `EXC_BAD_ACCESS (SIGKILL (Code Signature Invalid))` / `Namespace CODESIGNING,
+  Code 2 Invalid Page` when the package is loaded. Do not remove that step.
 - **Bump the version on every change** -- same version = no client `Update`.
 - **Tag policy.** With `STRICT_VERSION: "auto"` (default) a package tag must equal
   `DESCRIPTION` `Version`; a repo without a `DESCRIPTION` uses the tag as the store
@@ -172,11 +178,11 @@ once in a separate job and pass it as an artifact. Recipe: `references/startup-d
 
 The template builds the dependency graph from the **source** index, uses `pkgType="both"`
 (binary then source), runs a fix-up loop, load-validates seed packages from `rlib/`,
-excludes base and recommended packages, and audits macOS binaries for XQuartz/Homebrew
-links. It also fails when any `library()`/`require()`/`pkg::` name in the app sources is
-missing from `rlib/`, because the smoke test renders the UI once but never clicks a module --
-a package loaded inside a click handler otherwise stays invisible until a user presses the
-button.
+excludes base and recommended packages, audits macOS binaries for XQuartz/Homebrew
+links, and re-signs every Mach-O file in `bundle/` after portable-R patching. It also fails
+when any `library()`/`require()`/`pkg::` name in the app sources is missing from `rlib/`,
+because the smoke test renders the UI once but never clicks a module -- a package loaded
+inside a click handler otherwise stays invisible until a user presses the button.
 
 Archived and GitHub-only packages go through `ARCHIVE_URLS` and must be named in
 `FORCED_PKGS`; a failed archive install aborts the build. Build-time config patches
@@ -204,6 +210,15 @@ portability: `references/macos-portability.md`.
   still hard -- guard or drop that module. Source packages needing openssl/hdf5 use
   `MACOS_BREW_DEPS`. Never put `dylibbundler` in a loop -- it hangs; see
   `references/macos-portability.md`.
+- **macOS `Code Signature Invalid` after a green smoke test.** The bundle installs and the
+  smoke test passes, but on a user Mac R dies with `EXC_BAD_ACCESS (SIGKILL (Code Signature
+  Invalid))` / `Namespace CODESIGNING, Code 2 Invalid Page` while loading a package. Portable
+  R's `.portable` wrapper patched that package's `.so` after installation without re-signing
+  it. Verify `rlib/` with `codesign --verify` before publishing, and run the template's
+  `Re-sign macOS binaries` step; a failing file often lives in the shell's shared library,
+  so `codesign --verify` on the `.app` alone can still pass. Shared-library dedup can keep
+  the bad package when an update ships the same version, so existing installs may need the
+  package re-signed or cleared.
 - With the release-only trigger, poll `actions/runs?event=release` and match
   `.github/workflows/build-app-bundle.yml` (and the tag when available); a stale
   tag-push run must not be mistaken for the release build.

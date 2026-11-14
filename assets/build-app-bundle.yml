@@ -12,6 +12,8 @@
 #  positionally; `-f` is an R flag, not an Rscript flag.
 #  v5.2 keeps R_PROFILE pointed at portable R's own Rprofile.site so the
 #  .portable binary patcher runs (an empty R_PROFILE disables it).
+#  v5.3 re-signs every Mach-O file in bundle/ after portable R's .portable
+#  wrapper patches CRAN binaries, then verifies the signatures before zipping.
 #
 #  This is the genome-stats-review revision, based on the merged
 #  MPUSP/shiny-genome-stats PR. v4 uses a release-only trigger (publishing a
@@ -630,6 +632,34 @@ jobs:
           EOF
           # Rscript takes the script path positionally; it does not support -f.
           "$PORTABLE_RSCRIPT" prefetch-app.R
+
+      - name: Re-sign macOS binaries after portable-R patching
+        if: runner.os == 'macOS'
+        shell: bash
+        run: |
+          set -euo pipefail
+          # portable R's .portable wrapper rewrites CRAN .so load commands after
+          # install.packages(), but does not re-sign them. macOS kills R with
+          # "Code Signature Invalid" when such a .so is loaded from the bundle.
+          # Re-sign every Mach-O file before zipping, then verify the result.
+          while IFS= read -r -d '' f; do
+            if file -b "$f" | grep -q 'Mach-O'; then
+              xattr -cr "$f" 2>/dev/null || true
+              chmod u+w "$f" 2>/dev/null || true
+              codesign --force --sign - "$f"
+            fi
+          done < <(find bundle -type f -print0)
+
+          bad=0
+          while IFS= read -r -d '' f; do
+            if file -b "$f" | grep -q 'Mach-O'; then
+              if ! codesign --verify --verbose=1 "$f" >/dev/null 2>&1; then
+                echo "::error::invalid code signature: $f"
+                bad=1
+              fi
+            fi
+          done < <(find bundle -type f -print0)
+          exit "$bad"
 
       - name: Zip + sha256 + metadata + size guard
         shell: bash
