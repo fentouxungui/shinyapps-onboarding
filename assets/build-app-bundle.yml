@@ -14,6 +14,7 @@
 #  .portable binary patcher runs (an empty R_PROFILE disables it).
 #  v5.3 re-signs every Mach-O file in bundle/ after portable R's .portable
 #  wrapper patches CRAN binaries, then verifies the signatures before zipping.
+#  v5.4 records r_abi (major.minor) in manifest.json for runtime selection.
 #
 #  This is the genome-stats-review revision, based on the merged
 #  MPUSP/shiny-genome-stats PR. v4 uses a release-only trigger (publishing a
@@ -586,10 +587,16 @@ jobs:
           jsonlite::write_json(lock, file.path(root, lock_file), pretty = TRUE, auto_unbox = TRUE)
           lock_sha <- digest::digest(file.path(root, lock_file), algo = "sha256", file = TRUE)
           notes <- Sys.getenv("APP_NOTES"); if (length(soft_missing)) notes <- paste0(notes, " Not bundled: ", paste(soft_missing, collapse = ", "), ".")
+          r_version <- paste(R.version$major, R.version$minor, sep = ".")
+          r_abi <- paste(R.version$major, sub("\\..*$", "", R.version$minor), sep = ".")
+          env_r_version <- Sys.getenv("R_VERSION")
+          if (nzchar(env_r_version) && !identical(r_version, env_r_version)) {
+            stop("R_VERSION says ", env_r_version, " but this R is ", r_version)
+          }
           man <- list(schema = 1L, id = app_id, name = Sys.getenv("APP_NAME"), version = Sys.getenv("VERSION"),
             author = Sys.getenv("APP_AUTHOR"), description = Sys.getenv("APP_DESC"), homepage = Sys.getenv("APP_HOMEPAGE"),
             license = Sys.getenv("APP_LICENSE"), runtime = "r-shiny", entry = entry, platform = platform,
-            r_version = Sys.getenv("R_VERSION"), min_shell_version = "0.1.0", notes = notes,
+            r_version = r_version, r_abi = r_abi, min_shell_version = "0.1.0", notes = notes,
             packages = lapply(seq_len(nrow(pkgs)), function(i) list(name = pkgs$Package[i], version = pkgs$Version[i], path = file.path("rlib", pkgs$Package[i]), source = "cran")))
           jsonlite::write_json(man, file.path(bundle, "manifest.json"), pretty = TRUE, auto_unbox = TRUE)
           EOF
@@ -666,7 +673,9 @@ jobs:
         run: |
           cat > zip-bundle.R <<'EOF'
           platform <- "${{ matrix.platform }}"
-          out <- sprintf("%s-%s-%s.zip", Sys.getenv("APP_ID"), Sys.getenv("VERSION"), platform)
+          r_version <- Sys.getenv("R_VERSION")
+          r_abi <- paste(head(strsplit(r_version, ".", fixed = TRUE)[[1]], 2), collapse = ".")
+          out <- sprintf("%s-%s-%s-r%s.zip", Sys.getenv("APP_ID"), Sys.getenv("VERSION"), platform, r_abi)
           bundle <- file.path(getwd(), "bundle"); old <- setwd(bundle); on.exit(setwd(old))
           zip::zipr(out, files = list.files(".", all.files = TRUE, no.. = TRUE))
           entries <- utils::unzip(out, list = TRUE)$Name
@@ -691,7 +700,7 @@ jobs:
             version = Sys.getenv("VERSION"), file = out, sha256 = sha, size = sz,
             source_repository = Sys.getenv("GITHUB_REPOSITORY"), source_commit = Sys.getenv("GITHUB_SHA"),
             source_ref = Sys.getenv("GITHUB_REF"), source_tag = Sys.getenv("TAG"),
-            r_version = Sys.getenv("R_VERSION"), cran_snapshot = Sys.getenv("CRAN_SNAPSHOT"),
+            r_version = r_version, r_abi = r_abi, cran_snapshot = Sys.getenv("CRAN_SNAPSHOT"),
             strict_version = Sys.getenv("STRICT_VERSION"), strict_deps = Sys.getenv("STRICT_DEPS"),
             pandoc_version = pv, dependency_lock = lock_file, dependency_lock_sha256 = lock_sha,
             package_count = nrow(utils::installed.packages(lib.loc = file.path("bundle", "rlib")))
@@ -709,7 +718,9 @@ jobs:
         run: |
           cat > smoke-bundle.R <<'EOF'
           app_id <- Sys.getenv("APP_ID"); ver <- Sys.getenv("VERSION"); plat <- "${{ matrix.platform }}"
-          zip <- sprintf("%s-%s-%s.zip", app_id, ver, plat)
+          r_abi <- paste(head(strsplit(Sys.getenv("R_VERSION"), ".", fixed = TRUE)[[1]], 2),
+                         collapse = ".")
+          zip <- sprintf("%s-%s-%s-r%s.zip", app_id, ver, plat, r_abi)
           if (!file.exists(zip)) stop("smoke: bundle not found: ", zip)
           tmp <- tempfile("smoke"); dir.create(tmp)
           utils::unzip(zip, exdir = tmp)

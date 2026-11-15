@@ -57,6 +57,12 @@ GitHub Release, not a tag push, is the automatic trigger.
     `SIGKILL (Code Signature Invalid)` when the package is loaded. The template
     signs every Mach-O file in `bundle/` and verifies the signatures before zipping.
     Keep this step after any patch/prefetch script and before the zip.
+12. **Record the R ABI.** The manifest must carry both `r_version` (exact) and
+    `r_abi` (major.minor). A bundle built for 4.6 belongs to the `r-4.6`
+    runtime; the shell selects that runtime and library. Do not hand-edit
+    `r_abi` to make a bundle look compatible with a newer R. New assets use
+    `<id>-<version>-<platform>-r<abi>.zip`; the catalog also accepts legacy
+    unsuffixed assets for the default ABI.
 
 ## The version-policy decision
 

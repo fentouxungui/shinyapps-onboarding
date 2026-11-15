@@ -73,10 +73,13 @@ Fast path: run `scripts/onboard-shiny-app.ps1` (steps 2-6), then `record-app.ps1
 
 ## Hard rules
 
-- Store `id` must be lowercase `^[a-z0-9][a-z0-9-]*$` and equal the release asset prefix
-  `<id>-<version>-<platform>.zip`.
+- Store `id` must be lowercase `^[a-z0-9][a-z0-9-]*$` and equal the release asset prefix.
+  New bundles use `<id>-<version>-<platform>-r<abi>.zip` (for example `-r4.6`);
+  legacy unsuffixed `<id>-<version>-<platform>.zip` assets remain supported.
 - The app must run from a directory; never rely on `pkg:::` + `runApp()` from the bundle.
-- Pin to **R 4.6.1**.
+- Pin to a **supported R ABI** (currently R 4.6.1 / ABI 4.6). Record both
+  `r_version` (exact) and `r_abi` (major.minor) in `manifest.json`; never mix
+  binaries built for different R minors.
 - **Build with the shell's portable R, not the CI framework R.** The template
   downloads the same `portable-r` release the shell ships and runs the app closure
   with its `Rscript`; `setup-r` is only for build tooling. Installing app packages
@@ -219,6 +222,11 @@ portability: `references/macos-portability.md`.
   so `codesign --verify` on the `.app` alone can still pass. Shared-library dedup can keep
   the bad package when an update ships the same version, so existing installs may need the
   package re-signed or cleared.
+- **A new R minor means a new bundle.** Do not treat `4.7` as a drop-in for `4.6`:
+  binary packages, Bioconductor releases and `.so`/`.dll` files are version-specific.
+  Keep the old `r-A.B` runtime for existing installs, build a new bundle with
+  `r_abi: "A.B"`, and let the shell select the runtime. The template writes `r_abi`
+  from `R_VERSION`; never hand-edit it to make a bundle look compatible.
 - With the release-only trigger, poll `actions/runs?event=release` and match
   `.github/workflows/build-app-bundle.yml` (and the tag when available); a stale
   tag-push run must not be mistaken for the release build.

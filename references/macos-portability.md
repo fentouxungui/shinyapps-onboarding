@@ -192,10 +192,11 @@ Two pitfalls seen in practice:
 
 ## Shared-library dedup
 
-The ShinyApps shell moves package directories into a global library after install. Bundled
-dylibs move with them, so `@loader_path` still resolves. But dedup is keyed by package
-name+version: two apps that bundle the same package version with different vendored
-libraries can overwrite each other.
+The ShinyApps shell moves package directories into a runtime-scoped library after install
+(for example `lib/r-4.6/<pkg>`). Bundled dylibs move with them, so `@loader_path` still
+resolves. Dedup is keyed by runtime + package name + version: two apps that bundle the
+same package version with different vendored libraries can still overwrite each other
+within one runtime, but packages built for different R minors are isolated.
 
 The same dedup keeps a bad macOS signature alive: if an already-installed shared package
 has an invalid signature, reinstalling an app that ships the same package version may reuse
