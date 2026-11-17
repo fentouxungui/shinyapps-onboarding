@@ -40,12 +40,21 @@ and do not listen for `release.published`.
    created through GitHub's Release UI may not emit a `push` event, so use a manual
    dispatch after publishing it. Use the standard
    `.github/workflows/build-app-bundle.yml` filename, without an app-id prefix.
+   A matrix build has one aggregate result: the release job must use
+   `always()` plus an artifact-presence check so a successful platform is not
+   blocked by the other platform's failure. See
+   `references/independent-platform-releases.md`.
 3. **Dependencies must fail loudly.** A required or transitive dependency missing from the
    configured repositories is a hard error, not a `WARN` followed by silently dropping the
    package. Pin CRAN inputs to a snapshot date and publish the resolved package list.
+   For `ARCHIVE_URLS`, this includes the archive's transitive R dependencies: a local
+   source install with `dependencies = FALSE` does not resolve them. See
+   `references/failure-modes.md`.
 4. **Clean-library smoke.** The smoke test must use only the bundle's `rlib` plus base R.
-   Set `.libPaths(c(rlib, .Library))` in the child and fail when any other path is present;
-   otherwise a runner library can mask a missing bundle dependency.
+   Set `.libPaths(c(rlib, .Library), include.site = FALSE)` in the child and launch
+   `callr::r_bg` with `R_LIBS_SITE`/`R_LIBS_USER`/`R_LIBS` empty; fail when any other
+   path is present. Without `include.site = FALSE`, the portable-R harness appears as
+   an extra path on macOS and the app exits before serving.
 5. **Report toolchain.** If the app renders R Markdown, install and check Pandoc in CI.
    Pandoc and LaTeX are not part of the bundle; document the runtime requirement (PDF
    additionally needs LaTeX).
@@ -53,8 +62,12 @@ and do not listen for `release.published`.
    `contents: write`. Record the checked-out commit with `git rev-parse HEAD` as
    `SOURCE_COMMIT` (the template exports it with `SOURCE_REF=refs/tags/<tag>` from
    the checkout); `GITHUB_SHA` is the workflow ref, not necessarily the built tag.
-   Publish SHA-256 files, build/source metadata and a dependency lock. Do not rewrite
-   existing release notes.
+   Release assets are the platform **zips**; keep SHA-256/meta/deps files as
+   Actions artifacts. ShinyApps `publish-catalog` derives `sha256` from GitHub's
+   asset digest and ignores non-zip assets. For independently released platforms,
+   publishing per-run shared or per-platform meta files adds no store value and
+   can collide when the second platform is added later. Do not rewrite existing
+   release notes.
 7. **Shell testing boundary.** A CI bundle is not a tested desktop install. Test the real
    ShinyApps shell on Windows/macOS separately; do not claim shell E2E from a green CI
    smoke, which starts the server and requests `/` but is not an installed store run.
@@ -74,7 +87,15 @@ and do not listen for `release.published`.
     flag, not an `Rscript` flag, and produces `cannot open file '-f'` on macOS
     (or a crash on Windows). On macOS, keep `R_PROFILE` pointed at portable R's
     own `etc/Rprofile.site`; an empty value disables `.portable`, leaving CRAN
-    binary `.so` files unpatched and the audit reporting many packages.
+    binary `.so` files unpatched and the audit reporting many packages. After the
+    setup, call the absolute `"$PORTABLE_RSCRIPT"`, not bare `Rscript`: a bare
+    `Rscript` can resolve to the framework R or a shim, exiting 255 with `The
+    system cannot find the path specified`. On Windows, keep `R_HOME` empty and
+    let Rscript self-locate; a set `R_HOME` (even a correct path) can fail once
+    the portable bin is on `GITHUB_PATH`. Do not add the portable bin to
+    `GITHUB_PATH`: a forward-slash drive entry can make `where`/R `Sys.which`
+    exit 255. Check `make`/`gcc` with shell `command -v`. macOS keeps the
+    explicit portable `R_HOME`. See `references/failure-modes.md`.
 11. **Re-sign macOS Mach-O files after `.portable` patching.** `.portable` rewrites
     CRAN `.so` load commands without re-signing, so macOS can kill R with
     `SIGKILL (Code Signature Invalid)` when the package is loaded. The template

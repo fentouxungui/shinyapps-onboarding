@@ -11,7 +11,7 @@ Publish any Shiny-app repository to the **ShinyApps** desktop app store using th
 that tag's GitHub Release; a catalog entry + icon make the app installable without
 rebuilding the store shell.
 
-**Skill version:** `2026.11.17` (see `VERSION`). Canonical source:
+**Skill version:** `2026.11.17.8` (see `VERSION`). Canonical source:
 <https://github.com/fentouxungui/shinyapps-onboarding> (`main`).
 
 ## Mandatory version gate (read first)
@@ -39,8 +39,8 @@ version. Full procedure and commands: `references/skill-version-policy.md`.
 
 Read `references/skill-version-policy.md` first, then
 `references/failure-modes.md`, `references/app-shapes.md`,
-`references/store-contract.md` and `references/release-hardening.md` before
-touching a workflow.
+`references/store-contract.md`, `references/release-hardening.md` and
+`references/independent-platform-releases.md` before touching a workflow.
 
 ## When to use
 
@@ -128,6 +128,16 @@ Fast path: run `scripts/onboard-shiny-app.ps1` (steps 2-6), then `record-app.ps1
   (macOS treats `-f` as a filename; Windows can crash). On macOS, do not set
   `R_PROFILE` to an empty string: that disables portable R's `.portable` site
   profile, which is what rewrites CRAN binary `.so` files to `@rpath`.
+  After the portable-R setup, invoke the absolute `"$PORTABLE_RSCRIPT"` in later
+  steps; a bare `Rscript` can resolve to the runner's framework R or a shim,
+  producing `The system cannot find the path specified` (exit 255) before any R
+  code runs. On Windows, keep `R_HOME` empty and let Rscript self-locate: a set
+  `R_HOME` (even a correct path) can fail once the portable bin is on
+  `GITHUB_PATH`. Write `R_HOME=` empty to `GITHUB_ENV` on Windows; macOS keeps
+  the portable `R_HOME`. Do not add the portable bin to `GITHUB_PATH`: a
+  forward-slash drive entry can make Windows `where`/R `Sys.which` exit 255.
+  Check `make`/`gcc` with shell `command -v`, not R `Sys.which`. Do not read
+  that 255 as a missing `make`/`gcc`.
 - **Never ship base/recommended packages in `rlib`.** The shell's bundled R provides
   `KernSmooth`, `MASS`, `Matrix`, `survival`, `lattice`, `nlme`, `mgcv`, `boot`,
   `cluster`, `codetools`, `foreign`, `rpart`, `spatial`, `class`, `nnet`, etc.
@@ -168,8 +178,16 @@ Fast path: run `scripts/onboard-shiny-app.ps1` (steps 2-6), then `record-app.ps1
   `softprops/action-gh-release` (it has no `release_id`/`allowUpdates`, and a
   `tag_name` that differs from the existing tag silently creates a new Release).
 - **Manual runs attach, tag pushes own the Release.** `workflow_dispatch` must fail
-  when the tag has no Release; it must never create one. Only a `push` event may
-  create the missing Release for its tag.
+  when the tag has no Release; it must never create one. Only a `push` event, or a
+  `workflow_call` with `allow_create_release: true`, may create the missing Release.
+- **Release platforms independently.** A matrix `bundle` job has one aggregate
+  result. The release job must use `always()` (plus `resolve` success), tolerate
+  missing platform artifacts, and publish only the platforms that built. Upload
+  only the platform zips; keep `meta-*`/`deps-*`/checksum files as Actions
+  artifacts. ShinyApps `publish-catalog` derives `sha256` from GitHub's asset
+  digest and ignores non-zip assets. For a missing-platform retry, use the Run
+  Bundle workflow and the `platforms`/`workflow_call` pattern in
+  `references/independent-platform-releases.md`.
 - **Least privilege.** The build job is `contents: read`; only the release job is
   `contents: write`. Remove unused `GITHUB_PAT`/`GITHUB_TOKEN` env entries.
 - **One version source.** A `resolve` job takes the dispatch input or `github.ref_name`,
@@ -182,9 +200,11 @@ Fast path: run `scripts/onboard-shiny-app.ps1` (steps 2-6), then `record-app.ps1
 - **Supported macOS runners.** `macos-14` was retired on 2026-11-02; use
   `macos-15` for the arm64 bundle. Keep the app's own macOS minimum in the
   documentation, not in `runs-on:`.
-- **Keep release assets small.** Publish the platform ZIPs plus one checksum file
-  and one consolidated build-info file; keep per-platform metadata and dependency
-  locks as Actions artifacts unless the reviewer asks for them in the Release.
+- **Keep release assets small.** Publish the platform ZIPs only; keep
+  `meta-*`/`deps-*`/checksum files as Actions artifacts. ShinyApps
+  `publish-catalog` derives `sha256` from GitHub's asset digest and ignores
+  non-zip assets, so extra Release files add no store value and can collide when
+  a second platform is added later.
 - **Pin and validate dependencies.** Use a CRAN snapshot, write the resolved lock
   before installation, and verify the installed closure in a clean child process.
   Present the lock as an enforced artifact, not a post-install inventory.
@@ -215,7 +235,12 @@ The workflow ships a **`Smoke test`** step that starts the built bundle with `sh
 process (clean library: `rlib` + base R), waits for the server and requests `/`; it fails unless an HTML
 page comes back, and prints the child's output on failure. Constructing the app object (`shinyAppDir()`)
 is not enough -- a `ui` function, an `onStart` hook or a resource-loading error can fail only once the
-server runs. See `references/failure-modes.md`. Turn it off with `SMOKE: "off"` for apps that need network
+server runs. See `references/failure-modes.md`. The child must explicitly exclude
+`.Library.site` and the portable-R harness: use
+`.libPaths(c(rlib, .Library), include.site = FALSE)` and
+`callr::r_bg(..., env = c(R_LIBS_SITE = "", R_LIBS_USER = "", R_LIBS = ""))`.
+Otherwise macOS reports `smoke: unexpected library paths: .../harness-root/harness`
+and the app exits before serving. Turn it off with `SMOKE: "off"` for apps that need network
 at startup.
 
 A **module that the user explicitly opens** may fetch its own large data on first use
@@ -243,10 +268,14 @@ because the smoke test renders the UI once but never clicks a module -- a packag
 inside a click handler otherwise stays invisible until a user presses the button.
 
 Archived and GitHub-only packages go through `ARCHIVE_URLS` and must be named in
-`FORCED_PKGS`; a failed archive install aborts the build. Build-time config patches
-(absolute author paths, disabling a module that cannot ship) go in `PATCH_SCRIPT`, which
-runs inside `bundle/app/` before zipping. Recipes: `references/heavy-apps.md`. macOS
-portability: `references/macos-portability.md`.
+`FORCED_PKGS`; a failed archive install aborts the build. A local source install with
+`dependencies = FALSE` does not resolve dependencies: install the full CRAN/Bioc
+transitive closure of each archive's declared deps before the archive itself. The
+template's `install_archive()` does this; an older workflow missing it will fail even
+for pure-R archives. Build-time config patches (absolute author paths, disabling a
+module that cannot ship) go in `PATCH_SCRIPT`, which runs inside `bundle/app/` before
+zipping. Recipes: `references/heavy-apps.md`. macOS portability:
+`references/macos-portability.md`.
 
 ## Field lessons (batch CRAN sweep)
 
@@ -289,6 +318,14 @@ portability: `references/macos-portability.md`.
 - `ARCHIVE_URLS` accepts a monorepo tarball whose package sits in a subdirectory (BPCells in
   `r/`): the template locates the single `DESCRIPTION` and installs that package's Imports
   first. A tarball with several packages fails on purpose -- pass a package tarball.
+- **Pure-R GitHub archives still need their transitive R deps.** No `src/` and no
+  `NeedsCompilation` does not mean "no dependency work": `jjPlot -> tidyverse`,
+  `ggunchull -> alphahull/dbscan/polyclip`, `jjAnno -> ggiraphExtra/magick` all have large
+  closures. Local `install.packages(..., repos = NULL, dependencies = FALSE)` installs only
+  the package. The template now expands each archive's declared deps with
+  `tools::package_dependencies(..., recursive = TRUE)` before installing the archive; for an
+  older workflow, add the archive's direct CRAN deps to `EXTRA_PKGS` as a belt-and-suspenders
+  fix. Reproduce with `R CMD INSTALL --no-clean-on-error` and read `00install.out`.
 - Publish **Windows-only** when a macOS dependency cannot be made portable (see
   `references/macos-portability.md`): remove the macOS matrix entry and record it in
   `APP_NOTES`; do not ship a mac zip that cannot start.
@@ -390,9 +427,9 @@ on dependencies, supports an optional `CRAN_SNAPSHOT` pin and optional
 - `references/skill-version-policy.md`, `references/app-shapes.md`,
   `references/failure-modes.md`, `references/store-contract.md`,
   `references/startup-data.md`, `references/release-hardening.md`,
-  `references/heavy-apps.md`, `references/macos-portability.md`,
-  `references/runtime-downloads.md`, `references/special-packages.md`,
-  `references/pr-template.md`.
+  `references/independent-platform-releases.md`, `references/heavy-apps.md`,
+  `references/macos-portability.md`, `references/runtime-downloads.md`,
+  `references/special-packages.md`, `references/pr-template.md`.
 - `examples/` - historical v1 workflows for flat, package-fn and package-deploy apps.
   They predate the v5.5 trigger/release fixes and are annotated do-not-copy; use
   `assets/build-app-bundle.yml` for new onboarding.

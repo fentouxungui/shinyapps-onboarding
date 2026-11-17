@@ -21,7 +21,7 @@ upstream/fork drift and rebuild signals for every recorded app.
 **Mandatory version gate:** before creating, upgrading, or reviewing any workflow,
 verify the loaded skill against canonical `main` and record the commit; see
 [references/skill-version-policy.md](references/skill-version-policy.md). Current
-`VERSION`: `2026.11.17`.
+`VERSION`: `2026.11.17.8`.
 
 ## Contents
 
@@ -46,6 +46,7 @@ verify the loaded skill against canonical `main` and record the commit; see
 | `references/startup-data.md`   | First-launch data downloads: generate at build time into the bundle |
 | `references/store-contract.md` | Bundle/manifest/catalog contract and `publish-catalog` |
 | `references/release-hardening.md` | Tag/version policy, release-safety checklist, reviewer boundary |
+| `references/independent-platform-releases.md` | Independent win/mac release jobs and Run Bundle missing-platform checks |
 | `references/heavy-apps.md`     | Many modules / many dependencies / large data: census, size budget, build-time patches |
 | `references/macos-portability.md` | XQuartz/Homebrew dylib failures and the remediation ladder |
 | `references/runtime-downloads.md` | When a user-triggered module download is acceptable (and how) |

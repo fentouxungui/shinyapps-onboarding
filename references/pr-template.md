@@ -48,11 +48,15 @@ answers each finding and then states how it was verified:
   the feature you left out.
 - **Verification** -- the tag you built, both platforms green, and: "I installed the Windows
   bundle through the ShinyApps desktop client; it launches and runs normally."
-- **Release instructions** -- push the `vX.Y.Z` tag; the workflow builds once, creates
+- **Release instructions** -- push the `vX.Y.Z` tag; the workflow builds, creates
   that tag's Release if needed, and attaches
-  `<id>-<version>-win-x64-r<abi>.zip` / `<id>-<version>-mac-arm64-r<abi>.zip`
-  plus `SHA256SUMS` and `build-info.json`. A manual run with an existing tag attaches
-  to that tag's existing Release only; it does not create a new Release.
+  `<id>-<version>-win-x64-r<abi>.zip` / `<id>-<version>-mac-arm64-r<abi>.zip`.
+  ShinyApps derives `sha256` from GitHub's asset digest; meta/checksum files stay
+  as Actions artifacts. Platforms are released independently: a failed platform
+  does not block the successful one. To complete a partially released tag, run
+  the Run Bundle workflow for the
+  missing platform; a direct manual Build dispatch attaches to an existing
+  Release only and does not create one.
 - **Scope** -- one workflow file, no application code, and an offer to adjust the filename or
   branch.
 
