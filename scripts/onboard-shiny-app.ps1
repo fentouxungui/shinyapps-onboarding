@@ -1,7 +1,9 @@
 <#
   onboard-shiny-app-hardened.ps1
   ------------------------------
-  Fork -> bundle workflow -> tag + published release -> catalog entry + icon -> optional PR.
+  MANDATORY: complete references/skill-version-policy.md before running this
+  driver; it generates a workflow from the loaded skill.
+  Fork -> bundle workflow -> tag push (CI creates the tag's Release) -> catalog entry + icon -> optional PR.
 
   Adds, on top of the basic route:
     * -StrictVersion auto|on|off  (tag vs DESCRIPTION Version)
@@ -109,36 +111,34 @@ git -C $dir commit -q -m "Add GitHub Actions workflow publishing prebuilt deskto
 git -C $dir push -q -u origin $branch
 Info "workflow pushed to $me/$RepoName@$branch"
 
-# --- tag + published release -> release CI ---------------------------------
-# The standard workflow is release-only: publishing a Release starts the
-# build; pushing a tag alone does not. Create the Release explicitly after
-# the tag is visible to GitHub.
+# --- tag push -> bundle CI --------------------------------------------------
+# The standard workflow builds on `push: tags` (`v*`) and creates/attaches the
+# tag's Release. Do not publish a Release here: the workflow owns it, and a
+# concurrent API-created Release could race the workflow's own creation step.
 git -C $dir tag -a $Tag -m "$AppName ShinyApps bundle $Tag"
 git -C $dir push -q origin $Tag
-$rel = $null
-try { $rel = Api GET "https://api.github.com/repos/$me/$RepoName/releases/tags/$Tag" } catch { $rel = $null }
-if (-not $rel) {
-  $rel = Api POST "https://api.github.com/repos/$me/$RepoName/releases" @{
-    tag_name = $Tag; name = $Tag; draft = $false; prerelease = $false
-    generate_release_notes = $false
-  }
-  Info "release $Tag published (CI building bundles)"
-} else {
-  Info "release $Tag already exists (CI building bundles)"
-}
+Info "tag $Tag pushed (CI building bundles; the workflow creates its Release)"
 
 if ($WatchRelease) {
+  $tagSha = (git -C $dir rev-parse $Tag).Trim()
   $run = $null
   for ($i = 0; $i -lt 90; $i++) {
     Start-Sleep 20
-    $runs = (Api GET "https://api.github.com/repos/$me/$RepoName/actions/runs?event=release&per_page=20").workflow_runs
-    $run = $runs | Where-Object { $_.path -eq '.github/workflows/build-app-bundle.yml' } | Select-Object -First 1
+    $runs = (Api GET "https://api.github.com/repos/$me/$RepoName/actions/runs?event=push&per_page=30").workflow_runs
+    $run = $runs | Where-Object {
+      $_.path -eq '.github/workflows/build-app-bundle.yml' -and
+      ($_.head_branch -eq $Tag -or $_.head_sha -eq $tagSha)
+    } | Select-Object -First 1
     if ($run -and $run.status -eq 'completed') { break }
   }
-  if (-not $run) { throw "release workflow for $Tag did not appear within 30 minutes" }
-  if ($run.status -ne 'completed') { throw "release workflow did not complete: $($run.html_url)" }
+  if (-not $run) { throw "tag-push workflow for $Tag did not appear within 30 minutes" }
+  if ($run.status -ne 'completed') { throw "tag-push workflow did not complete: $($run.html_url)" }
   if ($run.conclusion -ne 'success') { throw "bundle CI $($run.conclusion): $($run.html_url)" }
-  $rel = Api GET "https://api.github.com/repos/$me/$RepoName/releases/tags/$Tag"
+  try {
+    $rel = Api GET "https://api.github.com/repos/$me/$RepoName/releases/tags/$Tag"
+  } catch {
+    throw "bundle CI succeeded but the Release for $Tag was not found: $($run.html_url)"
+  }
   Info ("release assets: " + (($rel.assets | ForEach-Object { "$($_.name) ($([math]::Round($_.size/1MB,1)) MB)" }) -join ', '))
 }
 

@@ -187,9 +187,16 @@ These come from multi-module apps (xOmicsShiny, ScRDAVis). Full playbook:
 - **Reference genomes blow the size limit.** Two `BSgenome` packages are ~1.4 GB before
   the dependency stack; the full ScRDAVis bundle cannot fit under the 2 GiB release limit.
   Drop or guard the heavy feature, and say which module is disabled in `APP_NOTES`.
+- **A tag push built nothing.** The workflow listened only for `release: published`.
+  A git tag push is a `push` event, not a release event, so no run appeared. The
+  template now triggers on `push: tags`; `release: published` is not a trigger (the
+  workflow creates the Release itself, and listening to that event would double-build).
+  A tag created through the Release UI may not emit a `push` event either: run the
+  workflow manually against it.
 - **Version assembled from several refs.** `mainv3.0.1` came from concatenating
-  `release.tag_name` + `ref_name` + `inputs.tag`. Use one source (`inputs.tag || github.ref_name`)
-  and check out that same tag (`ref: ${{ inputs.tag || github.ref }}`).
+  `release.tag_name` + `ref_name` + `inputs.tag`. Use one source (`inputs.tag || github.ref_name`),
+  strip `refs/tags/` and `v`, require the tag to exist, and check out
+  `ref: ${{ needs.resolve.outputs.tag }}`.
 - **No upstream license.** A repo with no `LICENSE` needs explicit permission from the
   author before listing, independent of whether the CI now works.
 - **A GitHub package is not at its repo root.** BPCells is `r/` inside `bnprks/BPCells`;
@@ -212,8 +219,15 @@ These come from multi-module apps (xOmicsShiny, ScRDAVis). Full playbook:
   at the tag being built; building the stale default branch ships old source under a new tag.
 - **A manual run builds the default branch, not the tag.** `inputs.tag` decides the Release
   that receives the assets, but `actions/checkout` follows the event ref. Run from `main`
-  with `v2.2.0` and the bundle contains `main`. Set
-  `ref: ${{ inputs.tag || github.ref }}`.
+  with `v2.2.0` and the bundle contains `main`. The `resolve` job now canonicalizes the
+  tag and the build checks out `ref: ${{ needs.resolve.outputs.tag }}`.
+- **A manual run created a new Release instead of attaching.** The input `0.1.10` did not
+  match the existing `v0.1.10` tag, and `softprops/action-gh-release` treats an unknown
+  `tag_name` as "create a Release". The template now resolves the canonical `v<version>`
+  once, requires it to exist, uses `gh release upload` (which never creates a Release), and
+  fails a manual run whose tag has no Release. Do not add `release: published` to "fix"
+  the trigger: the workflow's own Release would start a second build; a tag push is the
+  trigger, and a manual run is attach-only.
 - **The smoke test constructs the app but never starts it.** `shiny::shinyAppDir(".")`
   returns a `shiny.appobj` without running the server, so a `ui` function, an `onStart`
   hook or a missing resource passes while the real app would fail. Start the bundle with

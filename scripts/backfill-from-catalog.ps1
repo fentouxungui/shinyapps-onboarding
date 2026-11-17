@@ -95,8 +95,10 @@ foreach ($e in $entries) {
 
     $wfList = @((Api "https://api.github.com/repos/$repo/contents/.github/workflows?ref=$([uri]::EscapeDataString($tag))") | ForEach-Object { $_ })
     $candidates = @($wfList | Where-Object { $_.name -match '\.ya?ml$' })
-    # New workflows use the standard name. Keep the app-id prefix as a
-    # fallback so historical releases can still be backfilled.
+    # New workflows use the standard name. Prefixed files are migrated when the
+    # app is re-onboarded or its workflow is next changed (release-hardening
+    # point 13); this fallback exists only so historical releases can still be
+    # backfilled.
     $preferred = @($candidates | Where-Object { $_.name -eq 'build-app-bundle.yml' })
     if ($preferred.Count -eq 0) { $preferred = @($candidates | Where-Object { $_.name -eq "$id-build-app-bundle.yml" }) }
     if ($preferred.Count -eq 0) { $preferred = @($candidates | Where-Object { $_.name -match 'build-app-bundle\.ya?ml$' }) }

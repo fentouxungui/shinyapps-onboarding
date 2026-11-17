@@ -4,24 +4,31 @@ Reusable, **battle-tested** tooling to publish any Shiny-app GitHub repository t
 [ShinyApps](https://github.com/fentouxungui/ShinyApps) desktop app store, end to end:
 
 ```
-feasibility -> fork -> bundle workflow -> tag + published GitHub Release
+feasibility -> fork -> bundle workflow -> tag push -> tag's GitHub Release
             -> catalog entry + icon -> (optional) upstream pull request
 ```
 
 Route A: a per-repo GitHub Actions workflow builds **prebuilt desktop bundles**
-(Windows `win-x64`, macOS `mac-arm64`, pinned to R 4.6.1) and attaches them to a GitHub
-Release; a catalog entry + icon make the app installable **without rebuilding the store
-shell**. The same route powers iSEE, UCSCXenaShiny, spatialLIBD, beeRapp, CSBB-Shiny,
+(Windows `win-x64`, macOS `mac-arm64`, pinned to R 4.6.1) on a `v*` tag push and
+attaches them to that tag's GitHub Release; a catalog entry + icon make the app
+installable **without rebuilding the store shell**. The same route powers iSEE, UCSCXenaShiny, spatialLIBD, beeRapp, CSBB-Shiny,
 SeuratExplorer, scConvertShiny, shinyCircos-V2.0, UpSetR-shiny, bestDEG, GraphBio,
 splitKbCompare, ShinyStan and shiny-genome-stats.
 
 **Maintenance board:** <https://fentouxungui.github.io/shinyapps-onboarding/> -- last build,
 upstream/fork drift and rebuild signals for every recorded app.
 
+**Mandatory version gate:** before creating, upgrading, or reviewing any workflow,
+verify the loaded skill against canonical `main` and record the commit; see
+[references/skill-version-policy.md](references/skill-version-policy.md). Current
+`VERSION`: `2026.11.17`.
+
 ## Contents
 
 | Path | Purpose |
 |---|---|
+| `VERSION` | Human-readable skill version; must match canonical `main` |
+| `references/skill-version-policy.md` | Mandatory version gate for new and upgraded workflows |
 | `assets/build-app-bundle.yml` | Hardened **multi-mode** bundle workflow (drop into `.github/workflows/build-app-bundle.yml`, fill `env:`) |
 | `assets/catalog-entry.yml`     | Catalog entry for `ShinyApps/catalog/apps.yml` |
 | `scripts/onboard-shiny-app.ps1`| Parameterized driver for steps 2-6 (`-StrictVersion`, `-CranSnapshot`, `-PandocVersion`) |
@@ -35,7 +42,7 @@ upstream/fork drift and rebuild signals for every recorded app.
 | `scripts/build-dashboard.ps1`  | Render the maintenance board from `site/status.json` |
 | `apps/<id>/`                   | Exact workflow + `meta.yml` + debug log for each onboarded or attempted app |
 | `references/app-shapes.md`     | The 5 app shapes and how each is handled |
-| `references/failure-modes.md`  | Real failures and their fixes -- read this first |
+| `references/failure-modes.md`  | Real failures and their fixes -- read after the version gate |
 | `references/startup-data.md`   | First-launch data downloads: generate at build time into the bundle |
 | `references/store-contract.md` | Bundle/manifest/catalog contract and `publish-catalog` |
 | `references/release-hardening.md` | Tag/version policy, release-safety checklist, reviewer boundary |
@@ -44,7 +51,7 @@ upstream/fork drift and rebuild signals for every recorded app.
 | `references/runtime-downloads.md` | When a user-triggered module download is acceptable (and how) |
 | `references/special-packages.md` | Unique version suffixes for patched packages (Cairo) in the shared library |
 | `references/pr-template.md`    | Structure for the upstream pull request |
-| `examples/`                    | Real working workflows (flat, package-fn, package-deploy) |
+| `examples/`                    | Historical v1 workflows (flat, package-fn, package-deploy); annotated do-not-copy |
 
 ## App shapes
 
@@ -97,9 +104,15 @@ Proceed only if all hold:
   -IconPath .\icon.png -Tag v0.1.0 -WatchRelease -OpenPR
 ```
 
-The driver writes `.github/workflows/build-app-bundle.yml` (no app-id prefix), tags
-the checkout, and **publishes a GitHub Release** to start the build. The standard
-workflow is release-only: a tag push by itself does not trigger it.
+The driver writes `.github/workflows/build-app-bundle.yml` (no app-id prefix) and
+pushes the tag. The standard workflow builds on `push: tags` (`v*`), creates the
+tag's Release if none exists, and attaches the bundles. A manual dispatch attaches
+to an existing Release only; it never creates one.
+
+New onboarding must use the standard filename. An existing
+`<id>-build-app-bundle.yml` is renamed to `build-app-bundle.yml` when the app is
+re-onboarded or its workflow is next changed; the old `workflow_path` in
+`apps/<id>/meta.yml` stays as historical provenance.
 
 Omit `-Tag` to use the package `Version` when a `DESCRIPTION` exists. Omit
 `-CranSnapshot` for live CRAN, and `-PandocVersion` for apps that do not render R Markdown.
@@ -112,10 +125,10 @@ version (see [references/special-packages.md](references/special-packages.md)).
 
 The default template follows the maintainer-review checklist in
 [references/release-hardening.md](references/release-hardening.md): the build starts from
-the exact tag/release, a package tag must equal `DESCRIPTION` `Version`, publishing a
-GitHub Release is the only automatic trigger, and an existing release asset is never
-overwritten. A tag push alone does not build; use a published Release or a manual run
-with an existing tag.
+the exact tag, a package tag must equal `DESCRIPTION` `Version`, a `v*` tag push is the
+only automatic trigger (`release: published` must not be added, or the workflow's own
+Release starts a second build), and an existing release asset is never overwritten. A
+manual run must attach to the tag's existing Release and fails instead of creating one.
 
 | `STRICT_VERSION` | Behaviour | When |
 |---|---|---|
@@ -193,14 +206,15 @@ since then, fork sync status and workflow drift. It never edits `apps/`.
 `<id>-` filename prefix and publishes `catalog.json` + `icons/` to `gh-pages`.
 
 The generated catalog entry points at the fork while testing. After the upstream PR is
-merged and upstream publishes its own release, change `repo:` to the upstream repository
-and verify both platform artifacts resolve from there.
+merged and upstream pushes its own `v*` tag (the workflow creates the Release), change
+`repo:` to the upstream repository and verify both platform artifacts resolve from there.
 
 ## Security
 
 The driver reads your GitHub token with `git credential fill` into the process environment
-only (never written to disk) and performs fork/push/tag/published-release/PR **on your behalf**.
-Review the script before running it, and keep the token scoped to `repo` + `workflow`.
+only (never written to disk) and performs fork/push/tag/PR **on your behalf**; CI creates
+the tag's Release after a green build. Review the script before running it, and keep the
+token scoped to `repo` + `workflow`.
 
 ## License
 

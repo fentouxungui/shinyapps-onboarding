@@ -1,18 +1,46 @@
 ---
 name: shinyapps-onboarding
-description: Onboard a Shiny-app GitHub repository into the ShinyApps desktop app store (fentouxungui/ShinyApps) end to end - feasibility assessment, fork, a per-repo prebuilt bundle workflow, GitHub Release-driven Actions build, catalog entry and icon, and an upstream pull request. Use when the user wants to publish or "上架" a Shiny app repo to the ShinyApps store, add a desktop bundle for a Shiny app, or reuse the hardened "Route A" prebuilt-bundle onboarding.
+description: Onboard a Shiny-app GitHub repository into the ShinyApps desktop app store (fentouxungui/ShinyApps) end to end - feasibility assessment, fork, a per-repo prebuilt bundle workflow, tag-driven Actions build that attaches bundles to the tag's GitHub Release, catalog entry and icon, and an upstream pull request. Use when the user wants to publish or "上架" a Shiny app repo to the ShinyApps store, add a desktop bundle for a Shiny app, or reuse the hardened "Route A" prebuilt-bundle onboarding.
 ---
 
 # ShinyApps onboarding
 
 Publish any Shiny-app repository to the **ShinyApps** desktop app store using the hardened
 **"Route A"** route: a per-repo GitHub Actions workflow builds prebuilt desktop bundles
-(Windows `win-x64`, macOS `mac-arm64`, R 4.6.1) and attaches them to a GitHub Release; a
-catalog entry + icon make the app installable without rebuilding the store shell.
+(Windows `win-x64`, macOS `mac-arm64`, R 4.6.1) on a `v*` tag push and attaches them to
+that tag's GitHub Release; a catalog entry + icon make the app installable without
+rebuilding the store shell.
 
-Read `references/failure-modes.md` first, then `references/app-shapes.md`,
-`references/store-contract.md` and `references/release-hardening.md` before touching a
-workflow.
+**Skill version:** `2026.11.17` (see `VERSION`). Canonical source:
+<https://github.com/fentouxungui/shinyapps-onboarding> (`main`).
+
+## Mandatory version gate (read first)
+
+**No workflow work starts from a loaded/imported skill until it is verified against
+the canonical latest.**
+
+Applies to:
+
+- creating a new per-app `.github/workflows/build-app-bundle.yml`;
+- upgrading, patching, renaming, or reviewing an existing workflow;
+- changing this skill's workflow template or workflow rules.
+
+Minimum preflight:
+
+1. Locate the skill actually loaded by the agent (not a stale clone or memory).
+2. Fetch canonical `main`; read its `VERSION` and commit SHA.
+3. Compare the loaded `VERSION` and commit (git checkout) or `SKILL.md` +
+   `assets/build-app-bundle.yml` SHA-256 (imported copy).
+4. If stale or dirty: update/re-import, reload the session, and re-read the skill files.
+5. Record the verified commit and `VERSION` in the app record and PR.
+
+If the latest version cannot be verified, stop and ask; do not proceed on an old
+version. Full procedure and commands: `references/skill-version-policy.md`.
+
+Read `references/skill-version-policy.md` first, then
+`references/failure-modes.md`, `references/app-shapes.md`,
+`references/store-contract.md` and `references/release-hardening.md` before
+touching a workflow.
 
 ## When to use
 
@@ -39,6 +67,8 @@ cannot ship (give a feasibility caveat).
 
 ## Procedure
 
+0. **Version gate (mandatory).** Complete `references/skill-version-policy.md`
+   before any other step. Do not use an unverified skill.
 1. **Feasibility (gate).** Confirm the app runs from a directory or matches a package
    recipe; that dependencies resolve on CRAN/Bioconductor (archived via `ARCHIVE_URLS`,
    extra repos via `EXTRA_REPOS`); that no unshippable runtime engine is required (else
@@ -54,14 +84,19 @@ cannot ship (give a feasibility caveat).
    `PANDOC_VERSION`, `MACOS_BREW_DEPS`, `PKG_VERSION_PACKAGES` and
    `PKG_VERSION_SUFFIX`. Unsubstituted `__X__` values fall back to safe defaults.
    Use the standard filename; do **not** prefix it with the app id.
-4. **Tag** `vX.Y.Z`, push the tag, then **publish a GitHub Release** for it. The
-   standard workflow is release-only (`release: published`); pushing a tag alone no
-   longer starts a build. A manual dispatch with an existing tag is the fallback.
+4. **Tag** `vX.Y.Z` and push the tag. The standard workflow builds on `push: tags`
+   (`v*`), canonicalizes the tag, creates the tag's Release if none exists, and
+   attaches the bundles. Do not add a `release: published` trigger: the Release the
+   workflow creates would start a second identical build. A manual dispatch with an
+   existing tag is the retry path and attaches only to that tag's existing Release;
+   it never creates one. Create the tag with `git push` (the driver does this):
+   GitHub's Release UI can create a tag without emitting a `push` event, so if the
+   tag was created there, run the workflow manually against it.
 5. **Onboard**: append the entry from `assets/catalog-entry.yml` to
    `ShinyApps/catalog/apps.yml`, add `ShinyApps/icons/<id>.png` (from the upstream repo's own logo), push.
    The generated entry points at the fork while testing; after the upstream PR is
-   merged and upstream publishes its own release, change `repo:` to the upstream
-   repository so the store follows upstream, not the fork.
+   merged and upstream pushes its own `v*` tag (the workflow creates the Release),
+   change `repo:` to the upstream repository so the store follows upstream, not the fork.
 6. **Open the upstream PR** (CI-only; see `references/pr-template.md`).
 7. **Record it** with `scripts/record-app.ps1 -AppId <id> -Fork <owner>/<repo> -Upstream
    <owner>/<repo> -Tag <tag>`: it snapshots the workflow **at the tag**, the asset sizes and
@@ -73,6 +108,10 @@ Fast path: run `scripts/onboard-shiny-app.ps1` (steps 2-6), then `record-app.ps1
 
 ## Hard rules
 
+- **Latest-skill gate.** Before creating, upgrading, reviewing or patching any
+  workflow, verify the loaded skill against canonical `main` and record the commit;
+  do not proceed on a stale/imported snapshot. See
+  `references/skill-version-policy.md`.
 - Store `id` must be lowercase `^[a-z0-9][a-z0-9-]*$` and equal the release asset prefix.
   New bundles use `<id>-<version>-<platform>-r<abi>.zip` (for example `-r4.6`);
   legacy unsuffixed `<id>-<version>-<platform>.zip` assets remain supported.
@@ -106,21 +145,37 @@ Fast path: run `scripts/onboard-shiny-app.ps1` (steps 2-6), then `record-app.ps1
   `DESCRIPTION` `Version`; a repo without a `DESCRIPTION` uses the tag as the store
   version. Use `on` to require a `DESCRIPTION`, and `off` only for a deliberate
   mismatch documented in `APP_NOTES` and the PR. Never ship a silent mismatch.
-- **One workflow filename.** Always `.github/workflows/build-app-bundle.yml`; do not
-  prefix it with the app id. The archive, recorder, validator, and PR template all
-  expect this name.
-- **Release-only trigger.** Use `on: release: published` plus `workflow_dispatch`.
-  Do not add `push: tags` alongside it: that double-builds the same tag. A tag push
-  alone does not build; create/publish the GitHub Release after tagging.
-- **Immutable releases.** Refuse to overwrite a published release asset. The preflight
-  must use `gh release view --repo`, and only an explicit `release not found` / HTTP 404
-  may be treated as a missing release; other lookup failures abort. Use
-  `overwrite_files: false`.
+- **One workflow filename, including migrations.** Always
+  `.github/workflows/build-app-bundle.yml`; do not prefix it with the app id. The
+  archive uses this name, the recorder defaults to it, and the PR template expects
+  it. An existing per-app workflow such as
+  `.github/workflows/<id>-build-app-bundle.yml` must be renamed to
+  `build-app-bundle.yml` when the app is re-onboarded or its workflow is next
+  changed: `git mv` it (or add the new file and delete the old one) in the same
+  commit, never keep both. Do not rewrite the historical `workflow_path` in
+  `apps/<id>/meta.yml`; it records the path used by that release. The next
+  `record-app.ps1` run uses the standard path (its default).
+- **Tag-push trigger, never `release: published`.** Use `on.push.tags: ['v*']` plus
+  `workflow_dispatch` with a required `tag` input. The workflow creates the Release
+  for a new tag; listening for `release.published` as well would start a second
+  identical build, and `release: published` alone makes a plain tag push a no-op.
+  If the repo does not use `v` tags, change the pattern and the `resolve`
+  canonicalization together.
+- **Immutable releases, one canonical tag.** Refuse to overwrite a published release
+  asset. The preflight must use `gh release view --repo`, and only an explicit
+  `release not found` / HTTP 404 may be treated as a missing release; other lookup
+  failures abort. Upload with `gh release upload` and no `--clobber`; do not use
+  `softprops/action-gh-release` (it has no `release_id`/`allowUpdates`, and a
+  `tag_name` that differs from the existing tag silently creates a new Release).
+- **Manual runs attach, tag pushes own the Release.** `workflow_dispatch` must fail
+  when the tag has no Release; it must never create one. Only a `push` event may
+  create the missing Release for its tag.
 - **Least privilege.** The build job is `contents: read`; only the release job is
   `contents: write`. Remove unused `GITHUB_PAT`/`GITHUB_TOKEN` env entries.
-- **One version source.** Resolve the version from the dispatch input, then the
-  release tag; never concatenate refs. Check out that ref and require the tag to
-  equal `DESCRIPTION` when a package is present.
+- **One version source.** A `resolve` job takes the dispatch input or `github.ref_name`,
+  strips `refs/tags/` and a leading `v`, trims whitespace, and verifies the tag
+  exists; checkout, version and upload all use `needs.resolve.outputs.tag`. Never
+  concatenate refs. Require the tag to equal `DESCRIPTION` when a package is present.
 - **Record the built commit.** After checkout, compare `git rev-parse HEAD` with the
   tag commit and write `SOURCE_COMMIT` into the build metadata; do not use
   `GITHUB_SHA`, which may refer to the workflow ref.
@@ -140,7 +195,7 @@ Fast path: run `scripts/onboard-shiny-app.ps1` (steps 2-6), then `record-app.ps1
 - **PR quality is part of onboarding.** Every upstream PR must use
   `references/pr-template.md`: explain what ShinyApps is, why the workflow exists, the
   exact diff scope (one YAML file, no app code), the impact (Actions minutes only when a
-  Release is published, credit), what the maintainer must do, and an explicit opt-out.
+  `v*` tag is pushed, credit), what the maintainer must do, and an explicit opt-out.
   One-line "adds a workflow" PRs are not acceptable and damage the store's reputation.
 - **Verify** `catalog.json` shows the app with the expected artifacts + `sha256`
   (Windows-only apps have no mac asset; document the deviation).
@@ -227,9 +282,9 @@ portability: `references/macos-portability.md`.
   Keep the old `r-A.B` runtime for existing installs, build a new bundle with
   `r_abi: "A.B"`, and let the shell select the runtime. The template writes `r_abi`
   from `R_VERSION`; never hand-edit it to make a bundle look compatible.
-- With the release-only trigger, poll `actions/runs?event=release` and match
-  `.github/workflows/build-app-bundle.yml` (and the tag when available); a stale
-  tag-push run must not be mistaken for the release build.
+- With the tag-push trigger, poll `actions/runs?event=push`, match
+  `.github/workflows/build-app-bundle.yml`, and select the run whose `head_branch`
+  is the tag (a manual or default-branch push must not be mistaken for it).
 - `cran/*` repos are read-only mirrors: onboard the fork but do not open an upstream PR.
 - `ARCHIVE_URLS` accepts a monorepo tarball whose package sits in a subdirectory (BPCells in
   `r/`): the template locates the single `DESCRIPTION` and installs that package's Imports
@@ -250,10 +305,10 @@ portability: `references/macos-portability.md`.
   (GitHub compares the merge base), so the gap was invisible in review. Merge upstream into the
   fork before building, and verify `DESCRIPTION` at the checked-out ref, not in the browser.
 - **One version source, and check out the tag.** Concatenating `release.tag_name + ref_name +
-  inputs.tag` produced `2.2.0v2.2.0`; a manual run from `main` produced `mainv2.2.0`. Select
-  `github.event.inputs.tag || github.event.release.tag_name`, strip `v`, and set
-  `actions/checkout` `ref: ${{ github.event.inputs.tag || github.ref }}`. A manual run with a
-  tag must build that tag; a bad tag should fail at checkout, never ship default-branch code.
+  inputs.tag` produced `2.2.0v2.2.0`; a manual run from `main` produced `mainv2.2.0`. The
+  `resolve` job now takes `inputs.tag || github.ref_name`, strips `refs/tags/` and `v`,
+  verifies the tag exists, and every later step uses `needs.resolve.outputs.tag`. A manual
+  run builds that tag; a bad tag fails before any build, never ships default-branch code.
 - **Construction is not startup.** `shinyAppDir()` returns the app object without running the
   server; a `ui` function, `onStart` hook or resource-loading error passes silently. Both a human
   maintainer and Copilot rejected this. The template now runs `shiny::runApp()` and GETs `/`.
@@ -273,9 +328,10 @@ portability: `references/macos-portability.md`.
   logo is a wrong icon, not a style choice.
 - **Reply with evidence after review.** State point by point what changed and how it was verified:
   the test tag, both platforms built, the real startup check passed, and the Windows bundle
-  installed through the ShinyApps client launches and runs. Then explain releases: publishing a
-  GitHub Release for the `v*` tag starts the build automatically; a manual run with an existing
-  tag does the same; a tag push alone does not. Keep the PR to one workflow file
+  installed through the ShinyApps client launches and runs. Then explain releases: pushing a
+  `v*` tag starts the build automatically and the workflow creates/attaches that tag's
+  Release; a manual run with an existing tag attaches to its existing Release only and
+  cannot create one. Keep the PR to one workflow file
   (`.github/workflows/build-app-bundle.yml`) and answer bot reviews in one summary comment
   (resolve the inline threads).
 
@@ -283,12 +339,16 @@ portability: `references/macos-portability.md`.
 
 - **Use the standard workflow filename.** `.github/workflows/build-app-bundle.yml`
   is the convention; the old `<id>-build-app-bundle.yml` name is legacy and should
-  not be used for new onboarding. GitHub shows the workflow name, not the filename,
-  so a shared filename causes no confusion across apps.
-- **Release-only, not tag-only.** The upstream maintainer preferred one trigger.
-  Publish a GitHub Release after tagging; `release: published` builds once, while a
-  `push: tags` trigger duplicates the build. Manual dispatch with an existing tag
-  remains available.
+  not be used for new onboarding. An existing prefixed file is renamed when the app
+  is re-onboarded or its workflow is next changed (see the filename hard rule).
+  GitHub shows the workflow name, not the filename, so a shared filename causes no
+  confusion across apps.
+- **One trigger, and it must be the tag push.** The earlier review chose
+  `release: published` because adding `push: tags` alongside it double-builds the
+  same tag. That avoided the duplicate but made a plain tag push a no-op, and the
+  Release the workflow created re-triggered it. The corrected model is `push: tags`
+  only (no `release: published`), with manual dispatch attaching to an existing
+  Release. Keep exactly one automatic trigger; never both.
 - **Copilot/reviewer findings worth fixing proactively.** Remove unused
   `GITHUB_PAT`/`GITHUB_TOKEN` env entries; keep the top-level permissions at
   `contents: read` with `contents: write` only on the release job; resolve the
@@ -306,27 +366,33 @@ portability: `references/macos-portability.md`.
 ## Security
 
 `scripts/onboard-shiny-app.ps1` reads the GitHub token via `git credential fill` into the
-process environment only and performs fork/push/tag/published-release/PR on the user's behalf; it
-requires a `repo`+`workflow` token. Review before running. The CI build job is
-`contents: read`; only the release job may write.
+process environment only and performs fork/push/tag/PR on the user's behalf; it
+requires a `repo`+`workflow` token. Review before running. The workflow creates the
+tag's Release after a green build. The CI build job is `contents: read`; only the
+release job may write.
 
-**Release hardening.** Besides the smoke test, the template enforces the tag/version
-policy, one immutable release per tag, clean-library smoke (only `rlib` + base R on
-`.libPaths()`), fail-fast dependencies, an optional `CRAN_SNAPSHOT` pin and optional
+**Release hardening.** Besides the smoke test, the template canonicalizes and validates
+the tag, makes manual runs attach-only, enforces the tag/version policy, keeps releases
+immutable, uses clean-library smoke (only `rlib` + base R on `.libPaths()`), fails fast
+on dependencies, supports an optional `CRAN_SNAPSHOT` pin and optional
 `PANDOC_VERSION`, and publishes `*.sha256`, `meta-*.json` and `deps-*.json`. Checklist:
 `references/release-hardening.md`.
 
 ## Files
 
+- `VERSION` - human-readable skill version; must match canonical `main`.
 - `assets/build-app-bundle.yml` - hardened multi-mode workflow template.
 - `assets/catalog-entry.yml` - catalog entry template.
 - `scripts/onboard-shiny-app.ps1` - parameterized driver for steps 2-6.
 - `scripts/validate-apps.ps1`, `scripts/build-app-index.ps1`, `scripts/new-app-record.ps1`
   - record checks, index generation and scaffolding (`apps/README.md`).
 - `apps/<id>/` - per-app archive: exact workflow, `meta.yml`, `NOTES.md`.
-- `references/app-shapes.md`, `references/failure-modes.md`, `references/store-contract.md`,
+- `references/skill-version-policy.md`, `references/app-shapes.md`,
+  `references/failure-modes.md`, `references/store-contract.md`,
   `references/startup-data.md`, `references/release-hardening.md`,
   `references/heavy-apps.md`, `references/macos-portability.md`,
   `references/runtime-downloads.md`, `references/special-packages.md`,
   `references/pr-template.md`.
-- `examples/` - real workflows for flat, package-fn and package-deploy apps.
+- `examples/` - historical v1 workflows for flat, package-fn and package-deploy apps.
+  They predate the v5.5 trigger/release fixes and are annotated do-not-copy; use
+  `assets/build-app-bundle.yml` for new onboarding.

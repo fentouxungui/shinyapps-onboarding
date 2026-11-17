@@ -1,3 +1,10 @@
+#  HISTORICAL EXAMPLE -- do not copy this workflow.
+#  The authoritative, current template is assets/build-app-bundle.yml.
+#  This snapshot predates the v5.5 release fixes: it triggers on BOTH
+#  `push: tags` and `release: published` (double build), concatenates tag refs,
+#  and uses softprops/action-gh-release (which creates a new Release when the
+#  tag spelling does not match an existing one). Use the template for new
+#  onboarding; see references/release-hardening.md.
 # =====================================================================
 #  ShinyApps app-layer bundle builder (Route A) -- HARDENED.
 #  Builds prebuilt desktop bundles (win-x64, mac-arm64) for an R/Shiny app

@@ -16,10 +16,10 @@ Pipeline used for the CRAN Shiny sweep (244-row shortlist).
 3. **Generate** `.github/workflows/build-app-bundle.yml` from
    `assets/build-app-bundle.yml`, replacing every `__PLACEHOLDER__`; set `APP_MODE`
    explicitly. One app per fork, one tag per attempt (`v0.1.0`, `v0.2.0`, ...).
-4. **Publish a release** for the tag (do not rely on a tag push; the workflow is
-   release-only), then **poll** `workflow_runs` with `event=release`, matching
-   `.github/workflows/build-app-bundle.yml`; wait for `status == completed` before
-   reading `conclusion`.
+4. **Push the tag**; the workflow builds on `push: tags` and creates/attaches the
+   tag's Release. **Poll** `workflow_runs` with `event=push`, matching
+   `.github/workflows/build-app-bundle.yml` and `head_branch == <tag>`; wait for
+   `status == completed` before reading `conclusion`.
 5. **Finalize**: on success append the catalog entry + icon to `ShinyApps` in one commit; open an upstream
    PR only for real upstreams (never `cran/*`).
 6. **Record** failures with the concrete error class (X11, OpenMP, blocking launcher, non-standard entry)

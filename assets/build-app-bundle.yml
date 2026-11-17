@@ -1,5 +1,8 @@
 # =====================================================================
-#  ShinyApps app-layer bundle builder (Route A) -- HARDENED v5.
+#  MANDATORY: before using or modifying this template, complete the skill
+#  version gate in references/skill-version-policy.md (verify canonical main).
+#
+#  ShinyApps app-layer bundle builder (Route A) -- HARDENED v5.5.
 #  Builds prebuilt desktop bundles (win-x64, mac-arm64) for an R/Shiny app
 #  and attaches them to a GitHub Release. No shell rebuild. R 4.6.1.
 #
@@ -16,11 +19,24 @@
 #  wrapper patches CRAN binaries, then verifies the signatures before zipping.
 #  v5.4 records r_abi (major.minor) in manifest.json for runtime selection.
 #
-#  This is the genome-stats-review revision, based on the merged
-#  MPUSP/shiny-genome-stats PR. v4 uses a release-only trigger (publishing a
-#  GitHub Release; a tag push alone does not build), checks out the dispatch
-#  tag or release ref, resolves the version without concatenating refs, and
-#  removes unused token env entries. v3 added: the smoke test starts
+#  v5.5 fixes the release-trigger / release-ownership failures seen in the
+#  wild (SeuratExplorer review):
+#   * a tag push now builds (`push: tags: ['v*']`); `release: published` is not
+#     a trigger, because the Release this workflow creates for a new tag would
+#     start a second identical build/upload run;
+#   * a `resolve` job canonicalizes the tag (strips `refs/tags/` and a leading
+#     `v`) and requires it to exist, so checkout, version and upload all use one
+#     spelling; an input like `0.1.10` cannot miss an existing `v0.1.10` Release;
+#   * manual runs attach to the tag's existing Release and fail when there is
+#     none; they never create one. Tag pushes create the Release if needed;
+#   * upload uses `gh release upload` because softprops/action-gh-release has no
+#     `release_id` / `allowUpdates` input: when `tag_name` does not match an
+#     existing Release it silently creates a new tag/Release.
+#
+#  v4 was the genome-stats-review revision (based on the merged
+#  MPUSP/shiny-genome-stats PR): it checked out the dispatch tag or release ref,
+#  resolved the version without concatenating refs, and removed unused token env
+#  entries. v3 added: the smoke test starts
 #  shiny::runApp() and requests /; package-fn removes any CRAN copy and
 #  verifies the installed DESCRIPTION; httpuv joins the build helpers. v2
 #  added: optional tag/DESCRIPTION version enforcement, immutable release
@@ -39,16 +55,20 @@
 # =====================================================================
 name: Build app bundle
 
-# Publish a GitHub Release to build; a tag push alone does not trigger this
-# workflow. A manual run with an existing tag is also supported.
+# Tag pushes are the primary trigger. Do NOT add `release: published`: this
+# workflow creates the Release for a new tag, so that event would start a second
+# identical build/upload. A manual dispatch attaches to an existing Release.
+# If the repo's tags do not use a `v` prefix, change this pattern and the
+# canonicalization in the `resolve` job together.
 on:
-  release:
-    types: [published]
+  push:
+    tags:
+      - 'v*'
   workflow_dispatch:
     inputs:
       tag:
-        description: "Existing tag to build and publish (e.g. v0.2.0); empty uses DESCRIPTION"
-        required: false
+        description: "Existing tag whose Release should receive the bundles (e.g. v0.2.0)"
+        required: true
         type: string
 
 permissions:
@@ -109,7 +129,49 @@ env:
   PANDOC_VERSION: "__PANDOC_VERSION__"
 
 jobs:
+  resolve:
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.resolve.outputs.tag }}
+      version: ${{ steps.resolve.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Resolve and validate target tag
+        id: resolve
+        shell: bash
+        env:
+          INPUT_TAG: ${{ github.event.inputs.tag }}
+          EVENT_TAG: ${{ github.event_name == 'push' && github.ref_name || '' }}
+        run: |
+          set -euo pipefail
+          # One source of truth: dispatch input, else the pushed tag. Never
+          # concatenate refs; strip refs/tags/ and a leading v, then trim.
+          raw="${INPUT_TAG:-$EVENT_TAG}"
+          raw="${raw#refs/tags/}"
+          raw="${raw#v}"
+          raw="$(printf '%s' "$raw" | sed 's/^[[:space:]]*//; s/[[:space:]]*$//')"
+          if [ -z "$raw" ]; then
+            echo "::error::cannot resolve tag: pass a tag input or push a v* tag"
+            exit 1
+          fi
+
+          tag="v$raw"
+          if ! git rev-parse --verify "refs/tags/$tag" >/dev/null 2>&1; then
+            echo "::error::tag $tag does not exist in this checkout"
+            echo "fetched tags: $(git tag -l 'v*' | tr '\n' ' ')"
+            exit 1
+          fi
+
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "version=$raw" >> "$GITHUB_OUTPUT"
+          echo "Resolved tag=$tag version=$raw"
+
   bundle:
+    needs: resolve
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -120,8 +182,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.inputs.tag || github.ref }}
+          # Build exactly the resolved tag. Never the default branch for a
+          # manual run; a missing tag already failed in `resolve`.
+          ref: ${{ needs.resolve.outputs.tag }}
           fetch-depth: 0
+          fetch-tags: true
 
       - uses: r-lib/actions/setup-r@v2
         with:
@@ -305,27 +370,20 @@ jobs:
             echo "LDFLAGS=$ld$LDFLAGS"
           } >> "$GITHUB_ENV"
 
-      - name: Resolve and validate version
+      - name: Use the resolved tag and version
         shell: bash
         env:
-          INPUT_TAG: ${{ github.event.inputs.tag }}
-          RELEASE_TAG: ${{ github.event.release.tag_name }}
+          RESOLVED_TAG: ${{ needs.resolve.outputs.tag }}
+          RESOLVED_VERSION: ${{ needs.resolve.outputs.version }}
         run: |
-          # Prefer an explicit dispatch tag, then the tag of the current
-          # release. Never concatenate refs: on a release event ref_name is the
-          # tag too, so concatenating would produce e.g. "v0.1.0v0.1.0".
-          V="${INPUT_TAG:-${RELEASE_TAG:-}}"
-          if [ -z "$V" ] && [[ "${GITHUB_REF:-}" == refs/tags/* ]]; then V="${GITHUB_REF_NAME}"; fi
-          V="${V#v}"
-          if [ -z "$V" ]; then
-            V="$(sed -n 's/^Version:[[:space:]]*//p' "${PKG_SUBDIR:-.}/DESCRIPTION" 2>/dev/null | head -n1)"
-          fi
-          if [ -z "$V" ]; then
-            echo "::error::cannot resolve version: pass a tag or provide a DESCRIPTION"
-            exit 1
-          fi
-          echo "VERSION=$V" >> "$GITHUB_ENV"
-          echo "TAG=v$V" >> "$GITHUB_ENV"
+          set -euo pipefail
+          : "${RESOLVED_TAG:?}" "${RESOLVED_VERSION:?}"
+          echo "VERSION=$RESOLVED_VERSION" >> "$GITHUB_ENV"
+          echo "TAG=$RESOLVED_TAG" >> "$GITHUB_ENV"
+          # GITHUB_SHA is the workflow ref, not necessarily the built tag.
+          # Record the checked-out commit and the tag ref in the metadata.
+          echo "SOURCE_COMMIT=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+          echo "SOURCE_REF=refs/tags/$RESOLVED_TAG" >> "$GITHUB_ENV"
 
       - name: Assemble bundle (app/ + rlib/ + manifest.json)
         shell: bash
@@ -698,8 +756,8 @@ jobs:
           meta <- list(
             schema = 1L, app_id = Sys.getenv("APP_ID"), platform = platform,
             version = Sys.getenv("VERSION"), file = out, sha256 = sha, size = sz,
-            source_repository = Sys.getenv("GITHUB_REPOSITORY"), source_commit = Sys.getenv("GITHUB_SHA"),
-            source_ref = Sys.getenv("GITHUB_REF"), source_tag = Sys.getenv("TAG"),
+            source_repository = Sys.getenv("GITHUB_REPOSITORY"), source_commit = Sys.getenv("SOURCE_COMMIT"),
+            source_ref = Sys.getenv("SOURCE_REF"), source_tag = Sys.getenv("TAG"),
             r_version = r_version, r_abi = r_abi, cran_snapshot = Sys.getenv("CRAN_SNAPSHOT"),
             strict_version = Sys.getenv("STRICT_VERSION"), strict_deps = Sys.getenv("STRICT_DEPS"),
             pandoc_version = pv, dependency_lock = lock_file, dependency_lock_sha256 = lock_sha,
@@ -785,11 +843,12 @@ jobs:
             deps-*.json
 
   release:
-    needs: bundle
-    if: github.event_name == 'release' || github.event.inputs.tag != ''
+    needs: [resolve, bundle]
     runs-on: ubuntu-latest
     permissions:
       contents: write
+    env:
+      TAG: ${{ needs.resolve.outputs.tag }}
     steps:
       - uses: actions/download-artifact@v4
         with:
@@ -835,43 +894,58 @@ jobs:
           # Keep per-platform files as Actions artifacts, but publish only the
           # bundles plus the consolidated checksum/metadata files.
           rm -f artifacts/*.sha256 artifacts/meta-*.json artifacts/deps-*.json
-      - name: Refuse to overwrite published assets
+      - name: Attach bundles to the tag's Release
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
+          EVENT_NAME: ${{ github.event_name }}
         shell: bash
         run: |
           set -euo pipefail
-          TAG="${{ github.event.inputs.tag || github.ref_name }}"
+          : "${TAG:?TAG is empty}"
+          files=(artifacts/*.zip artifacts/SHA256SUMS artifacts/build-info.json)
+
           ERR="$(mktemp)"
           set +e
-          release_json="$(gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json assets,name 2>"$ERR")"
+          release_json="$(gh release view "$TAG" --repo "$GITHUB_REPOSITORY" \
+            --json assets,databaseId 2>"$ERR")"
           rc=$?
           set -e
-          if [ "$rc" -eq 0 ]; then
-            existing="$(printf '%s' "$release_json" | jq -r '.assets[]?.name')"
-            for f in artifacts/*; do
-              n="$(basename "$f")"
-              if printf '%s\n' "$existing" | grep -qxF "$n"; then
-                echo "::error::release asset already exists: $n"
+
+          if [ "$rc" -ne 0 ]; then
+            if grep -qiE 'release not found|HTTP 404' "$ERR"; then
+              if [ "${EVENT_NAME:-}" != "push" ]; then
+                echo "::error::No existing Release is associated with tag $TAG."
+                echo "::error::Manual runs attach to an existing Release; they do not create one."
                 exit 1
               fi
-            done
-          elif grep -qiE 'release not found|HTTP 404' "$ERR"; then
-            echo "release $TAG does not exist yet; the upload step will create it"
-          else
-            echo "::error::could not read release $TAG; refusing to guess"
-            cat "$ERR"
-            exit 1
+              # A tag push owns the Release: create it once, then attach.
+              echo "No Release exists for $TAG; creating one for the tag."
+              gh release create "$TAG" --repo "$GITHUB_REPOSITORY" \
+                --title "$TAG" \
+                --notes "Automated app bundle build for $TAG" \
+                --verify-tag
+              release_json="$(gh release view "$TAG" --repo "$GITHUB_REPOSITORY" \
+                --json assets,databaseId)"
+            else
+              echo "::error::could not read Release $TAG; refusing to guess"
+              cat "$ERR"
+              exit 1
+            fi
           fi
-      - uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ github.event.inputs.tag || github.ref_name }}
-          name: ${{ github.event.release.name || github.event.inputs.tag || github.ref_name }}
-          files: |
-            artifacts/*.zip
-            artifacts/SHA256SUMS
-            artifacts/build-info.json
-          overwrite_files: false
-          fail_on_unmatched_files: true
-          generate_release_notes: false
+
+          release_id="$(printf '%s' "$release_json" | jq -r '.databaseId')"
+          existing="$(printf '%s' "$release_json" | jq -r '.assets[]?.name')"
+          for f in "${files[@]}"; do
+            n="$(basename "$f")"
+            if printf '%s\n' "$existing" | grep -qxF "$n"; then
+              echo "::error::release asset already exists for $TAG: $n"
+              exit 1
+            fi
+          done
+
+          echo "Attaching to existing Release $release_id for $TAG"
+          # No --clobber: a repeated run must fail instead of replacing a
+          # published asset. `gh release upload` locates the Release by tag and
+          # never creates one.
+          gh release upload "$TAG" --repo "$GITHUB_REPOSITORY" "${files[@]}"
