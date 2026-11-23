@@ -241,3 +241,9 @@ Additional notes:
   as Release assets for independent runs. Keep them as Actions artifacts.
   ShinyApps ignores non-zip release assets and records `sha256` from GitHub's
   asset digest, so the zips alone are the complete store contract.
+* If a platform job is cancelled before acquiring a runner (for example,
+  `The job was not acquired by Runner of type hosted`), the build never started;
+  retry that platform later. Once another platform's zip is already published,
+  do not use "Re-run all jobs" because the release guard rejects duplicate asset
+  names. Use `workflow_dispatch` with `platforms=<missing>` or Run Bundle so only
+  the missing zip is attached.

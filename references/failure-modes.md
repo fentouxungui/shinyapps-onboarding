@@ -57,6 +57,27 @@ of them; the rest need a decision you make during feasibility.
    `R_PROFILE` disables the site profile; set it explicitly to
    `$PORTABLE_R_HOME/etc/Rprofile.site` and use `R_PROFILE_USER` to put the harness
    library back. See `references/macos-portability.md`.
+14. **Workflow rejected before any job starts: `Exceeded max expression length 21000`.**
+   GitHub evaluates a whole `run:` block as one expression when the block contains
+   any `${{ }}`. A long heredoc (the assemble/zip scripts are tens of kilobytes)
+   plus even one interpolated value can pass that limit. ScRDAVis failed at
+   `Assemble bundle` because `platform <- "${{ matrix.platform }}"` was inside a
+   24,641-character `run:` block. The fix is to move every matrix value out of the
+   script into `env:` and read it with `Sys.getenv()`:
+
+   ```yaml
+   - name: Assemble bundle
+     shell: bash
+     env:
+       BUNDLE_PLATFORM: ${{ matrix.platform }}
+     run: |
+       ...
+       platform <- Sys.getenv("BUNDLE_PLATFORM")
+   ```
+
+   The limit is per block, before evaluation, so shortening the value or the
+   matrix does not help. Split the step or move the script to a committed file if
+   the block itself must stay large. `actionlint` does not detect this.
 
 ## Windows source installs from ARCHIVE_URLS: transitive dependencies
 
@@ -409,10 +430,14 @@ These come from multi-module apps (xOmicsShiny, ScRDAVis). Full playbook:
   `ref: ${{ needs.resolve.outputs.tag }}`.
 - **No upstream license.** A repo with no `LICENSE` needs explicit permission from the
   author before listing, independent of whether the CI now works.
-- **A GitHub package is not at its repo root.** BPCells is `r/` inside `bnprks/BPCells`;
-  a root-only tarball install failed three times and blocked `monocle3`. The template now
-  finds the single `DESCRIPTION` in the unpacked tarball and installs its Imports first;
-  a tarball with several packages fails with an explicit message instead of guessing.
+- **A monorepo has more than one `DESCRIPTION`.** BPCells is `r/` inside
+  `bnprks/BPCells`, and upstream later added a root `DESCRIPTION` for a sentinel
+  package named `BPCells.installation.moved`, so the old "exactly one DESCRIPTION"
+  check aborted with `found 2` and blocked `monocle3`. The template now reads each
+  candidate's `Package` field and selects the one named in `FORCED_PKGS`
+  (`BPCells` -> `r/DESCRIPTION`); if no candidate or more than one candidate
+  matches, it fails with the candidate paths instead of guessing. Keep every
+  archive package in `FORCED_PKGS` so this selection and the final check work.
 - **1.4 GB of reference data on startup.** ScRDAVis cannot ship two `BSgenome` packages
   inside a 2 GiB release next to a 484-package closure. Startup downloads are still
   banned; a user-triggered module download into a user library is the documented
@@ -420,6 +445,13 @@ These come from multi-module apps (xOmicsShiny, ScRDAVis). Full playbook:
 - **macOS may be impossible, not just hard.** `monocle3` -> `ggrastr` -> `Cairo`/XQuartz
   cannot be made portable. Publish Windows-only, remove the `macos-14` matrix entry, and
   record the limitation instead of shipping a mac asset you cannot start.
+- **A package manager ships a nested private library.** `devtools` imports `pak`;
+  `pak` places `cli`, `curl`, `pkgcache`, `pkgdepends`, `processx`, `zip`, ... under
+  `rlib/pak/library/`. Portable R's `.portable` patcher only rewrites the main
+  library, so the macOS audit reports those nested `.so` files as linked to
+  `/Library/Frameworks/R.framework`. If the app does not call `devtools::*`, remove
+  `devtools` from `EXTRA_PKGS` and delete its startup `require`; otherwise patch and
+  re-sign the nested library or drop the feature. See `references/macos-portability.md`.
 
 ## Review findings (upstream PR: FielDHub, Familia)
 
@@ -456,6 +488,34 @@ These come from multi-module apps (xOmicsShiny, ScRDAVis). Full playbook:
 - **The store icon is another product's logo.** Familia's icon was `breedverse_logo.png`
   (the parent program), not `familia_logo.png`. See `references/icon-sourcing.md`: verify
   the app identity in the rendered 512 px icon.
+
+## GitHub-hosted runner acquisition failure (the job never starts)
+
+**Symptoms.** A matrix leg is `cancelled` with no steps, an empty `runner_name`,
+and an annotation such as:
+
+```text
+The job was not acquired by Runner of type hosted even after multiple attempts
+Internal server error. Correlation ID: ...
+Due to capacity constraints, jobs targeting macos arm64 runners may experience
+longer queue times.
+```
+
+Other platforms finish and the release job publishes only their assets. Because
+no runner was assigned, there is no checkout, R log or package error to debug.
+
+**Cause.** GitHub-hosted capacity or a transient runner-service failure, not the
+workflow and not the app's dependencies. `macos-15` is the correct arm64 label;
+the job never reached `actions/checkout`.
+
+**Recovery.** Retry later (check GitHub status first). Do **not** use
+"Re-run all jobs" when a Release already contains one platform's zip: the
+release job correctly refuses to overwrite an existing asset. Build only the
+missing platform through `workflow_dispatch` with the tag and
+`platforms=<missing>`, or through Run Bundle; the release job downloads only the
+new artifact and attaches it to the existing Release. Verify the Release asset
+list afterwards. If the same runner acquisition failure repeats, wait and retry;
+there is no code fix.
 
 ## Ops
 

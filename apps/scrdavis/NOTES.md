@@ -7,14 +7,15 @@
 - **Release:** https://github.com/fentouxungui/ScRDAVis/releases/tag/v1.1.2 (`v1.1.2`)
 - **Artifacts:** `scrdavis-1.1.2-win-x64.zip` (1617 MB),
   `scrdavis-1.1.2-mac-arm64.zip` (1535 MB)
-- **Template:** pre-hardening personal skill (v3 era), with app-specific patch steps.
+- **Template:** pre-hardening personal skill (v3 era) for v1.1.2; local v1.1.3
+  rebuild uses the standard `build-app-bundle.yml` from skill `2026.11.18.2`.
 
 ## Why it is packaged this way
 
 | Setting | Value | Reason |
 |---|---|---|
 | platforms | `win-x64`, `mac-arm64` | v1.0.2 was Windows-only; v1.1.2 vendors the XQuartz dylibs so macOS works without XQuartz |
-| `EXTRA_PKGS` | 87 declared packages | Seurat / monocle3 / CellChat stack |
+| `EXTRA_PKGS` | 86 declared packages | Seurat / monocle3 / CellChat stack; the v1.1.3 Windows asset predates dropping devtools, the mac rebuild uses 86 |
 | `SOFT_PKGS` | both `BSgenome` references | 1.4 GB combined; with the closure the bundle would exceed the 2 GiB release limit |
 | `ARCHIVE_URLS` | 11 GitHub-only packages + BPCells | not on CRAN/Bioconductor; BPCells is the `r/` package inside `bnprks/BPCells` |
 | `MACOS_BREW_DEPS` | `openssl@3 hdf5` (inline step) | `alabaster.base` links `-lssl`; `BPCells` needs `pkg-config hdf5`; written into `~/.R/Makevars` |
@@ -37,6 +38,10 @@
 | 8 | `alabaster.base` `ld: library 'ssl' not found`; `BPCells` `pkg-config hdf5` failed | Homebrew `openssl@3` is keg-only; hdf5 dev libs absent | `brew install openssl@3 hdf5`, export `PKG_CONFIG_PATH`/`CPPFLAGS`/`LDFLAGS` and write them into `~/.R/Makevars` (R does not reliably pass `LDFLAGS` from the environment) | source builds link (v1.1.1) |
 | 9 | BPCells configure still could not find hdf5 | `SOURCE_REBUILD` hides Homebrew and blanks `PKG_CONFIG_PATH`/`PKG_CONFIG_LIBDIR` but restored only `PATH` | save and restore all three variables after the gdtools rebuild | v1.1.2 dual-platform green |
 | 10 | Shared-library question after install | the shell moves package dirs into `%APPDATA%\shinyapps\lib` and empties the app's `rlib` | keep downloaded genomes outside the app dir; append the user library; check `requireNamespace()` before downloading; vendored `libs/` move with the package | inspection of a real install (shell 0.1.11) |
+| 11 | GitHub rejected the workflow: `Exceeded max expression length 21000` at `Assemble bundle` | the 24.6k-character `run:` block contained `${{ matrix.platform }}`; GitHub evaluates the whole block as one expression | pass `BUNDLE_PLATFORM` through `env:` and read `Sys.getenv("BUNDLE_PLATFORM")` in both assemble and zip scripts | static: no remaining `${{ }}` in the >21k blocks; v1.1.3 CI pending |
+| 12 | `ARCHIVE_URLS: expected one package DESCRIPTION inside main, found 2` | BPCells now has a root sentinel `DESCRIPTION` (`BPCells.installation.moved`) plus the real `r/DESCRIPTION` (`Package: BPCells`) | read every candidate `Package` and select the one in `FORCED_PKGS`; error lists candidates if the match is ambiguous | static: BPCells candidates are the root sentinel and `r/BPCells`; v1.1.3 CI pending |
+| 13 | mac-arm64 job `cancelled` with no steps: `The job was not acquired by Runner of type hosted` / `Internal server error` | GitHub-hosted macOS capacity or transient runner-service failure; no runner was assigned | retry later; use a manual Build Bundle dispatch with `tag=v1.1.3`, `platforms=mac-arm64` so only the mac zip attaches to the existing Release; do not re-run all jobs | Release v1.1.3 currently has only `scrdavis-1.1.3-win-x64-r4.6.zip`; mac retry pending |
+| 14 | macOS audit: 15 files under `rlib/pak/library` reference `/Library/Frameworks/R.framework` | `devtools` (in `EXTRA_PKGS`) imports `pak`; pak's private library is not rewritten by portable R's `.portable` patcher | remove unused `devtools` from `EXTRA_PKGS` and delete its startup `require` in `global.R`; no other app package imports pak | static: `devtools`/`pak` no longer in seed; v1.1.3 mac CI pending |
 
 ## Known limitations
 

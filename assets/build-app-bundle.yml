@@ -524,6 +524,8 @@ jobs:
 
       - name: Assemble bundle (app/ + rlib/ + manifest.json)
         shell: bash
+        env:
+          BUNDLE_PLATFORM: ${{ matrix.platform }}
         run: |
           cat > assemble-bundle.R <<'EOF'
           cat("R_HOME:", R.home(), " site:", file.exists(file.path(R.home("etc"), "Rprofile.site")), "\n")
@@ -678,7 +680,18 @@ jobs:
               if (grepl("[.]zip$", u, ignore.case = TRUE)) utils::unzip(f, exdir = ex) else utils::untar(f, exdir = ex)
               d <- list.files(ex, pattern = "^DESCRIPTION$", recursive = TRUE, full.names = TRUE)
               d <- d[!grepl("([.]Rcheck|/tests?/|/vignettes?/|/data/)", gsub("\\\\", "/", d))]
-              if (length(d) != 1) stop("ARCHIVE_URLS: expected one package DESCRIPTION inside ", basename(u), ", found ", length(d), ". Use a package tarball or install it in a manual step.")
+              if (length(d) > 1) {
+                wanted <- split_pkgs(Sys.getenv("FORCED_PKGS"))
+                pkg_of <- function(f) tryCatch(unname(read.dcf(f)[1, "Package"]), error = function(e) NA_character_)
+                candidates <- vapply(d, pkg_of, character(1))
+                cat("archive DESCRIPTION candidates:", paste(sprintf("%s=%s", basename(dirname(d)), candidates), collapse = ", "), "\n")
+                hit <- which(!is.na(candidates) & candidates %in% wanted)
+                if (length(hit) == 1) {
+                  d <- d[hit]
+                  cat("archive selected:", basename(dirname(d)), "package", candidates[hit], "\n")
+                }
+              }
+              if (length(d) != 1) stop("ARCHIVE_URLS: expected one package DESCRIPTION inside ", basename(u), ", found ", length(d), " (", paste(basename(dirname(d)), collapse = ", "), "): ", paste(d, collapse = ", "), ". Use a package tarball, add the intended package to FORCED_PKGS, or install it in a manual step.")
               pkgdir <- dirname(d)
               cat("archive subdirectory:", basename(pkgdir), "\n")
             }
@@ -786,7 +799,7 @@ jobs:
 
           entry <- if (file.exists(file.path(appdir, "app.R"))) "app/app.R" else "app/ui.R"
           pkgs <- as.data.frame(installed.packages(lib.loc = lib), stringsAsFactors = FALSE)
-          platform <- "${{ matrix.platform }}"
+          platform <- Sys.getenv("BUNDLE_PLATFORM")
           lock <- data.frame(package = pkgs$Package, version = pkgs$Version, stringsAsFactors = FALSE)
           lock <- lock[order(lock$package), ]
           lock_file <- sprintf("deps-%s.json", platform)
@@ -876,9 +889,11 @@ jobs:
 
       - name: Zip + sha256 + metadata + size guard
         shell: bash
+        env:
+          BUNDLE_PLATFORM: ${{ matrix.platform }}
         run: |
           cat > zip-bundle.R <<'EOF'
-          platform <- "${{ matrix.platform }}"
+          platform <- Sys.getenv("BUNDLE_PLATFORM")
           r_version <- Sys.getenv("R_VERSION")
           r_abi <- paste(head(strsplit(r_version, ".", fixed = TRUE)[[1]], 2), collapse = ".")
           out <- sprintf("%s-%s-%s-r%s.zip", Sys.getenv("APP_ID"), Sys.getenv("VERSION"), platform, r_abi)

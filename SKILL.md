@@ -138,6 +138,14 @@ Fast path: run `scripts/onboard-shiny-app.ps1` (steps 2-6), then `record-app.ps1
   forward-slash drive entry can make Windows `where`/R `Sys.which` exit 255.
   Check `make`/`gcc` with shell `command -v`, not R `Sys.which`. Do not read
   that 255 as a missing `make`/`gcc`.
+- **Never interpolate `${{ }}` in a long `run:` block.** GitHub treats the entire
+  `run:` scalar as one expression when it contains any `${{ }}`; if the block is
+  over 21,000 characters the workflow is rejected before any job starts with
+  `Exceeded max expression length 21000`. Pass matrix values through `env:` and
+  read them in the script (for example `BUNDLE_PLATFORM: ${{ matrix.platform }}`
+  then `Sys.getenv("BUNDLE_PLATFORM")`). The ScRDAVis assemble step reached
+  24,641 characters once app-specific code was added. `actionlint` does not catch
+  this limit.
 - **Never ship base/recommended packages in `rlib`.** The shell's bundled R provides
   `KernSmooth`, `MASS`, `Matrix`, `survival`, `lattice`, `nlme`, `mgcv`, `boot`,
   `cluster`, `codetools`, `foreign`, `rpart`, `spatial`, `class`, `nnet`, etc.

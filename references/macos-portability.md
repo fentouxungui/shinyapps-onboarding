@@ -36,6 +36,22 @@ Rules:
 - The macOS audit now also flags `/Library/Frameworks/R.framework`; an app-level
   compiled package with that reference must be rebuilt/repatched or dropped.
 
+## Nested private libraries (pak)
+
+`devtools` imports `pak`, and `pak` ships a private library under
+`rlib/pak/library/` containing packages such as `cli`, `curl`, `pkgcache`,
+`pkgdepends`, `processx` and `zip`. Portable R's `.portable` patcher rewrites
+the main library, not that private library, so `otool -L` reports many
+`/Library/Frameworks/R.framework/.../libR.dylib` references there and the audit
+fails. The files are not app dependencies and `SOURCE_REBUILD` cannot rebuild
+them independently.
+
+If the app does not call `devtools::*` (ScRDAVis only had a startup
+`require('devtools')`), remove `devtools` from `EXTRA_PKGS` and patch that
+startup line out of `global.R`. Otherwise, either patch every nested
+`.so` in `pak/library` to `@rpath/libR.dylib` and re-sign it, or drop the
+devtools-backed feature. Do not leave the nested library in the bundle.
+
 ## What the template already does
 
 0. Downloads the **shell's portable R** (the matching `portable-r` release for the
