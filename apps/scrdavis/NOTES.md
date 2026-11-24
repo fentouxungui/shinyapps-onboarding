@@ -1,7 +1,8 @@
 # ScRDAVis (`scrdavis`)
 
-- **Status:** `pending` -- both platform bundles build and pass smoke; **not** in the
-  catalog; the author issue is still to be opened after the user's functional test.
+- **Status:** `active` -- both platform bundles built and passed smoke, and the app is
+  listed in `ShinyApps/catalog/apps.yml` (which is the source of truth for listing;
+  the record's `status` was corrected from `pending` on 2026-11-24).
 - **Upstream:** https://github.com/GudaLab/ScRDAVis (no `LICENSE` file)
 - **Fork:** https://github.com/fentouxungui/ScRDAVis
 - **Release:** https://github.com/fentouxungui/ScRDAVis/releases/tag/v1.1.2 (`v1.1.2`)

@@ -1,6 +1,6 @@
 id: scrdavis
 name: ScRDAVis
-status: pending
+status: active
 upstream: GudaLab/ScRDAVis
 fork: fentouxungui/ScRDAVis
 license: none upstream (no LICENSE file)
