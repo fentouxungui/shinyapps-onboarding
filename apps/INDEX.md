@@ -96,6 +96,7 @@
 | `quallmer-app` | quallmer.app | active | win-x64, mac-arm64 | v0.1.0 | cran/quallmer.app | [NOTES](quallmer-app/NOTES.md) |
 | `quickexplore` | QuickExplore | active | win-x64, mac-arm64 | v0.1.2 | Ramsas88/QuickExplore | [NOTES](quickexplore/NOTES.md) |
 | `r3dmol` | r3dmol | active | win-x64, mac-arm64 | v0.1.0 | cran/r3dmol | [NOTES](r3dmol/NOTES.md) |
+| `radiant` | Radiant | active | win-x64, mac-arm64 | v1.6.7 | radiant-rstats/radiant | [NOTES](radiant/NOTES.md) |
 | `reliashiny` | ReliaShiny | active | win-x64, mac-arm64 | v0.1.1 | paulgovan/ReliaShiny | [NOTES](reliashiny/NOTES.md) |
 | `repplabshiny` | REPPlabShiny | active | win-x64, mac-arm64 | v0.1.0 | cran/REPPlabShiny | [NOTES](repplabshiny/NOTES.md) |
 | `scconvert` | scConvertShiny | active | win-x64, mac-arm64 | v0.1.3 | fentouxungui/scConvertShiny | [NOTES](scconvert/NOTES.md) |

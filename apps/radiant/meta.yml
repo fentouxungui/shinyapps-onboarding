@@ -1,0 +1,36 @@
+id: radiant
+name: Radiant
+status: active
+upstream: radiant-rstats/radiant
+fork: fentouxungui/radiant
+license: AGPL-3
+app_mode: flat
+platforms: win-x64, mac-arm64
+version: 1.6.7
+tag: v1.6.7
+release_url: https://github.com/fentouxungui/radiant/releases/tag/v1.6.7
+build_run: ""
+template: 2026.11.18.4 (local working tree; canonical main 2026.11.17.7)
+patch_file: ""
+recorded_at: 2026-11-24
+built_at: 2026-11-23T02:58:03Z
+source_repo: fentouxungui/radiant
+source_commit: 74301f6f094c0b0df77331c342a529c372f8d0ea
+upstream_repo: radiant-rstats/radiant
+upstream_head: 1bdb1780bdfbe59127a666e446e2a1ee3bc83aff
+upstream_checked_at: 2026-11-24T06:36:39Z
+workflow_path: .github/workflows/build-app-bundle.yml
+workflow_commit: 74301f6f094c0b0df77331c342a529c372f8d0ea
+workflow_sha256: 4db2c1eb1d117bac27f42182cd95045350cf34d88dca5cfb4311deacdf63fed3
+app_size_mb: win-x64=193, mac-arm64=233
+closure_packages: ""
+decisions:
+  - APP_MODE=flat APP_SUBDIR=inst/app - inst/app is a directory app inside the R package; global.R resolves every radiant.* module through system.file() and server.R calls library(radiant), so this is the "package whose app directory does library()" case, not package-deploy
+  - FORCED_PKGS=the six radiant packages - a silent CRAN miss must fail the build instead of shipping a navbar with a dead module
+  - EXTRA_PKGS=radiant radiant.data radiant.design radiant.basics radiant.model radiant.multivariate - closure is CRAN-only (1.6.7/1.6.9/1.6.6/1.6.6/1.6.13/1.6.9), no Bioconductor, no GitHub-only, no archived packages
+  - EXCLUDE=rsconnect,tests,for.shinyapps.io.R - rsconnect is shinyapps.io metadata, tests/ is a ShinyDriver script, for.shinyapps.io.R is a dev helper whose commented library() lines would seed the dependency scanner
+  - STRICT_DEPS=on - unresolved dependencies fail the build
+  - SMOKE=on - the built bundle must serve an HTML page before the Release is created
+  - MAX_REQUEST_MB=1024 - radiant imports user data files, so the upload cap needs headroom
+  - PANDOC_VERSION empty - Report > Rmd/R needs pandoc on the user's machine; the template only verifies pandoc on the runner and does not ship it
+  - SOURCE_REBUILD empty, PKG_VERSION_* empty - nothing recompiled for portability and no vendored dylibs, so no version suffix is allocated
